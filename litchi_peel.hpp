@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <filesystem>
+#include <cstdlib> // for sprintf
 
 #include "healpix_cxx/healpix_map.h"
 #include "healpix_cxx/healpix_map_fitsio.h"
@@ -65,7 +66,6 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
         if(neighbors[1]==-1) //west does not exist for some pixels, need north instead
         {
             westernNeighborship.at(2) = neighbors[3];
-            std::cout << "here" << std::endl;
         }
                 
         tensor2D output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex);
@@ -156,6 +156,24 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
     normalHealpixInterface interface(minkmapAverage);
     Healpix_Map<double> outputmap = HealpixFromMinkmap(interface,func);
     
+    if (!params.forceOutname)
+    {
+        std::size_t fitspos = outname.find(".fits");
+        if(fitspos!=std::string::npos)
+        {
+            outname = outname.substr(0,fitspos); //remove given .fits ending, will be added later again
+        }
+        char mintmaxtnumt[44];
+        if(params.numt==1) //if just one threshold write that
+        {
+            sprintf(mintmaxtnumt,"%g", params.mint); //printf %g for nicer formatting
+        }
+        else
+        {
+            sprintf(mintmaxtnumt,"%g_%g_%d_%s", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log"); //printf %g for nicer formatting
+        }
+        outname = outname + "_Nside="+std::to_string(params.Nside) + "_smooth="+"0_thresh=" + mintmaxtnumt + ".fits";
+    }
     
     std::filesystem::path f{outname};
     if (std::filesystem::exists(f))

@@ -104,7 +104,7 @@ int main(int argc,char **argv)
     struct {
         uint rankA=0, rankB=0, curvIndex=0, numt=1, Nside=0;
         double mint=0, maxt=1;
-        bool linThresh = true;
+        bool linThresh = true, forceOutname=false;
     } params;
     
     vector<string> arguments(argv + 1, argv + argc);    
@@ -184,6 +184,10 @@ int main(int argc,char **argv)
         else if (thisArg=="--logThresh" || thisArg=="--logthresh")
         {
             params.linThresh = false;
+        }
+        else if (thisArg=="--forceOutname" || thisArg=="--forceoutname")
+        {
+            params.forceOutname = true;
         }
         else
         {
