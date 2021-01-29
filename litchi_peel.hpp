@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 #include <filesystem>
 #include <cstdlib> // for sprintf
 
@@ -156,7 +157,9 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
     normalHealpixInterface interface(minkmapAverage);
     Healpix_Map<double> outputmap = HealpixFromMinkmap(interface,func);
     
-    if (!params.forceOutname)
+    
+    /**  Map is generated, now write outfile (and parameterfile)  **/
+    if (!params.forceOutname) //generate filename with parameters
     {
         std::size_t fitspos = outname.find(".fits");
         if(fitspos!=std::string::npos)
@@ -172,7 +175,31 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
         {
             sprintf(mintmaxtnumt,"%g_%g_%d_%s", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log"); //printf %g for nicer formatting
         }
-        outname = outname + "_Nside="+std::to_string(params.Nside) + "_smooth="+"0_thresh=" + mintmaxtnumt + ".fits";
+        //TODO add smooth option
+        outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex)+ "_Nside="+std::to_string(params.Nside) + "_smooth="+"0_thresh=" + mintmaxtnumt + ".fits";
+    }
+    else //generate textfile with params
+    {
+        std::size_t fitspos = outname.find(".fits");
+        std::string paramfilename;
+        if(fitspos!=std::string::npos)
+        {
+            paramfilename = outname.substr(0,fitspos)+"_params.txt";
+        } else{
+            paramfilename = outname+"_params.txt";
+        }
+        
+        std::ofstream file(paramfilename);
+        file << "rankA " << params.rankA << "\n";
+        file << "rankB " << params.rankB << "\n";
+        file << "curvIndex " << params.curvIndex << "\n";
+        file << "Nside " << params.Nside << "\n";
+        file << "smooth " << "TODO" << "\n"; //TODO
+        file << "mint " << params.mint << "\n";
+        file << "maxt " << params.maxt << "\n";
+        file << "numt " << params.numt << "\n";
+        file << "lin/logThresh " << (params.linThresh ? "lin" : "log") << "\n";
+        file.close();
     }
     
     std::filesystem::path f{outname};
