@@ -51,7 +51,7 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
     tensor2D at(int pixnum) const
     {
         fix_arr<int, 8> neighbors; //neighbors of this pixel
-        baseminkmap.originalMap.neighbors(pixnum,neighbors); // pixels with these numbers in minkmap are positioned around original pixel with this number
+        baseminkmap.originalMap.neighbors(pixnum,neighbors);
         std::vector<int> westernNeighborship{pixnum, neighbors[0],neighbors[1],neighbors[2]}; // non-polar: {E, SW, W, NW} corners, N-polar: {E, S, notacorner, W} corners, S-polar: {E, W, notacorner, N} in minkmap, replace notacorner
         
         uint pole = ispolar(pixnum);
@@ -95,7 +95,6 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
             int nsidesquared = nside*nside;
             if(pixnum==(nsidesquared-1) || pixnum==(nsidesquared*2-1) || pixnum==(nsidesquared*3-1) || pixnum==(nsidesquared*4-1)) return 1;
             else if(pixnum==(nsidesquared*8) || pixnum==(nsidesquared*9) || pixnum==(nsidesquared*10) || pixnum==(nsidesquared*11)) return 2;
-            
         }
         return 0;
     }
@@ -107,10 +106,9 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
     Healpix_Map<double> map(input.baseminkmap.originalMap.Nside(), input.baseminkmap.originalMap.Scheme(), SET_NSIDE);
     
     //if smoothing: reduce resolution of outputmap
-    
     //smooth input
     
-    //TODO parallelize here
+    #pragma omp parallel for
     for(int pixel=0; pixel<map.Npix(); pixel++)
     {
         if(!(pixel%10000)) 
@@ -118,7 +116,7 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
             std::cout << "Converting pixel " << pixel << "..." << std::endl;
         }
         tensor2D tensorHere = input.at(pixel);
-        map[pixel] = func( tensorHere ); //actually need to average over .at(_) of western neighborhood, because .at() refers to vertex east of pixel, so map should be interfaces
+        map[pixel] = func( tensorHere );
     }
     return map;
 }
@@ -159,7 +157,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
     
     
     /**  Map is generated, now write outfile (and parameterfile)  **/
-    if (!params.forceOutname) //generate filename with parameters
+    if (!params.forceOutname) //generate filename with all parameters
     {
         std::size_t fitspos = outname.find(".fits");
         if(fitspos!=std::string::npos)
@@ -167,7 +165,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
             outname = outname.substr(0,fitspos); //remove given .fits ending, will be added later again
         }
         char mintmaxtnumt[44];
-        if(params.numt==1) //if just one threshold write that
+        if(params.numt==1) //if just one threshold write that, else write mint_maxt_numt
         {
             sprintf(mintmaxtnumt,"%g", params.mint); //printf %g for nicer formatting
         }
@@ -178,7 +176,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
         //TODO add smooth option
         outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex)+ "_Nside="+std::to_string(params.Nside) + "_smooth="+"0_thresh=" + mintmaxtnumt + ".fits";
     }
-    else //generate textfile with params
+    else //generate textfile with params and use given filename
     {
         std::size_t fitspos = outname.find(".fits");
         std::string paramfilename;
@@ -187,6 +185,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
             paramfilename = outname.substr(0,fitspos)+"_params.txt";
         } else{
             paramfilename = outname+"_params.txt";
+            outname += ".fits";
         }
         
         std::ofstream file(paramfilename);
@@ -203,6 +202,12 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
     }
     
     std::filesystem::path f{outname};
+    
+    if(!std::filesystem::exists(f.parent_path()))
+    {
+        std::cout << "Path does not exist: " << f.parent_path() << ", creating..." << std::endl;
+        std::filesystem::create_directories(f.parent_path());
+    }
     if (std::filesystem::exists(f))
     {
         std::cout << "File already exists, deleting old file ..." << std::endl;
@@ -210,6 +215,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
         handle.delete_file(outname);
     }
     
+    std::cout << "Writing file " << outname << std::endl;
     write_Healpix_map_to_fits(outname, outputmap, PLANCK_FLOAT32);
 }
 

@@ -51,13 +51,34 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             throw std::invalid_argument("minkmapSphere::at: pixnum invalid");
         }
         
-        if(pixnum==-5) //5OUTH pole TODO
+        if(pixnum==-5) //5OUTH pole
         {
-            return tensor2D(rankA,rankB,curvIndex);
+            std::vector<int> southPolarCap;
+            if(originalMap.Scheme()==RING)
+            {
+                int npix = originalMap.Npix();
+                southPolarCap = {npix-4,npix-3,npix-2,npix-1};
+            }
+            else
+            {
+                int nsidesquared = originalMap.Nside()*originalMap.Nside();
+                southPolarCap = {nsidesquared*8, nsidesquared*9, nsidesquared*10, nsidesquared*11};
+            }
+            return integrateMinktensor(southPolarCap);
         }
         else if(pixnum==-11) //11ORTH pole
         {
-            return  tensor2D(rankA,rankB,curvIndex);
+            std::vector<int> northPolarCap;
+            if(originalMap.Scheme()==RING)
+            {
+                northPolarCap = {0,1,2,3};
+            }
+            else
+            {
+                int nsidesquared = originalMap.Nside()*originalMap.Nside();
+                northPolarCap = {nsidesquared-1, nsidesquared*2-1, nsidesquared*3-1, nsidesquared*4-1};
+            }
+            return integrateMinktensor(northPolarCap);
         }
         
         fix_arr<int, 8> neighbors; //neighbors of this pixel
@@ -121,7 +142,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         {
             switch (curvIndex)
             {
-                case 0: 
+                case 0:
                     return tensor2D(area*weight,curvIndex);
                 case 1:
                     return tensor2D(length*weight,curvIndex);
@@ -157,6 +178,8 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
          * Pay attention to direction of n! In getN(first, second) (first x second) should point away from body
          */
         
+        uint ranksum = rankA+rankB;
+        
         switch (caseindex)
         {
             case 0: //nix
@@ -164,21 +187,30 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 1: //one corner (pixel 0)
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
-                n = getN_cartesian(oneCorner,otherCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(oneCorner,otherCorner);
+                }
                 area += sphereArea(positions.at(0),oneCorner,otherCorner);
                 length += arclength(oneCorner,otherCorner);
                 break;
             case 2: //other corner (pixel 1)
                 oneCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
-                n = getN_cartesian(oneCorner,otherCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(oneCorner,otherCorner);
+                }
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 length += arclength(oneCorner,otherCorner);
                 break;
             case 3: //0 and 1 over
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                n = getN_cartesian(otherCorner,oneCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(otherCorner,oneCorner);
+                }
                 area += sphereArea(positions.at(0),oneCorner,positions.at(1));
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 length += arclength(oneCorner,otherCorner);
@@ -186,7 +218,10 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 4: //other corner (pixel 2)
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                n = getN_cartesian(oneCorner,otherCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(oneCorner,otherCorner);
+                }
                 area += sphereArea(positions.at(2),oneCorner,otherCorner);
                 length += arclength(oneCorner,otherCorner);
                 break;
@@ -213,7 +248,10 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 6: //2 and 1 over
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
-                n = getN_cartesian(oneCorner,otherCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(oneCorner,otherCorner);
+                }
                 area += sphereArea(positions.at(2),positions.at(1),oneCorner);
                 area += sphereArea(positions.at(1),otherCorner,oneCorner);
                 length += arclength(oneCorner,otherCorner);
@@ -221,7 +259,10 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 7: //all except pixel 3
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(3),values.at(3),positions.at(0),values.at(0),thresh);
-                n = getN_cartesian(oneCorner,otherCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(oneCorner,otherCorner);
+                }
                 area += sphereArea(positions.at(0),otherCorner,positions.at(1));
                 area += sphereArea(positions.at(1),otherCorner,oneCorner);
                 area += sphereArea(positions.at(2),positions.at(1),oneCorner);
@@ -230,14 +271,20 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 8: //other corner (pixel 3)
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(3),values.at(3),positions.at(0),values.at(0),thresh);
-                n = getN_cartesian(otherCorner,oneCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(otherCorner,oneCorner);
+                }
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 length += arclength(oneCorner,otherCorner);
                 break;
             case 9: //3 and 0 over
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
-                n = getN_cartesian(otherCorner,oneCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(otherCorner,oneCorner);
+                }
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 area += sphereArea(positions.at(0),positions.at(3),otherCorner);
                 length += arclength(oneCorner,otherCorner);
@@ -265,7 +312,10 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 11: //all except pixel 2
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                n = getN_cartesian(otherCorner,oneCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(otherCorner,oneCorner);
+                }
                 area += sphereArea(positions.at(3),oneCorner,positions.at(0));
                 area += sphereArea(positions.at(0),oneCorner,otherCorner);
                 area += sphereArea(positions.at(1),positions.at(0),otherCorner);
@@ -274,7 +324,10 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 12: //2 and 3 over
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                n = getN_cartesian(oneCorner,otherCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(oneCorner,otherCorner);
+                }
                 area += sphereArea(positions.at(3),otherCorner,oneCorner);
                 area += sphereArea(positions.at(3),positions.at(2),otherCorner);
                 length += arclength(oneCorner,otherCorner);
@@ -282,7 +335,10 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 13: //all except pixel 1
                 oneCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
-                n = getN_cartesian(otherCorner,oneCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(otherCorner,oneCorner);
+                }
                 area += sphereArea(positions.at(3),positions.at(2),oneCorner);
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 area += sphereArea(positions.at(3),otherCorner,positions.at(0));
@@ -291,7 +347,10 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 14: //all except pixel 0
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
-                n = getN_cartesian(otherCorner,oneCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(otherCorner,oneCorner);
+                }
                 area += sphereArea(positions.at(2),positions.at(1),oneCorner);
                 area += sphereArea(positions.at(2),oneCorner,otherCorner);
                 area += sphereArea(positions.at(2),otherCorner,positions.at(3));
@@ -324,7 +383,8 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
          *      2
          * 
          */
-         
+        
+        uint ranksum = rankA+rankB;
         switch (caseindex)
         {
             case 0: //nix
@@ -332,21 +392,30 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 1: //one corner (pixel 0)
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
-                n = getN_cartesian(oneCorner,otherCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(oneCorner,otherCorner);
+                }
                 area += sphereArea(positions.at(0),otherCorner,oneCorner);
                 length += arclength(oneCorner,otherCorner);
                 break;
             case 2: //other corner (pixel 1)
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                n = getN_cartesian(otherCorner,oneCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(otherCorner,oneCorner);
+                }
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 length += arclength(oneCorner,otherCorner);
                 break;
             case 3: //all except pixel 2
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                n = getN_cartesian(otherCorner,oneCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(otherCorner,oneCorner);
+                }
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 area += sphereArea(positions.at(1),positions.at(0),oneCorner);
                 length += arclength(oneCorner,otherCorner);
@@ -354,14 +423,20 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 4: //other corner (pixel 2)
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                n = getN_cartesian(oneCorner,otherCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(oneCorner,otherCorner);
+                }
                 area += sphereArea(positions.at(2),otherCorner,oneCorner);
                 length += arclength(oneCorner,otherCorner);
                 break;
             case 5: //all except pixel 1
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                n = getN_cartesian(oneCorner,otherCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(oneCorner,otherCorner);
+                }
                 area += sphereArea(positions.at(2),otherCorner,oneCorner);
                 area += sphereArea(positions.at(2),oneCorner,positions.at(0));
                 length += arclength(oneCorner,otherCorner);
@@ -369,7 +444,10 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 6: //all except pixel 0
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
-                n = getN_cartesian(otherCorner,oneCorner);
+                if(ranksum)
+                {
+                    n = getN_cartesian(otherCorner,oneCorner);
+                }
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 area += sphereArea(positions.at(1),otherCorner,positions.at(2));
                 length += arclength(oneCorner,otherCorner);
@@ -384,6 +462,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         minkTensorIntegrand theTensor(rankA, rankB, curvIndex); //TODO hier integrieren
         return theTensor;
     }
+    
     
 };
 

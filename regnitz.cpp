@@ -85,7 +85,7 @@ double eigenValueQuotient(tensorFamily& input) //TODO check
     } else
     {
         std::cerr << "Error: Eigenvalue quotient not implemented for rank higher than 2! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
-        throw std::invalid_argument("eigenValueQoutinet not implemented for higher ranks");
+        throw std::invalid_argument("eigenValueQuotient not implemented for higher ranks");
     } 
     
     
