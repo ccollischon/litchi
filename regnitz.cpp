@@ -17,6 +17,7 @@
 #include "minkTensorIntegrand.hpp"
 #include "litchi_pulp.hpp"
 #include "litchi_peel.hpp"
+#include "litchi_eat.hpp"
 
 const double pi = 3.14159265358979;
 
