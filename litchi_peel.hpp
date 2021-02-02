@@ -47,7 +47,6 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
     
     normalHealpixInterface(maptype& othermap) : baseminkmap(othermap) {}
     
-     //TODO: adapt to 3-pixel regions, poles. idea: give poles own (negative) pixnum, check for poles and replace pix in westernNeighborship with polepixel
     tensor2D at(int pixnum) const
     {
         fix_arr<int, 8> neighbors; //neighbors of this pixel

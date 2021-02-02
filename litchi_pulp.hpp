@@ -38,7 +38,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
     }
     
     //template <typename tensortype>
-    tensor2D at(int pixnum) const //TODO: poles
+    tensor2D at(int pixnum) const
     {
         if(pixnum>=originalMap.Npix())
         {
@@ -50,7 +50,6 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             std::cerr << "Error: requesting negative undefined pixnum, pixnum is " << pixnum << ", Npix is " << originalMap.Npix() << std::endl;
             throw std::invalid_argument("minkmapSphere::at: pixnum invalid");
         }
-        
         if(pixnum==-5) //5OUTH pole
         {
             std::vector<int> southPolarCap;
@@ -104,7 +103,6 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         {
             if(pixnum!=-1) values.push_back(originalMap[pixnum]);
         }
-        
         uint valuesSize = values.size();
         
         uint caseindex = 0; //Number of case (pattern above/below thresh). If diagonal above/below, check overall average to see whether connected
@@ -118,7 +116,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         if(valuesSize==3)
         {
             //do triangle things
-            weight = 0.3333333333333; //triangles appear in 3 final map pixels
+            weight = 1.d/3.; //triangles appear in 3 final map pixels
             integralNumbers = threeCornerCases(neighborship, values, caseindex, area, length, curvature)*weight; 
         } else if (valuesSize==4)
         {
@@ -371,7 +369,11 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
     minkTensorIntegrand threeCornerCases(std::vector<int>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
-        for(auto pixnum : neighborship) {positions.push_back(originalMap.pix2ang(pixnum));}
+        
+        for(auto pixnum : neighborship) 
+        {
+            if(pixnum!=-1)  positions.push_back(originalMap.pix2ang(pixnum));
+        }
         pointing oneCorner;
         pointing otherCorner;
         pointing n;
