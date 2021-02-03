@@ -21,23 +21,7 @@
 
 const double pi = 3.14159265358979;
 
-uint binomialCoeff(uint n, uint k) 
-{ 
-    uint res = 1; 
-  
-    // Since C(n, k) = C(n, n-k) 
-    if (k > n - k) 
-        k = n - k; 
-  
-    // Calculate value of 
-    // [n * (n-1) *---* (n-k+1)] / [k * (k-1) *----* 1] 
-    for (uint i = 0; i < k; ++i) { 
-        res *= (n - i); 
-        res /= (i + 1); 
-    }
-    return res;
-}
-
+/*
 pointing operator*(const double& left, const pointing& right)
 {
     pointing retpoint(left*right.theta, left*right.phi);
@@ -48,7 +32,7 @@ pointing operator*(const pointing& left, const double& right)
     pointing retpoint(right*left.theta, right*left.phi);
     return retpoint;
 }
-
+*/
 
 
 
@@ -103,7 +87,7 @@ int main(int argc,char **argv)
     string inname = "COM_CMB_IQU-smica_2048_R3.00_hm1.fits", outname = "testmap.fits";
     
     struct {
-        uint rankA=0, rankB=0, curvIndex=0, numt=1, Nside=0;
+        uint rankA=0, rankB=0, curvIndex=0, numt=1, Nside=0, smooth=0;
         double mint=0, maxt=1;
         bool linThresh = true, forceOutname=false;
     } params;
@@ -147,6 +131,16 @@ int main(int argc,char **argv)
             else
             {
                 std::cerr << "Illegal value after curvI: " << number << " , must be 0, 1, or 2 \n";
+                return 1;
+            }
+        }
+        else if (thisArg=="--smooth" || thisArg=="-s")
+        {
+            int number = stoi(arguments.at(++i));
+            if(number>=0) params.smooth = uint(number);
+            else
+            {
+                std::cerr << "Illegal value after smooth: " << number << " , must be positive integer or zero \n";
                 return 1;
             }
         }

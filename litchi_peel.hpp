@@ -96,12 +96,17 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
 };
 
 template <typename tensortype>
-Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input, double func(tensortype)) // generates scalar Healpix-type map from Minkmap(sum) via specified function
+Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input, double func(tensortype), uint smooth=0) // generates scalar Healpix-type map from Minkmap(sum) via specified function
 {
-    Healpix_Map<double> map(input.baseminkmap.originalMap.Nside(), input.baseminkmap.originalMap.Scheme(), SET_NSIDE);
-    
+    int outputNside = input.baseminkmap.originalMap.Nside();
     //if smoothing: reduce resolution of outputmap
-    //smooth input
+    if(smooth>1)
+    {
+        std::cout << "Warning: smoothing not implemented" << std::endl;
+        outputNside /= smooth;
+    }
+    Healpix_Map<double> map(outputNside, input.baseminkmap.originalMap.Scheme(), SET_NSIDE);
+    
     
     #pragma omp parallel for
     for(int pixel=0; pixel<map.Npix(); pixel++)
@@ -110,6 +115,11 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
         {
             std::cout << "Converting pixel " << pixel << "..." << std::endl;
         }
+        //smooth input
+        pointing thiscenter = map.pix2ang(pixel);
+        double radius = 1.; //TODO properly based on smooth
+        rangeset<int> pixelsNearby = input.baseminkmap.originalMap.query_disc(thiscenter, radius);
+        
         tensor2D tensorHere = input.at(pixel);
         map[pixel] = func( tensorHere );
     }

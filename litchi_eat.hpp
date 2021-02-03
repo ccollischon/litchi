@@ -47,10 +47,12 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
     
     auto minkmapAverage = sumOfMaps*(1./params.numt);
     normalHealpixInterface interface(minkmapAverage);
-    Healpix_Map<double> outputmap = HealpixFromMinkmap(interface,func);
+    Healpix_Map<double> outputmap = HealpixFromMinkmap(interface,func,params.smooth);
     
     
-    /**  Map is generated, now write outfile (and parameterfile)  **/
+    /**  Map is generated, now write outfile  **/
+    
+    
     if (!params.forceOutname) //generate filename with all parameters
     {
         std::size_t fitspos = outname.find(".fits");
@@ -67,10 +69,10 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
         {
             sprintf(mintmaxtnumt,"%g_%g_%d_%s", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log"); //printf %g for nicer formatting
         }
-        //TODO add smooth option
-        outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex)+ "_Nside="+std::to_string(params.Nside) + "_smooth="+"0_thresh=" + mintmaxtnumt + ".fits";
+        outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex)+ "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + ".fits";
     }
-    else //generate textfile with params and use given filename
+    
+    /*else //generate textfile with params and use given filename
     {
         std::size_t fitspos = outname.find(".fits");
         std::string paramfilename;
@@ -79,7 +81,6 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
             paramfilename = outname.substr(0,fitspos)+"_params.txt";
         } else{
             paramfilename = outname+"_params.txt";
-            outname += ".fits";
         }
         
         std::ofstream file(paramfilename);
@@ -87,14 +88,18 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
         file << "rankB " << params.rankB << "\n";
         file << "curvIndex " << params.curvIndex << "\n";
         file << "Nside " << params.Nside << "\n";
-        file << "smooth " << "TODO" << "\n"; //TODO
+        file << "smooth " << params.smooth << "\n";
         file << "mint " << params.mint << "\n";
         file << "maxt " << params.maxt << "\n";
         file << "numt " << params.numt << "\n";
         file << "lin/logThresh " << (params.linThresh ? "lin" : "log") << "\n";
         file.close();
-    }
+    }*/
     
+    
+    /**** create Fitsfile with params in Header ****/
+    
+    fitshandle handle;
     std::filesystem::path f{outname};
     
     if(!std::filesystem::exists(f.parent_path()))
@@ -105,12 +110,30 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
     if (std::filesystem::exists(f))
     {
         std::cout << "File already exists, deleting old file ..." << std::endl;
-        fitshandle handle;
         handle.delete_file(outname);
     }
     
+    handle.create(outname);
+    handle.add_comment("Minkowski map created using Litchi with the following parameters: ");
+    handle.set_key("rankA", (int)params.rankA, "First rank of Minkowski tensor (r)");
+    handle.set_key("rankB", (int)params.rankB, "Second rank of Minkowski tensor (n)");
+    handle.set_key("curvIndex ", (int)params.curvIndex, "Curvature (bottom) index of Minkowski tensor");
+    handle.set_key("Nside ", (int)params.Nside, "Nside of input map");
+    handle.set_key("smooth ", (int)params.smooth, "Factor by which output was smoothed");
+    handle.set_key("mint ", params.mint, "Min threshold");
+    handle.set_key("maxt ", params.maxt, "Max threshold");
+    handle.set_key("numt ", (int)params.numt, "Number of thresholds (mint used if 1)");
+    if(params.linThresh)
+    {
+        handle.set_key("lin/logThresh ", std::string("lin"), "linear or logarithmic spacing");
+    }
+    else
+    {
+        handle.set_key("lin/logThresh ", std::string("log"), "linear or logarithmic spacing");
+    }
+    
     std::cout << "Writing file " << outname << std::endl;
-    write_Healpix_map_to_fits(outname, outputmap, PLANCK_FLOAT32);
+    write_Healpix_map_to_fits(handle, outputmap, PLANCK_FLOAT32);
 }
 
 template <typename tensortype, typename paramtype>
