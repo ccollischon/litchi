@@ -102,6 +102,11 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
     //if smoothing: reduce resolution of outputmap
     if(smooth>1)
     {
+        if((int)smooth>outputNside)
+        {
+            std::cerr<< "Error: smooth > Nside of input, this is not possible! smooth=" << smooth << ", Nside="<< outputNside << std::endl;
+            throw std::invalid_argument( "HealpixFromMinkmap: Invalid smooth" );
+        }
         std::cout << "Warning: smoothing not implemented" << std::endl;
         outputNside /= smooth;
     }
@@ -116,12 +121,33 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
             std::cout << "Converting pixel " << pixel << "..." << std::endl;
         }
         //smooth input
-        pointing thiscenter = map.pix2ang(pixel);
-        double radius = 1.; //TODO properly based on smooth
-        rangeset<int> pixelsNearby = input.baseminkmap.originalMap.query_disc(thiscenter, radius);
+        //pointing thiscenter = map.pix2ang(pixel);
+        //double radius = 1.; //TODO properly based on smooth
+        if(smooth>1)
+        {
+            
+            std::vector<vec3> corners;
+            map.boundaries(pixel, 1, corners); //find corners of pixel in outputmap (larger pixels)
+            std::vector<pointing> cornersPoint;
+            for(auto corner : corners) {cornersPoint.push_back(pointing(corner));}
         
-        tensor2D tensorHere = input.at(pixel);
-        map[pixel] = func( tensorHere );
+            rangeset<int> pixelsNearbyRange = input.baseminkmap.originalMap.query_polygon(cornersPoint); //pixels in original map contained in pixel of outputmap
+            std::vector<int> pixelsNearby = pixelsNearbyRange.toVector();
+        
+            tensor2D tensorHere(input.baseminkmap.rankA, input.baseminkmap.rankB, input.baseminkmap.curvIndex);
+            for(auto pixelToAdd : pixelsNearby)
+            {
+                tensorHere = tensorHere+input.at(pixelToAdd); //TODO parallel transport, not just add
+            }
+            double norm = double(smooth*smooth)/(pixelsNearby.size());//normalize such that sum over all pixels remains same
+            tensorHere *= 1./norm;
+            map[pixel] = func( tensorHere );
+        }
+        else
+        {
+            tensor2D tensorHere = input.at(pixel);
+            map[pixel] = func( tensorHere );
+        }
     }
     return map;
 }

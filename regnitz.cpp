@@ -137,10 +137,10 @@ int main(int argc,char **argv)
         else if (thisArg=="--smooth" || thisArg=="-s")
         {
             int number = stoi(arguments.at(++i));
-            if(number>=0) params.smooth = uint(number);
+            if((number&(number-1))==0) params.smooth = uint(number);
             else
             {
-                std::cerr << "Illegal value after smooth: " << number << " , must be positive integer or zero \n";
+                std::cerr << "Illegal value after smooth: " << number << " , must be power of two or zero \n";
                 return 1;
             }
         }

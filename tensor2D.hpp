@@ -100,13 +100,13 @@ struct tensor2D : tensorFamily {
     }*/
     
     
-    tensor2D &operator *= (double multiplier)
+    tensor2D& operator*= (double multiplier)
     {
         std::transform(content.begin(), content.end(), content.begin(), [&multiplier](double& c){return c*multiplier;});
         return *this;
     }
     
-    tensor2D &operator = (const tensorFamily& other) //easily evaluate every element, needs completely symmetric tensorFamily on right
+    tensor2D& operator= (const tensorFamily& other) //easily evaluate every element, needs completely symmetric tensorFamily on right
     {
         if( (rankA != other.rankA) || (rankB != other.rankB) || (curvIndex != other.curvIndex))
         {
@@ -133,6 +133,18 @@ struct tensor2D : tensorFamily {
         return *this;
     }
     
+    tensor2D& operator= (const tensor2D& other) //easily evaluate every element, needs completely symmetric tensorFamily on right
+    {
+        if( (rankA != other.rankA) || (rankB != other.rankB) || (curvIndex != other.curvIndex))
+        {
+            std::cerr << "Error: trying to use operator = on tensors of different type. Left tensor2D has (rankA, rankB, curvIndex) =  (" << rankA << "," << rankB << "," << curvIndex << "), Right tensorFamily has ("  << other.rankA << "," << other.rankB << "," << other.curvIndex << "), this imakes no sense" << std::endl;
+            throw std::invalid_argument( "tensor2D: Different ranks in operator =" );
+        }
+        
+        content = other.content;
+        return *this;
+    }
+
     void assign(const tensorFamily& other) //easily evaluate every element, needs completely symmetric tensorFamily on right
     {
         if( (rankA != other.rankA) || (rankB != other.rankB) || (curvIndex != other.curvIndex))

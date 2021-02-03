@@ -91,7 +91,7 @@ struct minkmapStack : minkmapFamily
         tensor2D thistensor(mapstack.at(0).at(pixel));
         for(uint i=1; i<mapstack.size(); i++)
         {
-            thistensor.assign(thistensor+mapstack.at(i).at(pixel));
+            thistensor=(thistensor+mapstack.at(i).at(pixel));
         }
         return thistensor;
     }

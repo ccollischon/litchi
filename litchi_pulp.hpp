@@ -32,6 +32,20 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
     
     pointing pix2ang(int pixnum) const //TODO poles
     {
+        if(pixnum>=originalMap.Npix())
+        {
+            std::cerr << "Error: requesting pixnum too large for Healpix_Map, pixnum is " << pixnum << ", Npix is " << originalMap.Npix() << std::endl;
+            throw std::invalid_argument("minkmapSphere::pix2ang: pixnum too high");
+        }
+        else if(pixnum<0 && pixnum!=-5 && pixnum!= -11)
+        {
+            std::cerr << "Error: requesting negative undefined pixnum, pixnum is " << pixnum << ", Npix is " << originalMap.Npix() << std::endl;
+            throw std::invalid_argument("minkmapSphere::pix2ang: pixnum invalid");
+        }
+        
+        if(pixnum==-5) return pointing(0,pi);
+        if(pixnum==-11) return pointing(0,0);
+        
         std::vector<vec3> corners;
         originalMap.boundaries(pixnum, 1, corners); //find corners of original pixel in original map
         return pointing(corners.at(3)); //position east of pixel is center of vertex
