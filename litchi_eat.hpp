@@ -25,10 +25,60 @@ bool has_x(const auto &obj) {
 }
 */
 
+bool hasAllParams(const auto &obj) {
+    if constexpr (!requires {obj.Nside;}) {
+        std::cerr << "Error: parameter struct has no member named Nside. Use to set Nside to which input map is degraded" << std::endl;
+        throw std::invalid_argument("params.Nside non-existant");
+        return false;
+    }
+    if constexpr (!requires {obj.rankA;}) {
+        std::cerr << "Error: parameter struct has no member named rankA" << std::endl;
+        throw std::invalid_argument("params.rankA non-existant");
+        return false;
+    }
+    if constexpr (!requires {obj.rankB;}) {
+        std::cerr << "Error: parameter struct has no member named rankB" << std::endl;
+        throw std::invalid_argument("params.rankB non-existant");
+        return false;
+    }
+    if constexpr (!requires {obj.curvIndex;}) {
+        std::cerr << "Error: parameter struct has no member named curvIndex" << std::endl;
+        throw std::invalid_argument("params.curvIndex non-existant");
+        return false;
+    }
+    if constexpr (!requires {obj.mint;}) {
+        std::cerr << "Error: parameter struct has no member named mint" << std::endl;
+        throw std::invalid_argument("params.mint non-existant");
+        return false;
+    }
+    if constexpr (!requires {obj.maxt;}) {
+        std::cerr << "Error: parameter struct has no member named maxt" << std::endl;
+        throw std::invalid_argument("params.maxt non-existant");
+        return false;
+    }
+    if constexpr (!requires {obj.numt;}) {
+        std::cerr << "Error: parameter struct has no member named numt" << std::endl;
+        throw std::invalid_argument("params.numt non-existant");
+        return false;
+    }
+    if constexpr (!requires {obj.smooth;}) {
+        std::cerr << "Error: parameter struct has no member named smooth. Use to set factor by which output map is degraded" << std::endl;
+        throw std::invalid_argument("params.smooth non-existant");
+        return false;
+    }
+    if constexpr (!requires {obj.linThresh;}) {
+        std::cerr << "Error: parameter struct has no member named linThresh. Use to set linear (true) or logarithmic (false) thresholds" << std::endl;
+        throw std::invalid_argument("params.linThresh non-existant");
+        return false;
+    }
+    
+    return true;
+}
+
+
 template <typename tensortype, typename paramtype>
 void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(tensortype), std::string outname)
 {
-    std::cout << "TODO: check params for members with C++20" << std::endl;
     if(params.Nside)
     {
         Healpix_Map<double> degradedMap(params.Nside, map.Scheme(), SET_NSIDE);
@@ -50,7 +100,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
     Healpix_Map<double> outputmap = HealpixFromMinkmap(interface,func,params.smooth);
     
     
-    /**  Map is generated, now write outfile  **/
+    /**  Map is generated, now create outname  **/
     
     
     if (!params.forceOutname) //generate filename with all parameters
@@ -71,31 +121,6 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
         }
         outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex)+ "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + ".fits";
     }
-    
-    /*else //generate textfile with params and use given filename
-    {
-        std::size_t fitspos = outname.find(".fits");
-        std::string paramfilename;
-        if(fitspos!=std::string::npos)
-        {
-            paramfilename = outname.substr(0,fitspos)+"_params.txt";
-        } else{
-            paramfilename = outname+"_params.txt";
-        }
-        
-        std::ofstream file(paramfilename);
-        file << "rankA " << params.rankA << "\n";
-        file << "rankB " << params.rankB << "\n";
-        file << "curvIndex " << params.curvIndex << "\n";
-        file << "Nside " << params.Nside << "\n";
-        file << "smooth " << params.smooth << "\n";
-        file << "mint " << params.mint << "\n";
-        file << "maxt " << params.maxt << "\n";
-        file << "numt " << params.numt << "\n";
-        file << "lin/logThresh " << (params.linThresh ? "lin" : "log") << "\n";
-        file.close();
-    }*/
-    
     
     /**** create Fitsfile with params in Header ****/
     

@@ -107,7 +107,6 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
             std::cerr<< "Error: smooth > Nside of input, this is not possible! smooth=" << smooth << ", Nside="<< outputNside << std::endl;
             throw std::invalid_argument( "HealpixFromMinkmap: Invalid smooth" );
         }
-        std::cout << "Warning: smoothing not implemented" << std::endl;
         outputNside /= smooth;
     }
     Healpix_Map<double> map(outputNside, input.baseminkmap.originalMap.Scheme(), SET_NSIDE);
@@ -116,16 +115,15 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
     #pragma omp parallel for
     for(int pixel=0; pixel<map.Npix(); pixel++)
     {
-        if(!(pixel%10000)) 
+        if(!(pixel%10000))
         {
             std::cout << "Converting pixel " << pixel << "..." << std::endl;
         }
         //smooth input
         //pointing thiscenter = map.pix2ang(pixel);
-        //double radius = 1.; //TODO properly based on smooth
+        //double radius = 1.; //TODO properly based on smooth, smoothing radius evtl larger than outputpixel
         if(smooth>1)
         {
-            
             std::vector<vec3> corners;
             map.boundaries(pixel, 1, corners); //find corners of pixel in outputmap (larger pixels)
             std::vector<pointing> cornersPoint;
