@@ -79,6 +79,8 @@ bool hasAllParams(const auto &obj) {
 template <typename tensortype, typename paramtype>
 void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(tensortype), std::string outname)
 {
+    
+    
     if(params.Nside)
     {
         Healpix_Map<double> degradedMap(params.Nside, map.Scheme(), SET_NSIDE);
