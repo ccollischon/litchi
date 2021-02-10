@@ -30,7 +30,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         }
     }
     
-    pointing pix2ang(int pixnum) const //TODO poles
+    pointing pix2ang(int pixnum) const
     {
         if(pixnum>=originalMap.Npix())
         {
@@ -171,7 +171,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
     }
     
     //template<typename tensortype>
-    minkTensorIntegrand fourCornerCases(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
+    tensor2D fourCornerCases(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
         for(auto pixnum : neighborship) {positions.push_back(originalMap.pix2ang(pixnum));}
@@ -179,7 +179,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         pointing otherCorner;
         pointing n;
         double mean;
-        minkTensorIntegrand theTensor(rankA, rankB, curvIndex); //TODO hier integrieren
+        tensor2D theTensor(rankA, rankB, curvIndex); //TODO hier integrieren
         
         /* Corner numeration: 
          * 
@@ -199,43 +199,47 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 1: //one corner (pixel 0)
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(oneCorner,otherCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 area += sphereArea(positions.at(0),oneCorner,otherCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 2: //other corner (pixel 1)
                 oneCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(oneCorner,otherCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 3: //0 and 1 over
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(otherCorner,oneCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 area += sphereArea(positions.at(0),oneCorner,positions.at(1));
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 4: //other corner (pixel 2)
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(oneCorner,otherCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 area += sphereArea(positions.at(2),oneCorner,otherCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 5: //2 and 0 over, check if average above or below thresh and view as connected or not accordingly
                 mean = std::accumulate(values.begin(), values.end(), 0.)/values.size();
@@ -245,6 +249,8 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                     otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
                     pointing thirdCorner = interpPointing(positions.at(2),values.at(2),positions.at(1),values.at(1),thresh);
                     pointing fourthCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
+                    
+                    
                     area += sphereArea(positions.at(0),otherCorner,oneCorner);
                     area += sphereArea(positions.at(2),thirdCorner,fourthCorner);
                     area += sphereArea(thirdCorner,oneCorner,fourthCorner);
@@ -254,52 +260,57 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                 }
                 else //smaller mean = disconnected triangles
                 {
-                    auto theSum = fourCornerCases(neighborship,values,1,area,length,curvature) + fourCornerCases(neighborship,values,4,area,length,curvature);
+                    theTensor = fourCornerCases(neighborship,values,1,area,length,curvature) + fourCornerCases(neighborship,values,4,area,length,curvature);
+                    theTensor *= length;
                 }
                 break; 
             case 6: //2 and 1 over
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(oneCorner,otherCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 area += sphereArea(positions.at(2),positions.at(1),oneCorner);
                 area += sphereArea(positions.at(1),otherCorner,oneCorner);
-                length += arclength(oneCorner,otherCorner);
                 break; 
             case 7: //all except pixel 3
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(3),values.at(3),positions.at(0),values.at(0),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(oneCorner,otherCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 area += sphereArea(positions.at(0),otherCorner,positions.at(1));
                 area += sphereArea(positions.at(1),otherCorner,oneCorner);
                 area += sphereArea(positions.at(2),positions.at(1),oneCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 8: //other corner (pixel 3)
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(3),values.at(3),positions.at(0),values.at(0),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(otherCorner,oneCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 9: //3 and 0 over
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(otherCorner,oneCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 area += sphereArea(positions.at(0),positions.at(3),otherCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 10: //3 and 1 over, check if average above or below thresh and view as connected or not accordingly
                 mean = std::accumulate(values.begin(), values.end(), 0.)/values.size();
@@ -318,55 +329,60 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                 }
                 else //smaller mean = disconnected triangles
                 {
-                    auto theSum = fourCornerCases(neighborship,values,8,area,length,curvature) + fourCornerCases(neighborship,values,2,area,length,curvature);
+                    theTensor = fourCornerCases(neighborship,values,8,area,length,curvature) + fourCornerCases(neighborship,values,2,area,length,curvature);
+                    theTensor *= length;
                 }
                 break;
             case 11: //all except pixel 2
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(otherCorner,oneCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 area += sphereArea(positions.at(3),oneCorner,positions.at(0));
                 area += sphereArea(positions.at(0),oneCorner,otherCorner);
                 area += sphereArea(positions.at(1),positions.at(0),otherCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 12: //2 and 3 over
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(oneCorner,otherCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 area += sphereArea(positions.at(3),otherCorner,oneCorner);
                 area += sphereArea(positions.at(3),positions.at(2),otherCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 13: //all except pixel 1
                 oneCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(otherCorner,oneCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 area += sphereArea(positions.at(3),positions.at(2),oneCorner);
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 area += sphereArea(positions.at(3),otherCorner,positions.at(0));
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 14: //all except pixel 0
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(otherCorner,oneCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 area += sphereArea(positions.at(2),positions.at(1),oneCorner);
                 area += sphereArea(positions.at(2),oneCorner,otherCorner);
                 area += sphereArea(positions.at(2),otherCorner,positions.at(3));
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 15: //alles
                 area += sphereArea(positions.at(0),positions.at(2),positions.at(1));
@@ -380,7 +396,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         return theTensor;
     }
     
-    minkTensorIntegrand threeCornerCases(std::vector<int>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
+    tensor2D threeCornerCases(std::vector<int>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
         
@@ -392,13 +408,14 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         pointing otherCorner;
         pointing n;
         
-        /* Corner numeration: 
+        /* Corner numeration:
          * 
          *     1
          * 0
          *      2
          * 
          */
+        tensor2D theTensor(rankA, rankB, curvIndex); //TODO hier integrieren
         
         uint ranksum = rankA+rankB;
         switch (caseindex)
@@ -408,65 +425,71 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 1: //one corner (pixel 0)
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(oneCorner,otherCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 area += sphereArea(positions.at(0),otherCorner,oneCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 2: //other corner (pixel 1)
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(otherCorner,oneCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 3: //all except pixel 2
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(otherCorner,oneCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 area += sphereArea(positions.at(1),positions.at(0),oneCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 4: //other corner (pixel 2)
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(oneCorner,otherCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 area += sphereArea(positions.at(2),otherCorner,oneCorner);
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 5: //all except pixel 1
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(oneCorner,otherCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 area += sphereArea(positions.at(2),otherCorner,oneCorner);
                 area += sphereArea(positions.at(2),oneCorner,positions.at(0));
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 6: //all except pixel 0
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
+                length += arclength(oneCorner,otherCorner);
                 if(ranksum)
                 {
                     n = getN_cartesian(otherCorner,oneCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 area += sphereArea(positions.at(1),otherCorner,positions.at(2));
-                length += arclength(oneCorner,otherCorner);
                 break;
             case 7: //alles
                 area += sphereArea(positions.at(0),positions.at(2),positions.at(1));
@@ -475,7 +498,6 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                 std::cerr << "Error: invalid case number: " << caseindex << " , this makes no sense. Eastern end of neighborhood: px number " << neighborship.at(0) << std::endl;
                 throw std::invalid_argument( "minkmapSphere: Weird caseindex" );
         }
-        minkTensorIntegrand theTensor(rankA, rankB, curvIndex); //TODO hier integrieren
         return theTensor;
     }
     

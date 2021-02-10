@@ -12,15 +12,14 @@
 
 //struct to represent the r^a x n^b part of minkowski tensor calculation, only calculates value when necessary
 struct minkTensorIntegrand : tensorFamily {
-    pointing r, n;
+    pointing n;
     
-    minkTensorIntegrand(uint rank1, uint rank2, uint curvInd = 0) : tensorFamily(rank1, rank2, curvInd), r(0,0), n(0,0)
+    minkTensorIntegrand(uint rank1, uint rank2, uint curvInd = 0) : tensorFamily(rank1, rank2, curvInd), n(0,0)
     { //simple constructor for empty tensor, just give ranks
     }
     
-    minkTensorIntegrand(uint rank1, uint rank2, uint curvInd, pointing rNew, pointing nNew) : tensorFamily(rank1, rank2, curvInd)
+    minkTensorIntegrand(uint rank1, uint rank2, uint curvInd, pointing rNew, pointing nNew) : tensorFamily(rank1, rank2, curvInd, rNew)
     { //constructor with all necessary data
-        r = rNew;
         n = nNew;
     }
     
@@ -59,11 +58,11 @@ struct minkTensorIntegrand : tensorFamily {
             uint numberOfROnes = std::accumulate(indices.begin(), indices.begin()+rankA, 0); //Number of ones among indices of r / n
             uint numberOfNOnes = std::accumulate(indices.begin()+rankA, indices.end(), 0);
             
-            summand *= pow(r.theta, numberOfROnes); //different r contributions, depending on index
-            summand *= pow(r.phi, rankA-numberOfROnes); // Might need Jacobian, because Polar edit: no, sin is in metric
+            summand *= pow(r.theta, rankA-numberOfROnes); //different r contributions, depending on index. theta for zeros, phi for ones
+            summand *= pow(r.phi, numberOfROnes); // Might need Jacobian, because Polar edit: no, sin is in metric
             
-            summand *= pow(n.theta, numberOfNOnes); //same for n
-            summand *= pow(n.phi, rankB-numberOfNOnes);
+            summand *= pow(n.theta, rankB-numberOfNOnes); //same for n
+            summand *= pow(n.phi, numberOfNOnes);
             
             returnval += summand;
             numberOfPermutations++;

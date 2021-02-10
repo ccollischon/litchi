@@ -10,6 +10,7 @@
 #include <vector>
 #include <cmath>
 #include <type_traits>
+#include <chrono>
 
 #include "healpix_cxx/healpix_map.h"
 //#include "healpix_cxx/healpix_data_io.h"
@@ -41,13 +42,16 @@ pointing operator*(const pointing& left, const double& right)
 
 
 
-double trace(tensorFamily& input)
+double trace(tensorFamily& input) //sum of eigenvalues
 {
+    double sinT = sin(input.r.theta);
     if(input.rankA+input.rankB == 0) return input.accessElement({});
+    
     std::vector<uint_fast8_t> indices(input.rankA+input.rankB,0);
-    double summand = input.accessElement(indices);
+    double summand = input.accessElement(indices); //zeroes
+    
     for(uint i=0; i<indices.size(); i++) { indices.at(i) = 1; }
-    summand += input.accessElement(indices);
+    summand += input.accessElement(indices)*pow(sinT, input.rankA+input.rankB); //ones with metric contribution
     return summand;
 }
 
@@ -67,7 +71,6 @@ double eigenValueQuotient(tensorFamily& input) //TODO check
         double adminusbc = input.accessElement({0,0})*input.accessElement({1,1}) - pow(input.accessElement({0,1}),2); //tensors are symmetric here
         double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
         double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
-        std::cout << twolambda1 << " " << twolambda2  << std::endl;
         if(twolambda1>twolambda2) return twolambda1/twolambda2;
         else return twolambda2/twolambda1;
         
@@ -86,7 +89,7 @@ using namespace std;
 
 int main(int argc,char **argv)
 {
-    string inname = "COM_CMB_IQU-smica_2048_R3.00_hm1.fits", outname = "testmap.fits";
+    string inname = "../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits", outname = "testmap.fits";
     
     struct {
         uint rankA=0, rankB=0, curvIndex=0, numt=1, Nside=0, smooth=0;
@@ -198,7 +201,13 @@ int main(int argc,char **argv)
         return 1;
     }
     
+    auto start = chrono::high_resolution_clock::now();
+    
     makeHealpixMinkmap(inname, params, trace, outname); //TODO schauen dass rankB nicht bei curvIndex 0
+    
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
+    cout << "Execution took " << duration.count()/1000. << " seconds" << endl;
     
     /*
     Healpix_Map<double> map = read_Healpix_map_from_fits<double>(inname, 1, 2);
@@ -304,17 +313,18 @@ int main(int argc,char **argv)
     pointing r(0.5, 0);
     pointing n(0.5, pi);
     pointing nr(0.45*pi, 0.5*pi);
-    minkTensorIntegrand mytensor(3,4,0,r,n);
-    //minkTensorIntegrand mytensor2(3,4,0,nr,n);
-    auto testtensor = test(mytensor);
-    cout << mytensor.accessElement({1,1,0,1,1,0,0}) << endl;
-    cout << testtensor.accessElement({1,1,0,1,1,0,0}) << endl;
+    minkTensorIntegrand mytensor(0,2,0,r,n);
+    minkTensorIntegrand mytensor2(0,2,0,nr,nr);
+    tensor2D testtensor = mytensor;
+    cout << mytensor.accessElement({1,1}) << endl;
+    cout << mytensor2.accessElement({1,1}) << endl;
+    cout << testtensor.accessElement({1,1}) << endl;
     
     tensor2D zahlenfriedhof (mytensor*3+mytensor2);
-    cout << zahlenfriedhof.accessElement({1,1,0,1,1,0,0}) << endl;
+    cout << zahlenfriedhof.accessElement({1,1}) << endl;
     zahlenfriedhof = mytensor + mytensor2;
-    cout << zahlenfriedhof.accessElement({1,1,1,0,1,0,0}) << endl;
-
+    cout << zahlenfriedhof.accessElement({1,1}) << endl;
+    
     //auto timestensor = 3*mytensor2;
     int drei = 3;
     auto newtensor = drei*(3*(mytensor + mytensor2));

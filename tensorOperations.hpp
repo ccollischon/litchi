@@ -14,7 +14,7 @@ struct minkTensorSum : tensorFamily
     const rtype rhs;
     const ltype lhs;
     
-    minkTensorSum(const ltype& left,const rtype& right)  : tensorFamily(right.rankA, right.rankB, right.curvIndex), 
+    minkTensorSum(const ltype& left,const rtype& right)  : tensorFamily(right.rankA, right.rankB, right.curvIndex, right.r), 
         rhs(right), lhs(left)
     {
         if( (right.rankA != left.rankA) || (right.rankB != left.rankB) || (right.curvIndex != left.curvIndex))

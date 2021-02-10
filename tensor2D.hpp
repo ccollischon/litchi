@@ -20,7 +20,7 @@ struct tensor2D : tensorFamily {
         content = newContent;
     }
     
-    tensor2D (const tensorFamily& other) : tensorFamily(other.rankA, other.rankB, other.curvIndex)
+    tensor2D (const tensorFamily& other) : tensorFamily(other.rankA, other.rankB, other.curvIndex, other.r)
     {
         std::vector<double> newContent(pow(2,rankA+rankB),0);
         content = newContent;
@@ -108,28 +108,7 @@ struct tensor2D : tensorFamily {
     
     tensor2D& operator= (const tensorFamily& other) //easily evaluate every element, needs completely symmetric tensorFamily on right
     {
-        if( (rankA != other.rankA) || (rankB != other.rankB) || (curvIndex != other.curvIndex))
-        {
-            std::cerr << "Error: trying to use operator = on tensors of different type. Left tensor2D has (rankA, rankB, curvIndex) =  (" << rankA << "," << rankB << "," << curvIndex << "), Right tensorFamily has ("  << other.rankA << "," << other.rankB << "," << other.curvIndex << "), this imakes no sense" << std::endl;
-            throw std::invalid_argument( "tensor2D: Different ranks in operator =" );
-        }
-        
-        std::vector<uint_fast8_t> indices(rankA+rankB,0); //Start with only 0
-        double otherElementatZeros = other.accessElement(indices);
-        writeElement(indices, otherElementatZeros); //Add element at indices zero 
-        
-        for(uint i=0;i<rankA+rankB;i++) //Add one "1" to vector in every loop
-        {
-            std::sort (indices.begin(), indices.end());
-            indices.at(i) = 1;
-            double elementWithThisManyOnes = other.accessElement(indices); 
-              
-            //loop over all permutations (non-degenerate by next_permutation) and write
-            do
-            {
-                writeElement(indices, elementWithThisManyOnes);
-            } while ( std::next_permutation(indices.begin(), indices.end()) );
-        }
+        assign(other);
         return *this;
     }
     
@@ -140,7 +119,7 @@ struct tensor2D : tensorFamily {
             std::cerr << "Error: trying to use operator = on tensors of different type. Left tensor2D has (rankA, rankB, curvIndex) =  (" << rankA << "," << rankB << "," << curvIndex << "), Right tensorFamily has ("  << other.rankA << "," << other.rankB << "," << other.curvIndex << "), this imakes no sense" << std::endl;
             throw std::invalid_argument( "tensor2D: Different ranks in operator =" );
         }
-        
+        r = other.r;
         content = other.content;
         return *this;
     }
@@ -152,24 +131,23 @@ struct tensor2D : tensorFamily {
             std::cerr << "Error: trying to use operator = on tensors of different type. Left tensor2D has (rankA, rankB, curvIndex) =  (" << rankA << "," << rankB << "," << curvIndex << "), Right tensorFamily has ("  << other.rankA << "," << other.rankB << "," << other.curvIndex << "), this imakes no sense" << std::endl;
             throw std::invalid_argument( "tensor2D: Different ranks in operator =" );
         }
+        r = other.r;
         
         std::vector<uint_fast8_t> indices(rankA+rankB,0); //Start with only 0
         double otherElementatZeros = other.accessElement(indices);
         writeElement(indices, otherElementatZeros); //Add element at indices zero 
         
-        for(uint i=0;i<rankA+rankB;i++) //Add one "1" to vector in every loop
+        for(int i=rankA+rankB-1;i>=0;i--) //Add one "1" to vector in every loop from back to front
         {
             std::sort (indices.begin(), indices.end());
             indices.at(i) = 1;
             double elementWithThisManyOnes = other.accessElement(indices); 
-              
             //loop over all permutations (non-degenerate by next_permutation) and write
             do
             {
                 writeElement(indices, elementWithThisManyOnes);
             } while ( std::next_permutation(indices.begin(), indices.end()) );
         }
-        //return *this;
     }
 };
 
