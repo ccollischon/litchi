@@ -25,7 +25,7 @@ bool has_x(const auto &obj) {
 }
 */
 
-void hasAllParams(const auto &obj) {
+void checkParams(const auto &obj) {
     if constexpr (!requires {obj.Nside;}) {
         std::cerr << "Error: parameter struct has no member named Nside. Use to set Nside to which input map is degraded" << std::endl;
         throw std::invalid_argument("params.Nside non-existant");
@@ -62,13 +62,32 @@ void hasAllParams(const auto &obj) {
         std::cerr << "Error: parameter struct has no member named linThresh. Use to set linear (true) or logarithmic (false) thresholds" << std::endl;
         throw std::invalid_argument("params.linThresh non-existant");
     }
+    if constexpr (!requires {obj.useTrace;}) {
+        std::cerr << "Error: parameter struct has no member named useTrace. Use to set trace (true) or eigenvalue quotient (false) calculation" << std::endl;
+        throw std::invalid_argument("params.useTrace non-existant");
+    }
+    
+    if(obj.curvIndex==0 && obj.rankB)
+    {
+        std::cerr << "Error: rankB > 0 not possible when curvIndex=0. rankB = " << obj.rankB << std::endl;
+        throw std::invalid_argument("rankB && curvIndex!=0");
+    }
+    if(obj.curvIndex==0 && obj.rankA)
+    {
+        std::cerr << "Error: rankA > 0 not implemented when curvIndex=0. rankA = " << obj.rankA << std::endl;
+        throw std::invalid_argument("rankA && curvIndex!=0");
+    }
+    if(obj.rankA)
+    {
+        std::cerr << "Warning: rankA > 0 not implemented properly" << std::endl;
+    }
 }
 
 
-template <typename tensortype, typename paramtype>
-void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(tensortype), std::string outname)
+template <typename paramtype>
+void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, std::string outname)
 {
-    hasAllParams(params);
+    checkParams(params);
     
     if(params.Nside)
     {
@@ -88,7 +107,15 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
     
     auto minkmapAverage = sumOfMaps*(1./params.numt);
     normalHealpixInterface interface(minkmapAverage);
-    Healpix_Map<double> outputmap = HealpixFromMinkmap(interface,func,params.smooth);
+    Healpix_Map<double> outputmap;
+    if(params.useTrace)
+    {
+        outputmap = HealpixFromMinkmap(interface,trace,params.smooth);
+    }
+    else
+    {
+        outputmap = HealpixFromMinkmap(interface,eigenValueQuotient,params.smooth);
+    }
     
     
     /**  Map is generated, now create outname  **/
@@ -110,7 +137,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
         {
             sprintf(mintmaxtnumt,"%g_%g_%d_%s", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log"); //printf %g for nicer formatting
         }
-        outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex)+ "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + ".fits";
+        outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + (params.useTrace ? "_tr" : "_evq") + "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + ".fits";
     }
     
     /**** create Fitsfile with params in Header ****/
@@ -147,17 +174,25 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, double func(
     {
         handle.set_key("lin/logThresh ", std::string("log"), "linear or logarithmic spacing");
     }
+    if(params.useTrace)
+    {
+        handle.set_key("Function ", std::string("trace"), "Trace of tensor");
+    }
+    else
+    {
+        handle.set_key("Function ", std::string("EV quotient"), "Eigenvalue qoutient of tensor");
+    }
     
     std::cout << "Writing file " << outname << std::endl;
     write_Healpix_map_to_fits(handle, outputmap, PLANCK_FLOAT32);
 }
 
-template <typename tensortype, typename paramtype>
+template <typename paramtype>
 //void makeHealpixMinkmap(std::string inname, uint rankA, uint rankB, uint curvIndex, uint numt, double mint, double maxt, bool linthresh, double func(tensortype), std::string outname)
-void makeHealpixMinkmap(std::string inname, paramtype params, double func(tensortype), std::string outname)
+void makeHealpixMinkmap(std::string inname, paramtype params, std::string outname)
 {
     Healpix_Map<double> map = read_Healpix_map_from_fits<double>(inname, 1, 2);
-    makeHealpixMinkmap(map, params, func, outname);
+    makeHealpixMinkmap(map, params, outname);
 }
 
 

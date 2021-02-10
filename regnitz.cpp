@@ -42,48 +42,6 @@ pointing operator*(const pointing& left, const double& right)
 
 
 
-double trace(tensorFamily& input) //sum of eigenvalues
-{
-    double sinT = sin(input.r.theta);
-    if(input.rankA+input.rankB == 0) return input.accessElement({});
-    
-    std::vector<uint_fast8_t> indices(input.rankA+input.rankB,0);
-    double summand = input.accessElement(indices); //zeroes
-    
-    for(uint i=0; i<indices.size(); i++) { indices.at(i) = 1; }
-    summand += input.accessElement(indices)*pow(sinT, input.rankA+input.rankB); //ones with metric contribution
-    return summand;
-}
-
-double eigenValueQuotient(tensorFamily& input) //TODO check
-{
-    uint ranksum = input.rankA+input.rankB;
-    if (ranksum == 1)
-    {
-        std::cerr << "Error: Eigenvalue quotient not well-defined for rank 1! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
-        throw std::invalid_argument("eigenValueQuotient not defined for rank 1");
-    } else if (ranksum == 0)
-    {
-        return input.accessElement({});
-    } else if(ranksum == 2)
-    { //eigenvalues of matrix (a b, c d)
-        double dplusa = input.accessElement({1,1})+input.accessElement({0,0});
-        double adminusbc = input.accessElement({0,0})*input.accessElement({1,1}) - pow(input.accessElement({0,1}),2); //tensors are symmetric here
-        double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
-        double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
-        if(twolambda1>twolambda2) return twolambda1/twolambda2;
-        else return twolambda2/twolambda1;
-        
-    } else
-    {
-        std::cerr << "Error: Eigenvalue quotient not implemented for rank higher than 2! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
-        throw std::invalid_argument("eigenValueQuotient not implemented for higher ranks");
-    }
-}
-
-
-
-
 
 using namespace std;
 
@@ -94,8 +52,9 @@ int main(int argc,char **argv)
     struct {
         uint rankA=0, rankB=0, curvIndex=0, numt=1, Nside=0, smooth=0;
         double mint=0, maxt=1;
-        bool linThresh = true, forceOutname=false;
+        bool linThresh=true, forceOutname=false, useTrace=true;
     } params;
+    
     
     vector<string> arguments(argv + 1, argv + argc);    
     for(uint i=0; i<arguments.size(); i++)
@@ -189,6 +148,14 @@ int main(int argc,char **argv)
         {
             params.forceOutname = true;
         }
+        else if (thisArg=="--trace")
+        {
+            params.useTrace = true;
+        }
+        else if (thisArg=="--EVquotient" || thisArg=="--evquotient")
+        {
+            params.useTrace = false;
+        }
         else
         {
             std::cerr << "Illegal argument: " << thisArg << "\n";
@@ -203,7 +170,7 @@ int main(int argc,char **argv)
     
     auto start = chrono::high_resolution_clock::now();
     
-    makeHealpixMinkmap(inname, params, trace, outname); //TODO schauen dass rankB nicht bei curvIndex 0
+    makeHealpixMinkmap(inname, params, outname); //TODO schauen dass rankB nicht bei curvIndex 0
     
     auto stop = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
