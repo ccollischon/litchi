@@ -23,7 +23,7 @@ extern const double pi;
 struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-level) minkowski tensor functions. Don't save all because of space. 
     const double thresh;
     
-    minkmapSphere(Healpix_Map<double>& map, uint rank1 = 0, uint rank2 = 0, uint curvind = 0, double threshold = 0) : minkmapFamily(map, rank1, rank2, curvind), thresh(threshold) {
+    minkmapSphere(Healpix_Map<double>& map, uint rank1, uint rank2, uint curvind, double threshold) : minkmapFamily(map, rank1, rank2, curvind), thresh(threshold) {
         if (curvind > 2) {
             std::cerr << "Error: invalid curvIndex: " << curvind << " , this makes no sense. In 2D only up to two!" << std::endl;
             throw std::invalid_argument( "minkmapSphere: Weird curvIndex" );
@@ -98,7 +98,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         originalMap.neighbors(pixnum,neighbors);
         std::vector<int> easternNeighborship{pixnum, neighbors[4],neighbors[5],neighbors[6]}; //neighbors east of this pixel and this pixel
         //calculate one marching square/triangle
-        tensor2D tensorHere = integrateMinktensor(easternNeighborship);
+        tensor2D tensorHere ( integrateMinktensor(easternNeighborship) );
         return tensorHere;
     }
     
@@ -117,7 +117,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         {
             if(pixnum!=-1) values.push_back(originalMap[pixnum]);
         }
-        uint valuesSize = values.size();
+        const uint valuesSize = values.size();
         
         uint caseindex = 0; //Number of case (pattern above/below thresh). If diagonal above/below, check overall average to see whether connected
         for(uint i=0;i<valuesSize;i++)
@@ -190,7 +190,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
          * Pay attention to direction of n! In getN(first, second) (first x second) should point away from body
          */
         
-        uint ranksum = rankA+rankB;
+        const uint ranksum = rankA+rankB;
         
         switch (caseindex)
         {
@@ -417,7 +417,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
          */
         tensor2D theTensor(rankA, rankB, curvIndex); //TODO hier integrieren
         
-        uint ranksum = rankA+rankB;
+        const uint ranksum = rankA+rankB;
         switch (caseindex)
         {
             case 0: //nix

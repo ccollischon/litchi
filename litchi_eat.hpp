@@ -81,11 +81,16 @@ void checkParams(const auto &obj) {
     {
         std::cerr << "Warning: rankA > 0 not implemented properly" << std::endl;
     }
+    if(obj.mint==0. && !obj.linThresh)
+    {
+        std::cerr << "Minimal threshold zero not possible with logThresh!\n";
+        throw std::invalid_argument("mint==0 && logThresh");
+    }
 }
 
 
 template <typename paramtype>
-void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, std::string outname)
+void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::string outname)
 {
     checkParams(params);
     
@@ -95,18 +100,18 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramtype params, std::string 
         degradedMap.Import_degrade(map);
         map = degradedMap;
     }
-    std::vector<double> thresholds = params.linThresh ? makeIntervals_lin(params.mint, params.maxt, params.numt) : makeIntervals_log(params.mint, params.maxt, params.numt);
+    const std::vector<double> thresholds = params.linThresh ? makeIntervals_lin(params.mint, params.maxt, params.numt) : makeIntervals_log(params.mint, params.maxt, params.numt);
     std::vector<minkmapSphere> maps;
     for(double thresh : thresholds)
     {
         maps.push_back(minkmapSphere(map, params.rankA, params.rankB, params.curvIndex, thresh));
     }
-    minkmapStack sumOfMaps(maps);
+    const minkmapStack sumOfMaps(maps);
     
     //Probably should smooth before adding, so can parallel transport n only
     
-    auto minkmapAverage = sumOfMaps*(1./params.numt);
-    normalHealpixInterface interface(minkmapAverage);
+    const auto minkmapAverage = sumOfMaps*(1./params.numt);
+    const normalHealpixInterface interface(minkmapAverage);
     Healpix_Map<double> outputmap;
     if(params.useTrace)
     {

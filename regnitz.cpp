@@ -11,6 +11,8 @@
 #include <cmath>
 #include <type_traits>
 #include <chrono>
+#include <typeinfo>
+
 
 #include "healpix_cxx/healpix_map.h"
 //#include "healpix_cxx/healpix_data_io.h"
@@ -162,11 +164,7 @@ int main(int argc,char **argv)
             return 1;
         }
     }
-    if(params.mint==0. && !params.linThresh)
-    {
-        std::cerr << "Minimal threshold zero not possible with logThresh!\n";
-        return 1;
-    }
+    
     
     auto start = chrono::high_resolution_clock::now();
     
@@ -292,7 +290,9 @@ int main(int argc,char **argv)
     zahlenfriedhof = mytensor + mytensor2;
     cout << zahlenfriedhof.accessElement({1,1}) << endl;
     
-    //auto timestensor = 3*mytensor2;
+    auto timestensor = 3*mytensor2;
+    cout << "\n" << typeid(timestensor).name() << "\n";
+    
     int drei = 3;
     auto newtensor = drei*(3*(mytensor + mytensor2));
     //auto newtensor = minkTensorTimes<minkTensorSum<minkTensorIntegrand,minkTensorIntegrand>,int>(minkTensorSum<minkTensorIntegrand,minkTensorIntegrand>(mytensor,mytensor2),3);

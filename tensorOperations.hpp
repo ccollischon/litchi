@@ -14,7 +14,7 @@ struct minkTensorSum : tensorFamily
     const rtype rhs;
     const ltype lhs;
     
-    minkTensorSum(const ltype& left,const rtype& right)  : tensorFamily(right.rankA, right.rankB, right.curvIndex, right.r), 
+    minkTensorSum(const ltype& left, const rtype& right)  : tensorFamily(right.rankA, right.rankB, right.curvIndex, right.r), 
         rhs(right), lhs(left)
     {
         if( (right.rankA != left.rankA) || (right.rankB != left.rankB) || (right.curvIndex != left.curvIndex))
@@ -24,7 +24,7 @@ struct minkTensorSum : tensorFamily
         }
     }
     
-    double accessElement(std::vector<uint_fast8_t> indices) const
+    double accessElement(const std::vector<uint_fast8_t>& indices) const override
     {
         return (rhs.accessElement(indices)) + (lhs.accessElement(indices));
     }
@@ -44,7 +44,7 @@ struct minkTensorTimes : tensorFamily
     {
     }
     
-    double accessElement(std::vector<uint_fast8_t> indices) const
+    double accessElement(const std::vector<uint_fast8_t>& indices) const override
     {
         return mytensor.accessElement(indices) * myscalar;
     }
@@ -73,7 +73,7 @@ minkTensorTimes<right,left> operator* (const left& lhs, const right& rhs)
 
 /***** Functions that work on tensors ****/
 
-double trace(tensorFamily& input) //sum of eigenvalues
+double trace(const tensorFamily& input) //sum of eigenvalues
 {
     double sinT = sin(input.r.theta);
     if(input.rankA+input.rankB == 0) return input.accessElement({});
@@ -86,7 +86,7 @@ double trace(tensorFamily& input) //sum of eigenvalues
     return summand;
 }
 
-double eigenValueQuotient(tensorFamily& input) //TODO check
+double eigenValueQuotient(const tensorFamily& input) //TODO check
 {
     uint ranksum = input.rankA+input.rankB;
     if (ranksum == 1)

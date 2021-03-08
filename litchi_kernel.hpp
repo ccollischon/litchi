@@ -13,6 +13,7 @@ struct minkmapFamily {
     Healpix_Map<double>& originalMap;
     const uint rankA, rankB;
     const uint curvIndex;
+    virtual ~minkmapFamily() = default;
     virtual tensor2D at(int pixnum) const = 0;
     minkmapFamily(Healpix_Map<double>& map, uint rank1, uint rank2, uint curvind) : originalMap(map), rankA(rank1), rankB(rank2), curvIndex(curvind) {}
     minkmapFamily(const minkmapFamily& otherMap) : originalMap(otherMap.originalMap), rankA(otherMap.rankA), rankB(otherMap.rankB), curvIndex(otherMap.curvIndex) {}
@@ -36,7 +37,7 @@ struct minkmapSum : minkmapFamily
     
     tensor2D at(int pixnum) const
     {
-        return (rhs.at(pixnum)) + (lhs.at(pixnum));
+        return tensor2D((rhs.at(pixnum)) + (lhs.at(pixnum)));
     }
     
 };
@@ -62,7 +63,7 @@ struct minkmapTimes : minkmapFamily
     
     tensor2D at(int pixel) const
     {
-        return mymap.at(pixel) * myscalar;
+        return tensor2D(mymap.at(pixel) * myscalar);
     }
 };
 
@@ -91,7 +92,7 @@ struct minkmapStack : minkmapFamily
         tensor2D thistensor(mapstack.at(0).at(pixel));
         for(uint i=1; i<mapstack.size(); i++)
         {
-            thistensor=(thistensor+mapstack.at(i).at(pixel));
+            thistensor=(thistensor+mapstack[i].at(pixel));
         }
         return thistensor;
     }

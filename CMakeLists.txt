@@ -8,7 +8,7 @@ include_directories(${healpix_parent_dir}include/)
 link_directories(${healpix_parent_dir}lib/)
 
 # add the executable
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -std=c++20 -fopenmp -fconcepts")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -std=c++20 -fopenmp -fconcepts -O3")
 
 
 set(CMAKE_CXX_STANDARD 20)

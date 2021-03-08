@@ -15,7 +15,7 @@ std::vector<double> makeIntervals_lin(double mint, double maxt, uint numt)
     double interval = (maxt-mint)/(numt-1); //numt-1 because we want mint and maxt to be in thresholds. If numt=1 this is inf, but for loop below is ignored
     
     thresholds.push_back(mint);
-    for(uint i=1; i<numt; i++)
+    for(uint i=1; i<numt; ++i)
     {
         thresholds.push_back(mint+i*interval);
     }
@@ -28,7 +28,7 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
     double interval = (log(maxt)-log(mint))/(numt-1); //numt-1 because we want mint and maxt to be in thresholds. If numt=1 this is inf, but for loop below is ignored
     
     thresholds.push_back(mint);
-    for(uint i=1; i<numt; i++)
+    for(uint i=1; i<numt; ++i)
     {
         thresholds.push_back(exp(log(mint)+i*interval));
     }
@@ -96,7 +96,7 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
 };
 
 template <typename tensortype>
-Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input, double func(tensortype), uint smooth=0) // generates scalar Healpix-type map from Minkmap(sum) via specified function
+Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input, double func(tensortype), uint smooth) // generates scalar Healpix-type map from Minkmap(sum) via specified function
 {
     int outputNside = input.baseminkmap.originalMap.Nside();
     //if smoothing: reduce resolution of outputmap
@@ -113,7 +113,7 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
     
     
     #pragma omp parallel for
-    for(int pixel=0; pixel<map.Npix(); pixel++)
+    for(int pixel=0; pixel<map.Npix(); ++pixel)
     {
         if(!(pixel%10000))
         {
