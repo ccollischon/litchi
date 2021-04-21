@@ -35,7 +35,7 @@ struct minkmapSum : minkmapFamily
         }
     }
     
-    tensor2D at(int pixnum) const
+    tensor2D at(int pixnum) const override
     {
         return tensor2D((rhs.at(pixnum)) + (lhs.at(pixnum)));
     }
@@ -61,7 +61,7 @@ struct minkmapTimes : minkmapFamily
     {
     }
     
-    tensor2D at(int pixel) const
+    tensor2D at(int pixel) const override
     {
         return tensor2D(mymap.at(pixel) * myscalar);
     }
@@ -87,10 +87,10 @@ struct minkmapStack : minkmapFamily
     
     minkmapStack(std::vector<maptype>& stack) : minkmapFamily(stack.at(0)), mapstack(stack) {}
     
-    tensor2D at(int pixel) const
+    tensor2D at(int pixel) const override
     {
         tensor2D thistensor(mapstack.at(0).at(pixel));
-        for(uint i=1; i<mapstack.size(); i++)
+        for(uint i=1; i<mapstack.size(); ++i)
         {
             thistensor=(thistensor+mapstack[i].at(pixel));
         }

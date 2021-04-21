@@ -52,7 +52,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
     }
     
     //template <typename tensortype>
-    tensor2D at(int pixnum) const
+    tensor2D at(int pixnum) const override
     {
         if(pixnum>=originalMap.Npix())
         {
@@ -255,13 +255,18 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                     area += sphereArea(positions.at(2),thirdCorner,fourthCorner);
                     area += sphereArea(thirdCorner,oneCorner,fourthCorner);
                     area += sphereArea(otherCorner,fourthCorner,oneCorner);
-                    length += arclength(oneCorner,thirdCorner);
-                    length += arclength(otherCorner,fourthCorner); //TODO getN, integrieren
+                    double length1 = arclength(oneCorner,thirdCorner);
+                    double length2 = arclength(fourthCorner,otherCorner); //TODO getN, integrieren
+                    
+                    pointing n1 = getN_cartesian(oneCorner, thirdCorner);
+                    pointing n2 = getN_cartesian(fourthCorner,otherCorner);
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, fourthCorner, n2)*length2); //each section separately
+                    length += length1+length2;
                 }
                 else //smaller mean = disconnected triangles
                 {
                     theTensor = fourCornerCases(neighborship,values,1,area,length,curvature) + fourCornerCases(neighborship,values,4,area,length,curvature);
-                    theTensor *= length;
+                    //theTensor *= length; already included in line above
                 }
                 break; 
             case 6: //2 and 1 over
@@ -324,8 +329,13 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                     area += sphereArea(positions.at(3),fourthCorner,otherCorner);
                     area += sphereArea(thirdCorner,oneCorner,fourthCorner);
                     area += sphereArea(otherCorner,fourthCorner,oneCorner);
-                    length += arclength(oneCorner,thirdCorner);
-                    length += arclength(otherCorner,fourthCorner); //TODO getN, integrieren
+                    double length1 = arclength(otherCorner,oneCorner);
+                    double length2 = arclength(thirdCorner,fourthCorner); //TODO getN, integrieren
+                    
+                    pointing n1 = getN_cartesian(otherCorner,oneCorner);
+                    pointing n2 = getN_cartesian(thirdCorner,fourthCorner);
+                    theTensor = minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, thirdCorner, n2)*length2;
+                    length += length1+length2;
                 }
                 else //smaller mean = disconnected triangles
                 {

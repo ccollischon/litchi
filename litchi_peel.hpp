@@ -41,7 +41,7 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
     maptype& baseminkmap;
     //normalHealpixInterface(Healpix_Map<double>& map, uint rank1 = 0, uint rank2 = 0, uint curvind = 0) : minkmapFamily(map, rank1, rank2, curvind) {}
     
-    normalHealpixInterface(maptype& othermap) : baseminkmap(othermap) {}
+    explicit normalHealpixInterface(maptype& othermap) : baseminkmap(othermap) {}
     
     tensor2D at(int pixnum) const
     {
@@ -82,7 +82,7 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
         
         if(baseminkmap.originalMap.Scheme()==RING)
         {
-            if(pixnum<=4 && pixnum>=0) return 1;
+            if(pixnum<=3 && pixnum>=0) return 1;
             else if(pixnum<npix && pixnum>=npix-4) return 2;
         }
         else
