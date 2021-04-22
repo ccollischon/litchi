@@ -340,7 +340,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                 else //smaller mean = disconnected triangles
                 {
                     theTensor = fourCornerCases(neighborship,values,8,area,length,curvature) + fourCornerCases(neighborship,values,2,area,length,curvature);
-                    theTensor *= length;
+                    //theTensor *= length;
                 }
                 break;
             case 11: //all except pixel 2
