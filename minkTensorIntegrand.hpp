@@ -28,7 +28,7 @@ struct minkTensorIntegrand : tensorFamily {
         std::vector<uint_fast8_t> indices = inputindices; //Copy only in this class, reference in all others
         uint indicesSize = indices.size();
         
-        assert((indices.size() == rankA+rankB) &&  ("Error: requesting element with wrong number of indices") );
+        assert((indicesSize == rankA+rankB) &&  ("Error: requesting element with wrong number of indices") );
         
         
         if(indicesSize>0){ //Here Tensor case only

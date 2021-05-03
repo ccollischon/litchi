@@ -11,10 +11,11 @@
 
 struct minkmapFamily {
     Healpix_Map<double>& originalMap;
-    const uint rankA, rankB;
-    const uint curvIndex;
+    const uint rankA{}, rankB{};
+    const uint curvIndex{};
     virtual ~minkmapFamily() = default;
     virtual tensor2D at(int pixnum) const = 0;
+    explicit minkmapFamily(Healpix_Map<double>& map) : originalMap(map) {}
     minkmapFamily(Healpix_Map<double>& map, uint rank1, uint rank2, uint curvind) : originalMap(map), rankA(rank1), rankB(rank2), curvIndex(curvind) {}
     minkmapFamily(const minkmapFamily& otherMap) : originalMap(otherMap.originalMap), rankA(otherMap.rankA), rankB(otherMap.rankB), curvIndex(otherMap.curvIndex) {}
 };

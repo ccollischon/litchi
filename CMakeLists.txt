@@ -12,5 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -std=c++20 -fopenmp -fconcepts 
 
 
 set(CMAKE_CXX_STANDARD 20)
-add_executable(regnitz regnitz.cpp)
-target_link_libraries(regnitz -lhealpix_cxx)
+add_executable(litchi regnitz.cpp)
+add_executable(tests tests.cpp)
+target_link_libraries(litchi -lhealpix_cxx)
+target_link_libraries(tests -lhealpix_cxx)

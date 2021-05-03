@@ -82,7 +82,8 @@ double trace(const tensorFamily& input) //sum of eigenvalues
     double summand = input.accessElement(indices); //zeroes
     
     for(uint i=0; i<indices.size(); i++) { indices.at(i) = 1; }
-    summand += input.accessElement(indices)*pow(sinT, input.rankA+input.rankB); //ones with metric contribution
+    summand += input.accessElement(indices); //EDIT
+    //summand += input.accessElement(indices)*pow(sinT, input.rankA+input.rankB); //ones with metric contribution
     return summand;
 }
 

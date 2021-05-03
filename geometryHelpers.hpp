@@ -42,7 +42,8 @@ pointing parallelTransport(pointing start, pointing stop, pointing initialVector
 
 void normalizeVectorOnSphere(pointing& input, double theta)
 {
-    double lengthsquared = pow(input.theta,2) + pow(input.phi*sin(theta),2);
+    //double lengthsquared = pow(input.theta,2) + pow(input.phi*sin(theta),2); //EDIT
+    double lengthsquared = pow(input.theta,2) + pow(input.phi,2);
     input.theta /= sqrt(lengthsquared);
     input.phi /= sqrt(lengthsquared);
 }

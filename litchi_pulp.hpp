@@ -21,7 +21,10 @@ extern const double pi;
 
 
 struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-level) minkowski tensor functions. Don't save all because of space. 
-    const double thresh;
+    const double thresh{};
+    
+    
+    explicit minkmapSphere(Healpix_Map<double>& map) : minkmapFamily(map) {}
     
     minkmapSphere(Healpix_Map<double>& map, uint rank1, uint rank2, uint curvind, double threshold) : minkmapFamily(map, rank1, rank2, curvind), thresh(threshold) {
         if (curvind > 2) {
@@ -125,8 +128,8 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             if(values.at(i)>=thresh) caseindex += pow(2,i);
         }
         
-        //Check if 3 or 4 corners and check every case
-        tensor2D integralNumbers(rankA, rankB, curvIndex); //TODO evtl dont use tensor2d
+        
+        tensor2D integralNumbers(rankA, rankB, curvIndex); //TODO evtl dont use tensor2d, this tensor holds tensor product times length atm
         if(valuesSize==3)
         {
             //do triangle things
@@ -143,13 +146,8 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         }
         
         
-        //define minkTensorIntegrand (find normal vector), curvature for good point
-        std::vector<vec3> corners;
-        originalMap.boundaries(neighborship.at(0), 1, corners); //find corners of original pixel in original map
-        pointing n(pi/2,0);
-        pointing r(corners.at(3)); //position east of pixel is center of vertex
         
-        //do the integration (parallel transport, multiply with length)
+        //return scalars if only scalar necessary
         if(rankA+rankB == 0) //scalar functional
         {
             switch (curvIndex)
