@@ -1,3 +1,7 @@
+#include <cassert>
+#include <vector>
+#include <iostream>
+
 #include "healpix_cxx/healpix_map.h"
 #include "healpix_cxx/healpix_map_fitsio.h"
 
@@ -15,46 +19,7 @@ int main ()
     
     const double pi = 3.14159265358979;
     
-    Healpix_Map<double> map = read_Healpix_map_from_fits<double>("../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits", 1, 2);
-    Healpix_Map<double> degradedMap(128, map.Scheme(), SET_NSIDE);
-    degradedMap.Import_degrade(map);
-    map = degradedMap;
-    
-    std::vector<double> thresholds = 1 ? makeIntervals_lin(0, 1e-5, 3) : makeIntervals_log(1e-7, 1e-5, 3);
-    std::vector<minkmapSphere> mapsScalar;
-    std::vector<minkmapSphere> mapsTensor;
-    for(double thresh : thresholds)
-    {
-        mapsScalar.push_back(minkmapSphere(map, 0, 0, 1, thresh));
-        mapsTensor.push_back(minkmapSphere(map, 0, 2, 1, thresh));
-    }
-    int pixnum = 345; //1933
-    minkmapStack sumOfMapsS(mapsScalar);
-    minkmapStack sumOfMapsT(mapsTensor);
-    auto pix1S = mapsScalar.at(0).at(pixnum);
-    auto pix1T = mapsTensor.at(0).at(pixnum);
-    auto pix2S = mapsScalar.at(1).at(pixnum);
-    auto pix2T = mapsTensor.at(1).at(pixnum);
-    auto pix3S = sumOfMapsS.at(pixnum);
-    auto pix3T = sumOfMapsT.at(pixnum);
-    
-    cout << pix1S << " " << trace(pix1T) << endl;
-    cout << pix2S << " " << trace(pix2T) << endl;
-    cout << pix3S << " " << trace(pix3T) << endl;
-    assert( abs(pix1S-trace(pix1T))<1e-12 && "Trace of (0,2,1) and boundary different" );
-    assert( abs(pix2S-trace(pix2T))<1e-12 && "Trace of (0,2,1) and boundary different" );
-    assert( abs(pix3S-trace(pix3T))<1e-12 && "Trace of (0,2,1) and boundary different" );
-    
-    
-    const normalHealpixInterface interfaceS(sumOfMapsS);
-    const normalHealpixInterface interfaceT(sumOfMapsT);
-    auto pix4S = interfaceS.at(pixnum);
-    auto pix4T = interfaceT.at(pixnum);
-    cout << pix4S << " " << trace(pix4T) << endl;
-    assert( abs(pix4S-trace(pix4T))<1e-12 && "Trace of (0,2,1) and boundary different" );
-    
-    
-    
+    //Test midpoint, geometry helpers
     pointing A(pi/2,0);
     pointing B(pi/4,0);
     pointing C(pi/2,pi/4);
@@ -77,8 +42,8 @@ int main ()
     assert((abs(testvec.x)<1e-14 && abs(testvec.y)<1e-14 && abs(testvec.z-1)<1e-14) && "rotateAroundAxis() broken!");
     
     
-    map.SetNside(256,RING);
-    
+    Healpix_Map<double> map = read_Healpix_map_from_fits<double>("../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits", 1, 2);
+    //Test ispolar
     minkmapSphere testmink(map);
     normalHealpixInterface interface(testmink);
     fix_arr<int, 4> neighbors; 
@@ -104,7 +69,6 @@ int main ()
     }
     
     
-    map.SetNside(256,NEST);
     map.get_interpol(north,neighbors,weight);
     for(uint i=0;i<neighbors.size();i++)
     {
@@ -122,7 +86,7 @@ int main ()
         assert(!interface.ispolar(neighbors[i]) && "ispolar NEST broken (false-positive)!");
     }
     
-    
+    //Test more pointing-related functions
     pointing r(0.5, 0);
     pointing n(0.5, pi);
     
@@ -131,7 +95,7 @@ int main ()
     interpolation  = interpPointing(n, 0.5, r, 1.5, 1);
     assert(abs(interpolation.theta)<1e-12 && "interpPointing() broken!");
     
-    
+    //Test tensor functionality
     pointing nr(0.45*pi, 0.5*pi);
     minkTensorIntegrand mytensor(0,2,0,r,n);
     minkTensorIntegrand mytensor2(0,2,0,nr,nr);
@@ -145,6 +109,7 @@ int main ()
     testtensor = mytensor2;
     tensor2D zahlenfriedhof (mytensor+mytensor2);
     assert( abs(zahlenfriedhof.accessElement({1,1})-mytensor.accessElement({1,1})-mytensor2.accessElement({1,1}))<1e-13 && "minkTensorSum broken!" );
+    assert( abs(zahlenfriedhof.accessElement({0,0})-mytensor.accessElement({0,0})-mytensor2.accessElement({0,0}))<1e-13 && "minkTensorSum broken!" );
     zahlenfriedhof = mytensor + 3*mytensor2;
     assert( abs(zahlenfriedhof.accessElement({1,1})-mytensor.accessElement({1,1})-3*mytensor2.accessElement({1,1}))<1e-13 && "minkTensorTimes or minkTensorSum broken!" );
     
@@ -159,6 +124,51 @@ int main ()
     tensor2D testTensor(2,1,0);
     testTensor.writeElement({0,0,1},5);
     assert(abs(testTensor.accessElement({0,0,1})-5)<1e-14 && "testTensor::writeElement broken!");
+    
+    zahlenfriedhof = mytensor + mytensor2;
+    assert( abs(trace(zahlenfriedhof) - (trace(mytensor) +trace(mytensor2))) < 1e-13 && "trace not additive!" );
+    assert( abs(trace(zahlenfriedhof) - (zahlenfriedhof.accessElement({1,1}) + zahlenfriedhof.accessElement({0,0}))) < 1e-13 && "trace not working! (check normalization?)" );
+    
+    
+    //Test actual map, trace of W^(0,2)_1 should be equal to boundary length
+    Healpix_Map<double> degradedMap(128, map.Scheme(), SET_NSIDE);
+    degradedMap.Import_degrade(map);
+    map = degradedMap;
+    
+    std::vector<double> thresholds = 1 ? makeIntervals_lin(0, 1e-5, 3) : makeIntervals_log(1e-7, 1e-5, 3);
+    std::vector<minkmapSphere> mapsScalar;
+    std::vector<minkmapSphere> mapsTensor;
+    for(double thresh : thresholds)
+    {
+        mapsScalar.push_back(minkmapSphere(map, 0, 0, 1, thresh));
+        mapsTensor.push_back(minkmapSphere(map, 0, 2, 1, thresh));
+    }
+    int pixnum = 68; //1933
+    minkmapStack sumOfMapsS(mapsScalar);
+    minkmapStack sumOfMapsT(mapsTensor);
+    
+    auto pix1S = mapsScalar.at(0).at(pixnum);
+    auto pix1T = mapsTensor.at(0).at(pixnum);
+    cout << pix1S << " " << trace(pix1T) << endl;
+    assert( abs(pix1S-trace(pix1T))<1e-12 && "Trace of (0,2,1) and boundary different at thresh 0" );
+    
+    auto pix2S = mapsScalar.at(1).at(pixnum);
+    auto pix2T = mapsTensor.at(1).at(pixnum);
+    cout << pix2S << " " << trace(pix2T) << endl;
+    assert( abs(pix2S-trace(pix2T))<1e-12 && "Trace of (0,2,1) and boundary different at thresh > 0" );
+    
+    auto pix3S = sumOfMapsS.at(pixnum);
+    auto pix3T = sumOfMapsT.at(pixnum);
+    cout << pix3S << " " << trace(pix3T) << endl;
+    assert( abs(pix3S-trace(pix3T))<1e-12 && "Trace of (0,2,1) and boundary different in sum of maps" );
+    
+    
+    const normalHealpixInterface interfaceS(sumOfMapsS);
+    const normalHealpixInterface interfaceT(sumOfMapsT);
+    auto pix4S = interfaceS.at(pixnum);
+    auto pix4T = interfaceT.at(pixnum);
+    cout << pix4S << " " << trace(pix4T) << endl;
+    assert( abs(pix4S-trace(pix4T))<1e-12 && "Trace of (0,2,1) and boundary different in Interface" );
     
     return 0;
 }

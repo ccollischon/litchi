@@ -189,7 +189,6 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
          */
         
         const uint ranksum = rankA+rankB;
-        
         switch (caseindex)
         {
             case 0: //nix
@@ -197,22 +196,48 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 1: //one corner (pixel 0)
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
-                length += arclength(oneCorner,otherCorner);
-                if(ranksum)
+                if(!length) //if length is 0 ATM, can just add arclength and multiply with tensor. If length !=0 need to multiply tensor with current segment only
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
-                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
+                    length += arclength(oneCorner,otherCorner);
+                    if(ranksum)
+                    {
+                        n = getN_cartesian(oneCorner,otherCorner);
+                        theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
+                    }
+                }
+                else
+                {
+                    double newlength = arclength(oneCorner,otherCorner);
+                    length += newlength;
+                    if(ranksum)
+                    {
+                        n = getN_cartesian(oneCorner,otherCorner);
+                        theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*newlength);
+                    }
                 }
                 area += sphereArea(positions.at(0),oneCorner,otherCorner);
                 break;
             case 2: //other corner (pixel 1)
                 oneCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
-                length += arclength(oneCorner,otherCorner);
-                if(ranksum)
+                if(!length) //if length is 0 ATM, can just add arclength and multiply with tensor. If length !=0 need to multiply tensor with current segment only
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
-                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
+                    length += arclength(oneCorner,otherCorner);
+                    if(ranksum)
+                    {
+                        n = getN_cartesian(oneCorner,otherCorner);
+                        theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
+                    }
+                }
+                else
+                {
+                    double newlength = arclength(oneCorner,otherCorner);
+                    length += newlength;
+                    if(ranksum)
+                    {
+                        n = getN_cartesian(oneCorner,otherCorner);
+                        theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*newlength);
+                    }
                 }
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 break;
@@ -231,11 +256,24 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 4: //other corner (pixel 2)
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                length += arclength(oneCorner,otherCorner);
-                if(ranksum)
+                if(!length) //if length is 0 ATM, can just add arclength and multiply with tensor. If length !=0 need to multiply tensor with current segment only
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
-                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
+                    length += arclength(oneCorner,otherCorner);
+                    if(ranksum)
+                    {
+                        n = getN_cartesian(oneCorner,otherCorner);
+                        theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
+                    }
+                }
+                else
+                {
+                    double newlength = arclength(oneCorner,otherCorner);
+                    length += newlength;
+                    if(ranksum)
+                    {
+                        n = getN_cartesian(oneCorner,otherCorner);
+                        theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*newlength);
+                    }
                 }
                 area += sphereArea(positions.at(2),oneCorner,otherCorner);
                 break;
@@ -295,11 +333,24 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             case 8: //other corner (pixel 3)
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(3),values.at(3),positions.at(0),values.at(0),thresh);
-                length += arclength(oneCorner,otherCorner);
-                if(ranksum)
+                if(!length) //if length is 0 ATM, can just add arclength and multiply with tensor. If length !=0 need to multiply tensor with current segment only
                 {
-                    n = getN_cartesian(otherCorner,oneCorner);
-                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
+                    length += arclength(oneCorner,otherCorner);
+                    if(ranksum)
+                    {
+                        n = getN_cartesian(oneCorner,otherCorner);
+                        theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
+                    }
+                }
+                else
+                {
+                    double newlength = arclength(oneCorner,otherCorner);
+                    length += newlength;
+                    if(ranksum)
+                    {
+                        n = getN_cartesian(oneCorner,otherCorner);
+                        theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*newlength);
+                    }
                 }
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 break;
@@ -400,7 +451,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                 std::cerr << "Error: invalid case number: " << caseindex << " , this makes no sense. Eastern end of neighborhood: px number " << neighborship.at(0) << std::endl;
                 throw std::invalid_argument( "minkmapSphere: Weird caseindex" );
         }
-        
+
         return theTensor;
     }
     

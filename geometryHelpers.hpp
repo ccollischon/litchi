@@ -62,7 +62,7 @@ pointing getN_cartesian(pointing A, pointing B)//A, B should be given such that 
     double delTheta = A.theta-B.theta; //Direction along curve in cartesian approximation
     double delPhi  = A.phi-B.phi;
     
-    double n1 = delPhi; //elements of normalied vector normal to (deltheta,delPhi)
+    double n1 = delPhi; //elements of normalized vector normal to (deltheta,delPhi)
     double n2 = -delTheta/(sin(A.theta)*sin(A.theta));
     
     pointing n(n1,n2);
