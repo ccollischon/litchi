@@ -42,8 +42,8 @@ pointing parallelTransport(pointing start, pointing stop, pointing initialVector
 
 void normalizeVectorOnSphere(pointing& input, double theta)
 {
-    //double lengthsquared = pow(input.theta,2) + pow(input.phi*sin(theta),2); //EDIT
-    double lengthsquared = pow(input.theta,2) + pow(input.phi,2);
+    double lengthsquared = pow(input.theta,2) + pow(input.phi*sin(theta),2); //EDIT
+    //double lengthsquared = pow(input.theta,2) + pow(input.phi,2);
     input.theta /= sqrt(lengthsquared);
     input.phi /= sqrt(lengthsquared);
 }
@@ -112,6 +112,8 @@ void flipPointing(pointing& input) //make pointing point in opposite direction
 pointing midpoint(pointing A, pointing B) //rotate starting from A by half arclength
 {
     double sigma = arclength(A, B);
+    if(sigma < 1e-12) return A;
+    
     vec3 rotAxis = crossprod(A.to_vec3(),B.to_vec3());
     vec3 outVec = rotateAroundAxis(rotAxis, A, sigma/2);
     return pointing(outVec);

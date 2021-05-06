@@ -49,6 +49,7 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
         baseminkmap.originalMap.neighbors(pixnum,neighbors);
         std::vector<int> westernNeighborship{pixnum, neighbors[0],neighbors[1],neighbors[2]}; // non-polar: {E, SW, W, NW} corners, N-polar: {E, S, notacorner, W} corners, S-polar: {E, W, notacorner, N} in minkmap, replace notacorner
         
+        
         uint pole = ispolar(pixnum);
         switch(pole) //for polar pixels replace useless neighbors[1] with pole pixnum
         {

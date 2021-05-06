@@ -14,7 +14,7 @@ struct minkTensorSum : tensorFamily
     const rtype rhs;
     const ltype lhs;
     
-    minkTensorSum(const ltype& left, const rtype& right)  : tensorFamily(right.rankA, right.rankB, right.curvIndex, right.r), 
+    minkTensorSum(const ltype& left, const rtype& right)  : tensorFamily(right.rankA, right.rankB, right.curvIndex, midpoint(right.r, left.r)), 
         rhs(right), lhs(left)
     {
         if( (right.rankA != left.rankA) || (right.rankB != left.rankB) || (right.curvIndex != left.curvIndex))
@@ -82,8 +82,8 @@ double trace(const tensorFamily& input) //sum of eigenvalues
     double summand = input.accessElement(indices); //zeroes
     
     for(uint i=0; i<indices.size(); i++) { indices.at(i) = 1; }
-    summand += input.accessElement(indices); //EDIT
-    //summand += input.accessElement(indices)*pow(sinT, input.rankA+input.rankB); //ones with metric contribution
+    //summand += input.accessElement(indices); //EDIT
+    summand += input.accessElement(indices)*pow(sinT, input.rankA+input.rankB); //ones with metric contribution
     
     return summand;
 }
