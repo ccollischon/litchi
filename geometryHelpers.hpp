@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
+#include <cmath>
 
 #include "healpix_cxx/pointing.h"
 #include "healpix_cxx/rotmatrix.h"
@@ -17,6 +18,25 @@ vec3 rotateAroundAxis(vec3 axis, const vec3& input, double angle)
     rotmatrix theRotation;
     theRotation.Make_Axis_Rotation_Transform(axis, angle);
     return theRotation.Transform(input);
+}
+
+
+double arclength(pointing A, pointing B) //Distance between A and B on Sphere
+{
+    if( (std::abs(A.theta-B.theta)<1e-14) && (std::abs(A.phi-B.phi)<1e-14) )  return 0.;
+    const double pi = 3.14159265359;
+    double sigma = acos( sin(pi/2-A.theta)*sin(pi/2-B.theta) + cos(pi/2-A.theta)*cos(pi/2-B.theta)*cos(A.phi-B.phi));
+    return sigma;
+}
+
+pointing midpoint(pointing A, pointing B) //rotate starting from A by half arclength
+{
+    double sigma = arclength(A, B);
+    if(sigma < 1e-12) return A;
+    
+    vec3 rotAxis = crossprod(A.to_vec3(),B.to_vec3());
+    vec3 outVec = rotateAroundAxis(rotAxis, A, sigma/2);
+    return pointing(outVec);
 }
 
 pointing interpPointing(pointing A, double valA, pointing B, double valB, double thresh) // Do the Mantz et al 2008 interpolation between 2 lattice points
@@ -34,11 +54,7 @@ pointing interpPointing(pointing A, double valA, pointing B, double valB, double
     return retpoint;
 }
 
-pointing parallelTransport(pointing start, pointing stop, pointing initialVector) //Transport along geodesic
-{
-    //TODO implement properly
-    return initialVector;
-}
+
 
 void normalizeVectorOnSphere(pointing& input, double theta)
 {
@@ -70,12 +86,6 @@ pointing getN_cartesian(pointing A, pointing B)//A, B should be given such that 
     return n;
 }
 
-double arclength(pointing A, pointing B) //Distance between A and B on Sphere
-{
-    const double pi = 3.14159265359;
-    double sigma = acos( sin(pi/2-A.theta)*sin(pi/2-B.theta) + cos(pi/2-A.theta)*cos(pi/2-B.theta)*cos(A.phi-B.phi));
-    return sigma;
-}
 
 double sphereArea(pointing A, pointing B, pointing C) //Area of spherical triangle = sum of angles minus pi
 {
@@ -109,14 +119,28 @@ void flipPointing(pointing& input) //make pointing point in opposite direction
     input.normalize();
 }
 
-pointing midpoint(pointing A, pointing B) //rotate starting from A by half arclength
+pointing parallelTransport(pointing start, pointing stop, pointing initialVector) //Transport along geodesic
 {
-    double sigma = arclength(A, B);
-    if(sigma < 1e-12) return A;
+    start.normalize();
+    stop.normalize();
     
-    vec3 rotAxis = crossprod(A.to_vec3(),B.to_vec3());
-    vec3 outVec = rotateAroundAxis(rotAxis, A, sigma/2);
-    return pointing(outVec);
+    //Schild's ladder
+    pointing initShort(initialVector.theta*0.001, initialVector.phi*0.001);
+    pointing fromStartAlongInit(start.theta + initShort.theta, start.phi + initShort.phi); //move small distance along init
+    pointing midpointToAim = midpoint(fromStartAlongInit, stop); //find midpoint between pointing above and endpoint of transport
+    
+    //Now find point at twice distance from start to midpoint along geodesic, the geodesic through stop along transported vector passes through here
+    double dist = 2*arclength(start,midpointToAim);
+    auto rotaxis = crossprod(start.to_vec3(),midpointToAim.to_vec3());
+    pointing fromStopAlongFinal(rotateAroundAxis(rotaxis, start.to_vec3(), dist));
+    
+    pointing finalVector(fromStopAlongFinal.theta-stop.theta, fromStopAlongFinal.phi-stop.phi); //Take difference to return to tengent space
+    normalizeVectorOnSphere(finalVector,stop.theta);
+    
+    
+    return finalVector;
 }
+
+
 
 #endif

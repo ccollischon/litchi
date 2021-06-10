@@ -266,8 +266,10 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                     double length2 = arclength(fourthCorner,otherCorner); //TODO getN, integrieren
                     
                     pointing n1 = getN_cartesian(oneCorner, thirdCorner);
-                    pointing n2 = getN_cartesian(fourthCorner,otherCorner);
-                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, fourthCorner, n2)*length2); //each section separately
+                    pointing n2 = getN_cartesian(fourthCorner,otherCorner);//transport n2 from fourthCorner to oneCorner
+                    n2 = parallelTransport(fourthCorner, oneCorner, n2);    // Transport happened here                                                v ------ v
+                    theTensor = (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n2)*length2); //each section separately
+                    
                     length += length1+length2;
                 }
                 else //smaller mean = disconnected triangles
@@ -344,7 +346,12 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                     
                     pointing n1 = getN_cartesian(otherCorner,oneCorner);
                     pointing n2 = getN_cartesian(thirdCorner,fourthCorner);
-                    theTensor = minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, thirdCorner, n2)*length2;
+                    n2 = parallelTransport(thirdCorner, otherCorner, n2);    // Transport happened here                                                  v ------ v
+                    theTensor = minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n2)*length2;
+                    if(std::isnan(trace(theTensor)))
+                    {
+                        std::cout << length1 << '\n';
+                    }
                     length += length1+length2;
                 }
                 else //smaller mean = disconnected triangles

@@ -32,11 +32,13 @@ int main ()
     
     flipPointing(A);
     assert( abs(A.theta-pi/2) < 1e-12 && abs(A.phi-pi) < 1e-12 && "flipPointing broken!" );
+    flipPointing(A);
     pointing n1 = getN_cartesian(B,A);
+    assert( abs(n1.theta) < 1e-12 &&  "getN_cartesian broken!" );
     minkTensorIntegrand asdf(0,2,0,A,B);
     
     assert( abs(sphereArea(A, B, C) - sphereArea(A,C,B)) < 1e-13 && abs(sphereArea(A, B, C) - sphereArea(B,C,A)) <1e-13 && abs(sphereArea(A,B,C)-sphereArea(B,A,C))<1e-13 && "sphereArea not commutative!");
-    assert( abs(sphereArea(A,D,pointing(0,0))/pi - 0.5) < 1e-13 && "sphereArea broken!" );
+    assert( abs(sphereArea(A,D,pointing(0,0))/pi - 0.5) < 1e-12 && "sphereArea broken!" );
     vec3 axis(1,0,0);
     vec3 input(0,1,0);
     vec3 testvec = rotateAroundAxis(axis, input, pi/2);
@@ -132,6 +134,17 @@ int main ()
     assert( abs(trace(zahlenfriedhof) - (zahlenfriedhof.accessElement({1,1})*pow(sin(zahlenfriedhof.r.theta),2) + zahlenfriedhof.accessElement({0,0}))) < 1e-13 && "trace not working! (check normalization?)" );
     
     
+    //Test parallel transport of vectors
+    pointing myN(1,0);
+    pointing moved = parallelTransport(pointing(pi/2,0), pointing(pi/2,-pi/4), myN);
+    assert( abs(moved.theta-1) < 1e-5 && abs(moved.phi) < 1e-3 && "parallelTransport broken (phi direction)!" );
+    
+    moved = parallelTransport(pointing(pi/2,0), pointing(pi/4,0), myN);
+    assert( abs(moved.theta-1) < 1e-5 && abs(moved.phi) < 1e-3 && "parallelTransport broken (theta direction)!" );
+    
+    moved = parallelTransport(pointing(pi/2,0), pointing(pi/2,-pi/4), myN);
+    
+    
     //Test actual map, trace of W^(0,2)_1 should be equal to boundary length
     Healpix_Map<double> degradedMap(128, map.Scheme(), SET_NSIDE);
     degradedMap.Import_degrade(map);
@@ -151,7 +164,7 @@ int main ()
     
     auto pix1S = mapsScalar.at(0).at(pixnum);
     auto pix1T = mapsTensor.at(0).at(pixnum);
-    assert( abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) )<1e-6 && "Trace of (0,2,1) and boundary different at thresh 0" );
+    assert( abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) )<1e-5 && "Trace of (0,2,1) and boundary different at thresh 0" );
     
     auto pix2S = mapsScalar.at(1).at(pixnum);
     auto pix2T = mapsTensor.at(1).at(pixnum);
@@ -159,6 +172,7 @@ int main ()
     
     auto pix3S = sumOfMapsS.at(pixnum);
     auto pix3T = sumOfMapsT.at(pixnum);
+    cout << pix3S << " " << trace(pix3T) << " " << abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) ) << endl;
     assert( abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) )<2e-5 && "Trace of (0,2,1) and boundary different in sum of maps" );
     
     
