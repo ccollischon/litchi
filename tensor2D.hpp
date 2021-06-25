@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cassert>
 #include "tensorFamily.hpp"
+#include "geometryHelpers.hpp"
 
 
 //struct to represent 2D (Minkowski) tensors of rankA + rankB explicitly
@@ -72,6 +73,15 @@ struct tensor2D : tensorFamily
     void writeElement(const std::vector<uint_fast8_t>& indices, double element)
     {
         content.at(getContentIndex(indices)) = element;
+    }
+    
+    void moveTo(const pointing& newR) override
+    {
+        if(arclength(r,newR)>1e-5)
+        {
+            r = newR;
+        }
+        //std::cout << "Trying to move tensor2D, this does nothing to its elements!\n";
     }
 
 /*     /\                   */

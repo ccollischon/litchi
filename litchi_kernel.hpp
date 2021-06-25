@@ -2,6 +2,7 @@
 #define litchi_kernel
 
 #include <vector>
+#include <memory>
 #include "healpix_cxx/healpix_map.h"
 
 #include "tensor2D.hpp"
@@ -14,7 +15,7 @@ struct minkmapFamily {
     const uint rankA{}, rankB{};
     const uint curvIndex{};
     virtual ~minkmapFamily() = default;
-    virtual tensor2D at(int pixnum) const = 0;
+    virtual std::shared_ptr<tensorFamily> at(int pixnum) const = 0;
     explicit minkmapFamily(Healpix_Map<double>& map) : originalMap(map) {}
     minkmapFamily(Healpix_Map<double>& map, uint rank1, uint rank2, uint curvind) : originalMap(map), rankA(rank1), rankB(rank2), curvIndex(curvind) {}
     minkmapFamily(const minkmapFamily& otherMap) : originalMap(otherMap.originalMap), rankA(otherMap.rankA), rankB(otherMap.rankB), curvIndex(otherMap.curvIndex) {}
@@ -36,9 +37,9 @@ struct minkmapSum : minkmapFamily
         }
     }
     
-    tensor2D at(int pixnum) const override
+    std::shared_ptr<tensorFamily> at(int pixnum) const override
     {
-        return tensor2D((rhs.at(pixnum)) + (lhs.at(pixnum)));
+        return std::shared_ptr<tensorFamily>(new auto( *(rhs.at(pixnum)) + *(lhs.at(pixnum)) ));
     }
     
 };
@@ -62,9 +63,9 @@ struct minkmapTimes : minkmapFamily
     {
     }
     
-    tensor2D at(int pixel) const override
+    std::shared_ptr<tensorFamily> at(int pixel) const override
     {
-        return tensor2D(mymap.at(pixel) * myscalar);
+        return std::shared_ptr<tensorFamily>(new auto( (tensor2D)*(mymap.at(pixel)) * myscalar));
     }
 };
 
@@ -88,14 +89,14 @@ struct minkmapStack : minkmapFamily
     
     minkmapStack(std::vector<maptype>& stack) : minkmapFamily(stack.at(0)), mapstack(stack) {}
     
-    tensor2D at(int pixel) const override
+    std::shared_ptr<tensorFamily> at(int pixel) const override
     {
-        tensor2D thistensor(mapstack.at(0).at(pixel));
+        tensor2D thistensor(*mapstack.at(0).at(pixel));
         for(uint i=1; i<mapstack.size(); ++i)
         {
-            thistensor=(thistensor+mapstack[i].at(pixel));
+            thistensor=(thistensor + (tensor2D) *mapstack[i].at(pixel));
         }
-        return thistensor;
+        return std::shared_ptr<tensorFamily>(new tensor2D(thistensor));
     }
 };
 

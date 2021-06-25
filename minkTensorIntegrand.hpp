@@ -2,6 +2,7 @@
 #define minkTensorInt
 
 #include "tensorFamily.hpp"
+#include "geometryHelpers.hpp"
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
@@ -68,6 +69,15 @@ struct minkTensorIntegrand : tensorFamily {
         returnval /= numberOfPermutations; //binomialCoeff(indicesSize, numberOfOnes);
         return returnval;
         
+    }
+    
+    void moveTo(const pointing& newR) override
+    {
+        if(arclength(r,newR)>1e-5)
+        {
+            n = parallelTransport(r, newR, n);
+            r = newR;
+        }
     }
     
     //minkTensorIntegrand& operator= (const minkTensorIntegrand& other)

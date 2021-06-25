@@ -70,7 +70,7 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
         {
             if(minkpix != -1)
             {
-                output = output + baseminkmap.at(minkpix); //TODO parallel transport, not just add. baseminkmap-pixels are already weighted with 1/nr of times they appear here
+                output = output + (tensor2D) *baseminkmap.at(minkpix); //TODO parallel transport, not just add. baseminkmap-pixels are already weighted with 1/nr of times they appear here
             }
         }
         return output;

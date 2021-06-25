@@ -11,30 +11,39 @@
 template <typename ltype, typename rtype>
 struct minkTensorSum : tensorFamily
 {
-    const rtype rhs;
-    const ltype lhs;
+    rtype rhs;
+    ltype lhs;
     
-    minkTensorSum(const ltype& left, const rtype& right)  : tensorFamily(right.rankA, right.rankB, right.curvIndex, midpoint(right.r, left.r)), 
+    minkTensorSum(const ltype& left, const rtype& right)  : tensorFamily(right.rankA, right.rankB, right.curvIndex, left.r), 
         rhs(right), lhs(left)
     {
+        rhs.moveTo(left.r);
         if( (right.rankA != left.rankA) || (right.rankB != left.rankB) || (right.curvIndex != left.curvIndex))
         {
             std::cerr << "Error: trying to add tensors of different type. Left has (rankA, rankB, curvIndex) =  (" << left.rankA << "," << left.rankB << "," << left.curvIndex << "), Right has ("  << right.rankA << "," << right.rankB << "," << right.curvIndex << "), this makes no sense" << std::endl;
             throw std::invalid_argument( "minkTensorSum: Different parameters in addition" );
         }
+        
     }
     
     double accessElement(const std::vector<uint_fast8_t>& indices) const override
     {
         return (rhs.accessElement(indices)) + (lhs.accessElement(indices));
     }
+    
+    void moveTo(const pointing& newR) override
+    {
+        rhs.moveTo(newR);
+        lhs.moveTo(newR);
+    }
+    
 };
 
 //like minkTensorSum, but with * instead of + and scalar needs to come after tensor
 template <typename tensortype, typename scalar>
 struct minkTensorTimes : tensorFamily
 {
-    const tensortype mytensor;
+    tensortype mytensor;
     const scalar myscalar;
     
     template <typename tens, typename scal>
@@ -48,6 +57,12 @@ struct minkTensorTimes : tensorFamily
     {
         return mytensor.accessElement(indices) * myscalar;
     }
+    
+    void moveTo(const pointing& newR) override
+    {
+        mytensor.moveTo(newR);
+    }
+    
 };
 
 //Sum only for tensorFamily

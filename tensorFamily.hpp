@@ -11,6 +11,7 @@ struct tensorFamily {
     pointing r{1.5701963268,0};
     virtual ~tensorFamily() = default;
     virtual double accessElement(const std::vector<uint_fast8_t>& indices) const = 0;
+    virtual void moveTo(const pointing& newR) = 0;
     tensorFamily(uint rankA, uint rankB, uint curvIndex=0) : rankA(rankA), rankB(rankB), curvIndex(curvIndex) {}
     tensorFamily(uint rankA, uint rankB, uint curvIndex, const pointing& r) : rankA(rankA), rankB(rankB), curvIndex(curvIndex), r(r) {}
 };
