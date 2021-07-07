@@ -43,7 +43,7 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
     
     explicit normalHealpixInterface(maptype& othermap) : baseminkmap(othermap) {}
     
-    tensor2D at(int pixnum) const
+    minkTensorStack at(int pixnum) const
     {
         fix_arr<int, 8> neighbors; //neighbors of this pixel
         baseminkmap.originalMap.neighbors(pixnum,neighbors);
@@ -65,12 +65,12 @@ struct normalHealpixInterface //class only for giving minkmaps normal pixel numb
             westernNeighborship.at(2) = neighbors[3];
         }
                 
-        tensor2D output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex);
+        minkTensorStack output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex, baseminkmap.originalMap.pix2ang(pixnum));
         for(int minkpix : westernNeighborship)
         {
             if(minkpix != -1)
             {
-                output = output + (tensor2D) *baseminkmap.at(minkpix); //TODO parallel transport, not just add. baseminkmap-pixels are already weighted with 1/nr of times they appear here
+                output += baseminkmap.at(minkpix); //TODO parallel transport, not just add. baseminkmap-pixels are already weighted with 1/nr of times they appear here, DONE in minkTensorStack +=
             }
         }
         return output;
@@ -133,10 +133,10 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
             rangeset<int> pixelsNearbyRange = input.baseminkmap.originalMap.query_polygon(cornersPoint); //pixels in original map contained in pixel of outputmap
             std::vector<int> pixelsNearby = pixelsNearbyRange.toVector();
         
-            tensor2D tensorHere(input.baseminkmap.rankA, input.baseminkmap.rankB, input.baseminkmap.curvIndex);
+            minkTensorStack tensorHere(input.baseminkmap.rankA, input.baseminkmap.rankB, input.baseminkmap.curvIndex, map.pix2ang(pixel));
             for(auto pixelToAdd : pixelsNearby)
             {
-                tensorHere = tensorHere+input.at(pixelToAdd); //TODO parallel transport, not just add
+                tensorHere += input.at(pixelToAdd); //TODO parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = double(smooth*smooth)/(pixelsNearby.size());//normalize such that sum over all pixels remains same
             tensorHere *= 1./norm;
@@ -144,7 +144,7 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
         }
         else
         {
-            tensor2D tensorHere = input.at(pixel);
+            minkTensorStack tensorHere = input.at(pixel);
             map[pixel] = func( tensorHere );
         }
     }

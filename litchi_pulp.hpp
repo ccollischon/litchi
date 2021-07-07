@@ -56,7 +56,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
     }
     
     //template <typename tensortype>
-    std::shared_ptr<tensorFamily> at(int pixnum) const override
+    minkTensorStack at(int pixnum) const override
     {
         if(pixnum>=originalMap.Npix())
         {
@@ -107,7 +107,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
     
     
     //template <typename tensortype>
-    std::shared_ptr<tensorFamily> integrateMinktensor(std::vector<int>& neighborship) const
+    minkTensorStack integrateMinktensor(std::vector<int>& neighborship) const
     {
         //marching square (which above, below thresh)
         std::vector<double> values;
@@ -129,26 +129,19 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         }
         
         //tensor2D integralNumbers(rankA, rankB, curvIndex); //TODO evtl dont use tensor2d, this tensor holds tensor product times length atm
-        std::shared_ptr<tensorFamily> integralNumbers{nullptr}; 
-        using sumType = minkTensorSum< minkTensorTimes<minkTensorIntegrand,double> , minkTensorTimes<minkTensorIntegrand,double> >;
-        using nonSumType = minkTensorTimes<minkTensorIntegrand,double>;
+        minkTensorStack integralNumbers(rankA,rankB,curvIndex,pointing(1.5701963268,0)); 
+        //using sumType = minkTensorSum< minkTensorTimes<minkTensorIntegrand,double> , minkTensorTimes<minkTensorIntegrand,double> >;
+        //using nonSumType = minkTensorTimes<minkTensorIntegrand,double>;
         
         if(valuesSize==3)
         {
             //do triangle things
             weight = 1.d/3.; //triangles appear in 3 final map pixels
-            integralNumbers.reset( new minkTensorTimes<nonSumType,double>( threeCornerCases(neighborship, values, caseindex, area, length, curvature)*weight )); 
+            integralNumbers = std::move(threeCornerCases(neighborship, values, caseindex, area, length, curvature)*weight); 
         } else if (valuesSize==4)
         {
             //do 4 corner things
-            if(caseindex==5 || caseindex==10)
-            {
-                integralNumbers.reset( new minkTensorTimes<sumType,double>( fourCornerCases_twoEdges(neighborship, values, caseindex, area, length, curvature)*weight ));
-            }
-            else
-            {
-                integralNumbers.reset( new minkTensorTimes<nonSumType,double>( fourCornerCases_oneEdge(neighborship, values, caseindex, area, length, curvature)*weight ));
-            }
+            integralNumbers = fourCornerCases_oneEdge(neighborship, values, caseindex, area, length, curvature)*weight;
         }
         else{
             std::cerr << "Error: neighborhood has neither 3 nor 4 corners! Number of corners: " << valuesSize << " , this makes no sense. Eastern end of neighborhood: px number " << neighborship.at(0) << std::endl;
@@ -163,12 +156,12 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
             switch (curvIndex)
             {
                 case 0:
-                    return std::shared_ptr<tensorFamily>(new tensor2D(area*weight,curvIndex));
+                    return minkTensorStack(minkTensorIntegrand(rankA,rankB,curvIndex),(area*weight));
                 case 1:
-                    return std::shared_ptr<tensorFamily>(new tensor2D(length*weight,curvIndex));
+                    return minkTensorStack(minkTensorIntegrand(rankA,rankB,curvIndex),(length*weight));
                 case 2:
                     std::cout << "Warning! Curvature functional not implemented in integrateMinktensor!" << std::endl;
-                    return std::shared_ptr<tensorFamily>(new tensor2D(curvature*weight,curvIndex));
+                    return minkTensorStack(minkTensorIntegrand(rankA,rankB,curvIndex),(curvature*weight));
                 default:
                     std::cerr << "Error: invalid curvIndex: " << curvIndex << " , this makes no sense. In 2D only up to two!" << std::endl;
                     throw std::invalid_argument( "minkmapSphere::integrateMinktensor: Weird curvIndex" );
@@ -178,98 +171,8 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         return integralNumbers;
     }
     
-    minkTensorSum< minkTensorTimes<minkTensorIntegrand,double> , minkTensorTimes<minkTensorIntegrand,double> > fourCornerCases_twoEdges(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
-    {
-        //using sumType = minkTensorSum< minkTensorTimes<minkTensorIntegrand,double> , minkTensorTimes<minkTensorIntegrand,double> >;
-        std::vector<pointing> positions;
-        for(auto pixnum : neighborship) {positions.push_back(originalMap.pix2ang(pixnum));}
-        
-        pointing oneCorner;
-        pointing otherCorner;
-        pointing n;
-        double mean; //newlength: one-corner cases can't just use *length because of cases 5 and 10 (would multiply return tensor with other segment also)
-        //std::unique_ptr<sumType> theTensor{nullptr}; //TODO hier integrieren
-        
-        /* Corner numeration: 
-         * 
-         *    1
-         * 0     2
-         *    3
-         * 
-         * Pay attention to direction of n! In getN(first, second) (first x second) should point away from body
-         * caseindex: every corner gets a position in a 4 bit number, bit set to 1 if corner>thresh, 0 else
-         */
-        
-        //const uint ranksum = rankA+rankB;
-        switch (caseindex)
-        {
-            
-            case 5: //2 and 0 over, check if average above or below thresh and view as connected or not accordingly
-                mean = std::accumulate(values.begin(), values.end(), 0.)/values.size();
-                if (mean>thresh) //larger mean = connected hexagon
-                {
-                    oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
-                    otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
-                    pointing thirdCorner = interpPointing(positions.at(2),values.at(2),positions.at(1),values.at(1),thresh);
-                    pointing fourthCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
-                    
-                    
-                    area += sphereArea(positions.at(0),otherCorner,oneCorner);
-                    area += sphereArea(positions.at(2),thirdCorner,fourthCorner);
-                    area += sphereArea(thirdCorner,oneCorner,fourthCorner);
-                    area += sphereArea(otherCorner,fourthCorner,oneCorner);
-                    double length1 = arclength(oneCorner,thirdCorner);
-                    double length2 = arclength(fourthCorner,otherCorner); //TODO getN, integrieren
-                    length += length1+length2;
-                    
-                    pointing n1 = getN_cartesian(oneCorner, thirdCorner);
-                    pointing n2 = getN_cartesian(fourthCorner,otherCorner);//transport n2 from fourthCorner to oneCorner
-                    n2 = parallelTransport(fourthCorner, oneCorner, n2);    // Transport happened here                                             v ------ v
-                    return ((minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n2)*length2)); //each section separately
-                    
-                }
-                else //smaller mean = disconnected triangles
-                {
-                    return( fourCornerCases_oneEdge(neighborship,values,1,area,length,curvature) + fourCornerCases_oneEdge(neighborship,values,4,area,length,curvature) );
-                    //theTensor *= length; already included in line above
-                }
-                break;
-            case 10: //3 and 1 over, check if average above or below thresh and view as connected or not accordingly
-                mean = std::accumulate(values.begin(), values.end(), 0.)/values.size();
-                if(mean>thresh) //larger mean = connected hexagon
-                {
-                    oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
-                    otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
-                    pointing thirdCorner = interpPointing(positions.at(2),values.at(2),positions.at(1),values.at(1),thresh);
-                    pointing fourthCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
-                    area += sphereArea(positions.at(1),oneCorner,thirdCorner);
-                    area += sphereArea(positions.at(3),fourthCorner,otherCorner);
-                    area += sphereArea(thirdCorner,oneCorner,fourthCorner);
-                    area += sphereArea(otherCorner,fourthCorner,oneCorner);
-                    double length1 = arclength(otherCorner,oneCorner);
-                    double length2 = arclength(thirdCorner,fourthCorner); //TODO getN, integrieren
-                    length += length1+length2;
-                    
-                    pointing n1 = getN_cartesian(otherCorner,oneCorner);
-                    pointing n2 = getN_cartesian(thirdCorner,fourthCorner);
-                    n2 = parallelTransport(thirdCorner, otherCorner, n2);    // Transport happened here                                             v ------ v
-                    return(minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n2)*length2 );
-                }
-                else //smaller mean = disconnected triangles
-                {
-                    return( fourCornerCases_oneEdge(neighborship,values,8,area,length,curvature) + fourCornerCases_oneEdge(neighborship,values,2,area,length,curvature) );
-                    //theTensor *= length;
-                }
-                break;
-            default:
-                std::cerr << "Error: invalid case number: " << caseindex << " , this makes no sense. Should be 5 or 10 in this function. Eastern end of neighborhood: px number " << neighborship.at(0) << std::endl;
-                throw std::invalid_argument( "minkmapSphere: Weird caseindex" );
-        }
-
-        //return sumType(*theTensor);
-    }
     
-    minkTensorTimes<minkTensorIntegrand,double> fourCornerCases_oneEdge(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
+    minkTensorStack fourCornerCases_oneEdge(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
         for(auto pixnum : neighborship) {positions.push_back(originalMap.pix2ang(pixnum));}
@@ -277,7 +180,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         pointing oneCorner;
         pointing otherCorner;
         pointing n;
-        double newlength; //newlength: one-corner cases can't just use *length because of cases 5 and 10 (would multiply return tensor with other segment also)
+        double newlength, mean; //newlength: one-corner cases can't just use *length because of cases 5 and 10 (would multiply return tensor with other segment also)
         //minkTensorTimes<minkTensorIntegrand,double> theTensor(minkTensorIntegrand(rankA, rankB, curvIndex),0); //TODO hier integrieren
         
         /* Corner numeration: 
@@ -349,6 +252,36 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                 }
                 
                 break;
+            case 5: //2 and 0 over, check if average above or below thresh and view as connected or not accordingly
+                mean = std::accumulate(values.begin(), values.end(), 0.)/values.size();
+                if (mean>thresh) //larger mean = connected hexagon
+                {
+                    oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
+                    otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
+                    pointing thirdCorner = interpPointing(positions.at(2),values.at(2),positions.at(1),values.at(1),thresh);
+                    pointing fourthCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
+                    
+                    
+                    area += sphereArea(positions.at(0),otherCorner,oneCorner);
+                    area += sphereArea(positions.at(2),thirdCorner,fourthCorner);
+                    area += sphereArea(thirdCorner,oneCorner,fourthCorner);
+                    area += sphereArea(otherCorner,fourthCorner,oneCorner);
+                    double length1 = arclength(oneCorner,thirdCorner);
+                    double length2 = arclength(fourthCorner,otherCorner); //TODO getN, integrieren
+                    length += length1+length2;
+                    
+                    pointing n1 = getN_cartesian(oneCorner, thirdCorner);
+                    pointing n2 = getN_cartesian(fourthCorner,otherCorner);//transport n2 from fourthCorner to oneCorner
+                    n2 = parallelTransport(fourthCorner, oneCorner, n2);    // Transport happened here                                                                             v ------ v
+                    return (minkTensorStack(minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n1),length1) + minkTensorStack(minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n2),length2)); //each section separately
+                    
+                }
+                else //smaller mean = disconnected triangles
+                {
+                    return( fourCornerCases_oneEdge(neighborship,values,1,area,length,curvature) + fourCornerCases_oneEdge(neighborship,values,4,area,length,curvature) );
+                    //theTensor *= length; already included in line above
+                }
+                break;
             case 6: //2 and 1 over
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
@@ -398,6 +331,33 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                 {
                     n = getN_cartesian(otherCorner,oneCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
+                }
+                break;
+            case 10: //3 and 1 over, check if average above or below thresh and view as connected or not accordingly
+                mean = std::accumulate(values.begin(), values.end(), 0.)/values.size();
+                if(mean>thresh) //larger mean = connected hexagon
+                {
+                    oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
+                    otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
+                    pointing thirdCorner = interpPointing(positions.at(2),values.at(2),positions.at(1),values.at(1),thresh);
+                    pointing fourthCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
+                    area += sphereArea(positions.at(1),oneCorner,thirdCorner);
+                    area += sphereArea(positions.at(3),fourthCorner,otherCorner);
+                    area += sphereArea(thirdCorner,oneCorner,fourthCorner);
+                    area += sphereArea(otherCorner,fourthCorner,oneCorner);
+                    double length1 = arclength(otherCorner,oneCorner);
+                    double length2 = arclength(thirdCorner,fourthCorner); //TODO getN, integrieren
+                    length += length1+length2;
+                    
+                    pointing n1 = getN_cartesian(otherCorner,oneCorner);
+                    pointing n2 = getN_cartesian(thirdCorner,fourthCorner);
+                    n2 = parallelTransport(thirdCorner, otherCorner, n2);    // Transport happened here                                             v ------ v
+                    return(minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n2)*length2 );
+                }
+                else //smaller mean = disconnected triangles
+                {
+                    return( fourCornerCases_oneEdge(neighborship,values,8,area,length,curvature) + fourCornerCases_oneEdge(neighborship,values,2,area,length,curvature) );
+                    //theTensor *= length;
                 }
                 break;
             case 11: //all except pixel 2
@@ -456,14 +416,14 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
                 area += sphereArea(positions.at(0),positions.at(3),positions.at(2));
                 break;
             default:
-                std::cerr << "Error: invalid case number: " << caseindex << " , this makes no sense. Should not be 5 or 10 in this function. Eastern end of neighborhood: px number " << neighborship.at(0) << std::endl;
+                std::cerr << "Error: invalid case number: " << caseindex << " , this makes no sense. Eastern end of neighborhood: px number " << neighborship.at(0) << std::endl;
                 throw std::invalid_argument( "minkmapSphere: Weird caseindex" );
         }
 
         return minkTensorIntegrand(rankA, rankB, curvIndex)*0.;
     }
     
-    minkTensorTimes<minkTensorIntegrand,double> threeCornerCases(std::vector<int>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
+    minkTensorStack threeCornerCases(std::vector<int>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
         

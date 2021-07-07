@@ -24,6 +24,8 @@ int main ()
     pointing B(pi/4,0);
     pointing C(pi/2,pi/4);
     pointing D(pi/2,pi/2);
+    pointing E(pi/2,pi);
+    
     
     assert( abs(midpoint(A,D).theta-pi/2)<1e-13 && abs(midpoint(A,D).phi-pi/4)<1e-13 && "midpoint broken!");
     assert( abs(midpoint(C,C).theta-C.theta)<1e-13 && abs(midpoint(C,C).phi-C.phi)<1e-13 && "midpoint broken when entering same vector twice!");
@@ -136,6 +138,15 @@ int main ()
     assert( abs(trace(zahlenfriedhof) - (zahlenfriedhof.accessElement({1,1})*pow(sin(zahlenfriedhof.r.theta),2) + zahlenfriedhof.accessElement({0,0}))) < 1e-13 && "trace not working! (check normalization?)" );
     
     
+    //Test minkTensorStack
+    minkTensorStack mystack(mytensor4);
+    auto otherStack = mystack + minkTensorStack(mytensor5);
+    assert( abs( otherStack.accessElement({1,1,0,1,1,0,0}) -(mystack.accessElement({1,1,0,1,1,0,0}) + mytensor5.accessElement({1,1,0,1,1,0,0})) ) < 1e-13 && "minkTensorStack addition does not work! " );
+    
+    auto otherStack2 = drei*(3*(mystack + minkTensorStack(mytensor5)));
+    assert( abs( otherStack2.accessElement({1,1,0,1,1,0,0}) -(9*(mystack.accessElement({1,1,0,1,1,0,0}) + mytensor5.accessElement({1,1,0,1,1,0,0}))) ) < 1e-13 && "'auto otherStack2 = drei*(3*(mystack + minkTensorStack(mytensor5)));' does not work! " );
+    
+    
     //Test parallel transport of vectors
     pointing myN(1,0);
     pointing moved = parallelTransport(pointing(pi/2,0), pointing(pi/2,-pi/4), myN);
@@ -169,26 +180,26 @@ int main ()
     minkmapStack sumOfMapsS(mapsScalar);
     minkmapStack sumOfMapsT(mapsTensor);
     
-    tensor2D pix1S = (tensor2D) *mapsScalar.at(0).at(pixnum);
-    tensor2D pix1T = (tensor2D) *mapsTensor.at(0).at(pixnum);
+    double pix1S = (double)mapsScalar.at(0).at(pixnum);
+    minkTensorStack pix1T = mapsTensor.at(0).at(pixnum);
     cout << pix1S << " " << trace(pix1T) << " " << abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) ) << endl;
     assert( abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) )<1e-5 && "Trace of (0,2,1) and boundary different at thresh 0" );
     
-    tensor2D pix2S = (tensor2D) *mapsScalar.at(1).at(pixnum);
-    tensor2D pix2T = (tensor2D) *mapsTensor.at(1).at(pixnum);
+    double pix2S = (double) mapsScalar.at(1).at(pixnum);
+    minkTensorStack pix2T = mapsTensor.at(1).at(pixnum);
     cout << pix2S << " " << trace(pix2T) << " " << abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) ) << endl;
     assert( abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) )<2e-5 && "Trace of (0,2,1) and boundary different at thresh > 0" );
     
-    tensor2D pix3S = (tensor2D) *sumOfMapsS.at(pixnum);
-    tensor2D pix3T = (tensor2D) *sumOfMapsT.at(pixnum);
+    double pix3S = (double) sumOfMapsS.at(pixnum);
+    minkTensorStack pix3T = sumOfMapsT.at(pixnum);
     cout << pix3S << " " << trace(pix3T) << " " << abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) ) << endl;
     assert( abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) )<6e-5 && "Trace of (0,2,1) and boundary different in sum of maps" );
     
     
     const normalHealpixInterface interfaceS(sumOfMapsS);
     const normalHealpixInterface interfaceT(sumOfMapsT);
-    tensor2D pix4S = interfaceS.at(pixnum);
-    tensor2D pix4T = interfaceT.at(pixnum);
+    double pix4S = (double) interfaceS.at(pixnum);
+    minkTensorStack pix4T = interfaceT.at(pixnum);
     //tensor2D pix4Tfail = (tensor2D) sumOfMapsT.at(67);
     
     cout << pix4S << " " << trace(pix4T) << " " << abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) ) << endl;

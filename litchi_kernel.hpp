@@ -15,7 +15,7 @@ struct minkmapFamily {
     const uint rankA{}, rankB{};
     const uint curvIndex{};
     virtual ~minkmapFamily() = default;
-    virtual std::shared_ptr<tensorFamily> at(int pixnum) const = 0;
+    virtual minkTensorStack at(int pixnum) const = 0;
     explicit minkmapFamily(Healpix_Map<double>& map) : originalMap(map) {}
     minkmapFamily(Healpix_Map<double>& map, uint rank1, uint rank2, uint curvind) : originalMap(map), rankA(rank1), rankB(rank2), curvIndex(curvind) {}
     minkmapFamily(const minkmapFamily& otherMap) : originalMap(otherMap.originalMap), rankA(otherMap.rankA), rankB(otherMap.rankB), curvIndex(otherMap.curvIndex) {}
@@ -37,9 +37,9 @@ struct minkmapSum : minkmapFamily
         }
     }
     
-    std::shared_ptr<tensorFamily> at(int pixnum) const override
+    minkTensorStack at(int pixnum) const override
     {
-        return std::shared_ptr<tensorFamily>(new auto( *(rhs.at(pixnum)) + *(lhs.at(pixnum)) ));
+        return minkTensorStack(rhs.at(pixnum), lhs.at(pixnum));
     }
     
 };
@@ -63,9 +63,9 @@ struct minkmapTimes : minkmapFamily
     {
     }
     
-    std::shared_ptr<tensorFamily> at(int pixel) const override
+    minkTensorStack at(int pixel) const override
     {
-        return std::shared_ptr<tensorFamily>(new auto( (tensor2D)*(mymap.at(pixel)) * myscalar));
+        return mymap.at(pixel) * myscalar;
     }
 };
 
@@ -89,14 +89,14 @@ struct minkmapStack : minkmapFamily
     
     minkmapStack(std::vector<maptype>& stack) : minkmapFamily(stack.at(0)), mapstack(stack) {}
     
-    std::shared_ptr<tensorFamily> at(int pixel) const override
+    minkTensorStack at(int pixel) const override
     {
-        tensor2D thistensor(*mapstack.at(0).at(pixel));
+        minkTensorStack thistensor(mapstack.at(0).at(pixel));
         for(uint i=1; i<mapstack.size(); ++i)
         {
-            thistensor=(thistensor + (tensor2D) *mapstack[i].at(pixel));
+            thistensor += mapstack[i].at(pixel);
         }
-        return std::shared_ptr<tensorFamily>(new tensor2D(thistensor));
+        return thistensor;
     }
 };
 

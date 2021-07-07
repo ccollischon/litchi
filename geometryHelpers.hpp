@@ -41,8 +41,7 @@ pointing midpoint(pointing A, pointing B) //rotate starting from A by half arcle
 
 pointing interpPointing(pointing A, double valA, pointing B, double valB, double thresh) // Do the Mantz et al 2008 interpolation between 2 lattice points
 {
-    const double pi = 3.14159265359;
-    double sigma = acos( sin(pi/2-A.theta)*sin(pi/2-B.theta) + cos(pi/2-A.theta)*cos(pi/2-B.theta)*cos(A.phi-B.phi));//Angle between A and B
+    double sigma = arclength(A,B);//Angle between A and B
     double quotient = (thresh - valA)/(valB - valA); //Mantz et al 2008 style interpolation
     double angle = quotient*sigma;
     
