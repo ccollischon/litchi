@@ -141,7 +141,7 @@ struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-l
         } else if (valuesSize==4)
         {
             //do 4 corner things
-            integralNumbers = fourCornerCases_oneEdge(neighborship, values, caseindex, area, length, curvature)*weight;
+            integralNumbers = std::move(fourCornerCases_oneEdge(neighborship, values, caseindex, area, length, curvature)*weight);
         }
         else{
             std::cerr << "Error: neighborhood has neither 3 nor 4 corners! Number of corners: " << valuesSize << " , this makes no sense. Eastern end of neighborhood: px number " << neighborship.at(0) << std::endl;

@@ -81,7 +81,7 @@ struct tensor2D : tensorFamily
         {
             r = newR;
         }
-        //std::cout << "Trying to move tensor2D, this does nothing to its elements!\n";
+        std::cout << "Trying to move tensor2D, this does nothing to its elements!\n";
     }
 
 /*     /\                   */
