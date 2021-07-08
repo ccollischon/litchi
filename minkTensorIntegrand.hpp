@@ -5,7 +5,7 @@
 #include "geometryHelpers.hpp"
 #include <algorithm>
 #include <stdexcept>
-#include <iostream>
+//#include <iostream>
 #include <numeric>
 #include <cassert>
 #include <vector>
@@ -76,24 +76,13 @@ struct minkTensorIntegrand {
     
     void moveTo(const pointing& newR)
     {
-        if(arclength(r,newR)>1e-5)
+        if(arclength(r,newR)>1e-12)
         {
             n = parallelTransport(r, newR, n);
             r = newR;
         }
     }
     
-    //minkTensorIntegrand& operator= (const minkTensorIntegrand& other)
-    //{
-        //if( (rankA != other.rankA) || (rankB != other.rankB) || (curvIndex != other.curvIndex))
-        //{
-            //std::cerr << "Error: trying to use operator = on tensors of different type. Left has (rankA, rankB, curvIndex) =  (" << rankA << "," << rankB << "," << curvIndex << "), Right has ("  << other.rankA << "," << other.rankB << "," << other.curvIndex << "), this is not intended, ranks are const" << std::endl;
-            //throw std::invalid_argument( "minkTensorIntegrand: Different ranks in operator =" );
-        //}
-        //r = other.r;
-        //n = other.n;
-        //return *this;
-    //}
     
 };
 

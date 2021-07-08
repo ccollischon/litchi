@@ -162,7 +162,10 @@ minkTensorStack operator+ (const minkTensorIntegrand& lhs, const minkTensorInteg
     return returnval;
 }
 
-template<typename left , typename std::enable_if_t<std::is_base_of<minkTensorStack,left>::value || std::is_base_of<minkTensorIntegrand,left>::value>* = nullptr>
+template<typename T>
+concept minkTensor = std::is_base_of<minkTensorStack,T>::value || std::is_base_of<minkTensorIntegrand,T>::value;
+
+template<minkTensor left>
 minkTensorStack operator* (const left& lhs, double rhs)
 {
     minkTensorStack retStack(lhs);
@@ -170,7 +173,7 @@ minkTensorStack operator* (const left& lhs, double rhs)
     return retStack;
 }
 
-template<typename right , typename std::enable_if_t<std::is_base_of<minkTensorStack,right>::value || std::is_base_of<minkTensorIntegrand,right>::value>* = nullptr>
+template<minkTensor right>
 minkTensorStack operator* (double lhs, const right& rhs)
 {
     minkTensorStack retStack(rhs);

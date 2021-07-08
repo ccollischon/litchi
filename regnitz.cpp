@@ -18,31 +18,13 @@
 //#include "healpix_cxx/healpix_data_io.h"
 #include "healpix_cxx/healpix_map_fitsio.h"
 
-#include "tensor2D.hpp"
 #include "tensorOperations.hpp"
-#include "tensorFamily.hpp"
 #include "minkTensorIntegrand.hpp"
 #include "litchi_pulp.hpp"
 #include "litchi_peel.hpp"
 #include "litchi_eat.hpp"
 
 const double pi = 3.14159265358979;
-
-
-pointing operator*(const double& left, const pointing& right)
-{
-    pointing retpoint(left*right.theta, left*right.phi);
-    return retpoint;
-}
-pointing operator*(const pointing& left, const double& right)
-{
-    pointing retpoint(right*left.theta, right*left.phi);
-    return retpoint;
-}
-/**/
-
-
-
 
 
 using namespace std;
