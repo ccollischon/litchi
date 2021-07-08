@@ -1,7 +1,7 @@
 #ifndef tensorOperations
 #define tensorOperations
 
-#include "tensorFamily.hpp"
+//#include "tensorFamily.hpp"
 #include "minkTensorIntegrand.hpp"
 #include <iostream>
 #include <type_traits>
@@ -10,20 +10,23 @@
 
 
 //Save all linear combinations of minkTensorIntegrands in one class
-struct minkTensorStack : tensorFamily
+struct minkTensorStack
 {
+    const uint rankA{0}, rankB{0};
+    const uint curvIndex{0};
+    pointing r{1.5701963268,0};
     std::vector<pointing> ns{};
     std::vector<double> weights{};
     
-    minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : tensorFamily(left.rankA, left.rankB, left.curvIndex, left.r), ns(left.ns), weights(left.weights)
+    minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), ns(left.ns), weights(left.weights)
     {
         appendStack(right);
     }
     
-    minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew) : tensorFamily(rank1, rank2, curvInd, rNew)
+    minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
     {}
     
-    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : tensorFamily(inp.rankA, inp.rankB, inp.curvIndex, inp.r), ns{inp.n}, weights{weight}
+    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), ns{inp.n}, weights{weight}
     {}
     
     //Move/copy constructors default
@@ -46,12 +49,12 @@ struct minkTensorStack : tensorFamily
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to move assign minkTensorStacks of different rank!");
         ns = std::move(other.ns);
         weights = std::move(other.weights);
-        r = other.r;
+        r = std::move(other.r);
         return *this;
     }
     
     
-    double accessElement(const std::vector<uint_fast8_t>& indices) const override
+    double accessElement(const std::vector<uint_fast8_t>& indices) const
     {
         assert(ns.size()==weights.size() && "Error: number of weights different from number of normal vectors!");
         
@@ -64,7 +67,7 @@ struct minkTensorStack : tensorFamily
         return retval;
     }
     
-    void moveTo(const pointing& newR) override
+    void moveTo(const pointing& newR)
     {
         for(auto n : ns)
         {
@@ -180,7 +183,8 @@ minkTensorStack operator* (double lhs, const right& rhs)
 
 /***** Functions that work on tensors ****/
 
-double trace(const tensorFamily& input) //sum of eigenvalues
+template<typename tens>
+double trace(const tens& input) //sum of eigenvalues
 {
     double sinT = sin(input.r.theta);
     if(input.rankA+input.rankB == 0) return input.accessElement({});
@@ -195,7 +199,8 @@ double trace(const tensorFamily& input) //sum of eigenvalues
     return summand;
 }
 
-double eigenValueQuotient(const tensorFamily& input) //TODO check
+template<typename tens>
+double eigenValueQuotient(const tens& input) //TODO check
 {
     uint ranksum = input.rankA+input.rankB;
     if (ranksum == 1)

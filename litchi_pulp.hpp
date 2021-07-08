@@ -5,13 +5,13 @@
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
-#include <memory>
+//#include <memory>
 
 #include "healpix_cxx/healpix_map.h"
 #include "litchi_kernel.hpp"
 
-#include "tensorFamily.hpp"
-#include "tensor2D.hpp"
+//#include "tensorFamily.hpp"
+//#include "tensor2D.hpp"
 #include "tensorOperations.hpp"
 #include "minkTensorIntegrand.hpp"
 #include "geometryHelpers.hpp"

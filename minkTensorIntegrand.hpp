@@ -1,7 +1,7 @@
 #ifndef minkTensorInt
 #define minkTensorInt
 
-#include "tensorFamily.hpp"
+//#include "tensorFamily.hpp"
 #include "geometryHelpers.hpp"
 #include <algorithm>
 #include <stdexcept>
@@ -13,18 +13,21 @@
 #include "healpix_cxx/healpix_map.h"
 
 //struct to represent the r^a x n^b part of minkowski tensor calculation, only calculates value when necessary
-struct minkTensorIntegrand : tensorFamily {
+struct minkTensorIntegrand {
+    const uint rankA{0}, rankB{0};
+    const uint curvIndex{0};
+    pointing r{1.5701963268,0};
     pointing n {0,1};
     
-    minkTensorIntegrand(uint rank1, uint rank2, uint curvInd = 0) : tensorFamily(rank1, rank2, curvInd), n(0,1)
+    minkTensorIntegrand(uint rank1, uint rank2, uint curvInd = 0) : rankA(rank1), rankB(rank2), curvIndex(curvInd), n(0,1)
     { //simple constructor for empty tensor, just give ranks
     }
     
-    minkTensorIntegrand(uint rank1, uint rank2, uint curvInd, const pointing& rNew, const pointing& nNew) : tensorFamily(rank1, rank2, curvInd, rNew), n{nNew}
+    minkTensorIntegrand(uint rank1, uint rank2, uint curvInd, const pointing& rNew, const pointing& nNew) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew), n{nNew}
     { //constructor with all necessary data
     }
     
-    double accessElement(const std::vector<uint_fast8_t>& inputindices) const override // tensor element with indices i_1 ... i_{a+b} is sum over all permutations of indices of multiplication of elements of r and n at these indices
+    double accessElement(const std::vector<uint_fast8_t>& inputindices) const // tensor element with indices i_1 ... i_{a+b} is sum over all permutations of indices of multiplication of elements of r and n at these indices
     {
         std::vector<uint_fast8_t> indices = inputindices; //Copy only in this class, reference in all others
         uint indicesSize = indices.size();
@@ -71,7 +74,7 @@ struct minkTensorIntegrand : tensorFamily {
         
     }
     
-    void moveTo(const pointing& newR) override
+    void moveTo(const pointing& newR)
     {
         if(arclength(r,newR)>1e-5)
         {

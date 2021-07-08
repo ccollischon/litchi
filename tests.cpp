@@ -5,9 +5,9 @@
 #include "healpix_cxx/healpix_map.h"
 #include "healpix_cxx/healpix_map_fitsio.h"
 
-#include "tensor2D.hpp"
+//#include "tensor2D.hpp"
 #include "tensorOperations.hpp"
-#include "tensorFamily.hpp"
+//#include "tensorFamily.hpp"
 #include "minkTensorIntegrand.hpp"
 #include "litchi_pulp.hpp"
 #include "litchi_peel.hpp"
@@ -105,13 +105,13 @@ int main ()
     minkTensorIntegrand mytensor(0,2,0,r,n);
     minkTensorIntegrand mytensor2(0,2,0,nr,nr);
     minkTensorIntegrand mytensor3(1,1,0,r,nr);
-    tensor2D testtensor(mytensor);
+    //tensor2D testtensor(mytensor);
     assert( abs(mytensor.accessElement({1,1})-(pi*pi)) < 1e-13 && "minkTensorIntegrand::accessElement() broken!" );
     assert( abs(mytensor2.accessElement({0,0})-(0.45*pi*0.45*pi)) < 1e-13 && "minkTensorIntegrand::accessElement() broken!" );
     assert( abs(mytensor3.accessElement({1,0})-(0.5* (0.5*0.5*pi + 0*0.45*pi))) < 1e-13 && "minkTensorIntegrand::accessElement() broken!" );
-    assert( abs(testtensor.accessElement({0,1}) - (0.5*pi)) < 1e-13 && "tensor2D::accessElement() or assign() broken!");
+    //assert( abs(testtensor.accessElement({0,1}) - (0.5*pi)) < 1e-13 && "tensor2D::accessElement() or assign() broken!");
     
-    testtensor = mytensor2;
+    //testtensor = mytensor2;
     minkTensorStack zahlenfriedhof (mytensor+mytensor2);
     mytensor2.moveTo(r);
     assert( abs(zahlenfriedhof.accessElement({1,1})-mytensor.accessElement({1,1})-mytensor2.accessElement({1,1}))<1e-13 && "minkTensorStack sum broken!" );
@@ -127,10 +127,11 @@ int main ()
     mytensor5.moveTo(r);
     assert( abs( newtensor.accessElement({1,1,0,1,1,0,0}) -(9*(mytensor4.accessElement({1,1,0,1,1,0,0}) + mytensor5.accessElement({1,1,0,1,1,0,0}))) ) < 1e-13 && "'auto newtensor = drei*(3*(mytensor4 + mytensor5));' does not work! " );
     
-    
+    /*
     tensor2D testTensor(2,1,0);
     testTensor.writeElement({0,0,1},5);
     assert(abs(testTensor.accessElement({0,0,1})-5)<1e-14 && "testTensor::writeElement broken!");
+    */
     
     zahlenfriedhof = mytensor + mytensor2;
     cout << "trace additivity check deactivated" << '\n';

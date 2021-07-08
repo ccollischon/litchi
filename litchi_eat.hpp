@@ -115,11 +115,11 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::
     Healpix_Map<double> outputmap;
     if(params.useTrace)
     {
-        outputmap = HealpixFromMinkmap(interface,trace,params.smooth);
+        outputmap = HealpixFromMinkmap(interface,trace<minkTensorStack>,params.smooth);
     }
     else
     {
-        outputmap = HealpixFromMinkmap(interface,eigenValueQuotient,params.smooth);
+        outputmap = HealpixFromMinkmap(interface,eigenValueQuotient<minkTensorStack>,params.smooth);
     }
     
     
