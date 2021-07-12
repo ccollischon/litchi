@@ -35,8 +35,9 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
     return thresholds;
 }
 
+///class only for giving minkmaps normal pixel numbering
 template <typename maptype, typename std::enable_if_t<std::is_base_of<minkmapFamily,maptype>::value>* = nullptr >
-struct normalHealpixInterface //class only for giving minkmaps normal pixel numbering
+struct normalHealpixInterface 
 {
     maptype& baseminkmap;
     //normalHealpixInterface(Healpix_Map<double>& map, uint rank1 = 0, uint rank2 = 0, uint curvind = 0) : minkmapFamily(map, rank1, rank2, curvind) {}

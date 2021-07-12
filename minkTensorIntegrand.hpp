@@ -12,7 +12,7 @@
 #include <cmath>
 #include "healpix_cxx/healpix_map.h"
 
-//struct to represent the r^a x n^b part of minkowski tensor calculation, only calculates value when necessary
+///struct to represent the r^a x n^b part of minkowski tensor calculation, only calculates value when necessary
 struct minkTensorIntegrand {
     const uint rankA{0}, rankB{0};
     const uint curvIndex{0};

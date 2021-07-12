@@ -9,14 +9,14 @@
 #include <stdexcept>
 
 
-//Save all linear combinations of minkTensorIntegrands in one class
+///Save all linear combinations of minkTensorIntegrands in one class
 struct minkTensorStack
 {
     const uint rankA{0}, rankB{0};
     const uint curvIndex{0};
     pointing r{1.5701963268,0};
-    std::vector<pointing> ns{};
-    std::vector<double> weights{};
+    std::vector<pointing> ns{}; ///< list of normal Vectors from which minkTensorIntegrands should be generated
+    std::vector<double> weights{}; ///< list of weights for minkTensorIntegrands
     
     minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), ns(left.ns), weights(left.weights)
     {

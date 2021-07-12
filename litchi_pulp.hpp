@@ -20,8 +20,8 @@
 extern const double pi;
 
 
-
-struct minkmapSphere :  minkmapFamily{ //should contain "raw" (marching-square-level) minkowski tensor functions. Don't save all because of space. 
+///Contains "raw" (marching-square-level) minkowski tensor functions, don't save them because of space. 
+struct minkmapSphere :  minkmapFamily{ 
     const double thresh{};
     
     
