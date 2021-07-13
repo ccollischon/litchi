@@ -35,7 +35,7 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
     return thresholds;
 }
 
-///class only for giving minkmaps normal pixel numbering
+///Struct only for giving minkmaps normal pixel numbering
 template <typename maptype, typename std::enable_if_t<std::is_base_of<minkmapFamily,maptype>::value>* = nullptr >
 struct normalHealpixInterface 
 {
@@ -44,6 +44,12 @@ struct normalHealpixInterface
     
     explicit normalHealpixInterface(maptype& othermap) : baseminkmap(othermap) {}
     
+    /**
+     * Pixelvalue as a linear combination of tensors at given Healpix pixel, interpolated from surrounding Minkmap pixels
+     * \brief Tensor value at given Healpix pixel
+     * \param pixnum Pixel number
+     * \return minkTensorStack with linear combination of Minkmap pixels
+     */
     minkTensorStack at(int pixnum) const
     {
         fix_arr<int, 8> neighbors; //neighbors of this pixel
@@ -77,7 +83,8 @@ struct normalHealpixInterface
         return output;
     }
     
-    uint ispolar(int pixnum) const //return 0 if not polar, 1 if north, 2 if south
+    ///return 0 if pixnum not polar, 1 if north, 2 if south
+    uint ispolar(int pixnum) const 
     {
         int nside = baseminkmap.originalMap.Nside();
         int npix = baseminkmap.originalMap.Npix();
@@ -97,8 +104,14 @@ struct normalHealpixInterface
     }
 };
 
+/** Generates scalar Healpix-type map from Minkmap(Family) via specified function
+ * \param input normalHealpixInterface containing desired Minkmap
+ * \param func Function accepting tensor and returning scalar, e.g. trace or eigenValueQuotient
+ * \param smooth Smoothing (downscaling) factor before calculating func at each pixel
+ * \return Healpix_Map of desired Minkmap ready for saving to file
+ */
 template <typename tensortype>
-Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input, double func(tensortype), uint smooth) // generates scalar Healpix-type map from Minkmap(sum) via specified function
+Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input, double func(tensortype), uint smooth)
 {
     int outputNside = input.baseminkmap.originalMap.Nside();
     //if smoothing: reduce resolution of outputmap

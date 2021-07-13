@@ -88,7 +88,12 @@ void checkParams(const auto &obj) {
     }
 }
 
-
+/**
+ * "Wrapper"  function that creates actual minkmap from given inputmap, params
+ * \param map Input Healpix map
+ * \param params struct containing MInkowski map generation parameters
+ * \param outname path to and file prefix of outputfile
+ */
 template <typename paramtype>
 void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::string outname)
 {
@@ -192,6 +197,13 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::
     write_Healpix_map_to_fits(handle, outputmap, PLANCK_FLOAT32);
 }
 
+
+/**
+ * "Wrapper"  function that creates actual minkmap from given input filename, params
+ * \param inname Filename of input Healpix map
+ * \param params Struct containing Minkowski map generation parameters
+ * \param outname Path to and file prefix of outputfile
+ */
 template <typename paramtype>
 //void makeHealpixMinkmap(std::string inname, uint rankA, uint rankB, uint curvIndex, uint numt, double mint, double maxt, bool linthresh, double func(tensortype), std::string outname)
 void makeHealpixMinkmap(std::string inname, paramtype params, std::string outname)
