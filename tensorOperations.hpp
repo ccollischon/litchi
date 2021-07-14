@@ -53,7 +53,11 @@ struct minkTensorStack
         return *this;
     }
     
-    
+    /**
+     * Access element of linear combination of tensors determined by weights
+     * \param indices Indices of desired element
+     * \return Value of desired element
+     */
     double accessElement(const std::vector<uint_fast8_t>& indices) const
     {
         assert(ns.size()==weights.size() && "Error: number of weights different from number of normal vectors!");
@@ -67,6 +71,7 @@ struct minkTensorStack
         return retval;
     }
     
+    /// Parallel transport all normal vectors in stack to newR along geodesic
     void moveTo(const pointing& newR)
     {
         for(auto n : ns)

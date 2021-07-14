@@ -11,7 +11,6 @@
 #include <cmath>
 #include <type_traits>
 #include <chrono>
-#include <typeinfo>
 
 
 #include "healpix_cxx/healpix_map.h"

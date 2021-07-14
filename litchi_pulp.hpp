@@ -20,7 +20,7 @@
 extern const double pi;
 
 
-///Contains "raw" (marching-square-level) minkowski tensor functions, don't save them because of space. 
+///Contains "raw" (marching-square-level) minkowski tensors, returns on demand and doesn't save them because of space. 
 struct minkmapSphere :  minkmapFamily{ 
     const double thresh{};
     
@@ -55,7 +55,7 @@ struct minkmapSphere :  minkmapFamily{
         return pointing(corners.at(3)); //position east of pixel is center of vertex
     }
     
-    //template <typename tensortype>
+    ///Returns linear combination Minkowski tensors at given Minkmap-pixel (vertex east of Healpix pixel with same number) -11 = north pole, -5 = south pole
     minkTensorStack at(int pixnum) const override
     {
         if(pixnum>=originalMap.Npix())
@@ -106,7 +106,7 @@ struct minkmapSphere :  minkmapFamily{
     }
     
     
-    //template <typename tensortype>
+    ///Returns MT at marching square defined by surrounding Healpix pixels given by neighborship
     minkTensorStack integrateMinktensor(std::vector<int>& neighborship) const
     {
         //marching square (which above, below thresh)

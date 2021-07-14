@@ -36,7 +36,7 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
 }
 
 ///Struct only for giving minkmaps normal pixel numbering
-template <typename maptype, typename std::enable_if_t<std::is_base_of<minkmapFamily,maptype>::value>* = nullptr >
+template <typename maptype>//, typename std::enable_if_t<std::is_base_of<minkmapFamily,maptype>::value>* = nullptr >
 struct normalHealpixInterface 
 {
     maptype& baseminkmap;
@@ -50,7 +50,31 @@ struct normalHealpixInterface
      * \param pixnum Pixel number
      * \return minkTensorStack with linear combination of Minkmap pixels
      */
-    minkTensorStack at(int pixnum) const
+    minkTensorStack at(int pixnum) const;
+    
+    ///return 0 if pixnum not polar, 1 if north, 2 if south
+    uint ispolar(int pixnum) const 
+    {
+        int nside = baseminkmap.originalMap.Nside();
+        int npix = baseminkmap.originalMap.Npix();
+        
+        if(baseminkmap.originalMap.Scheme()==RING)
+        {
+            if(pixnum<=3 && pixnum>=0) return 1;
+            else if(pixnum<npix && pixnum>=npix-4) return 2;
+        }
+        else
+        {
+            int nsidesquared = nside*nside;
+            if(pixnum==(nsidesquared-1) || pixnum==(nsidesquared*2-1) || pixnum==(nsidesquared*3-1) || pixnum==(nsidesquared*4-1)) return 1;
+            else if(pixnum==(nsidesquared*8) || pixnum==(nsidesquared*9) || pixnum==(nsidesquared*10) || pixnum==(nsidesquared*11)) return 2;
+        }
+        return 0;
+    }
+};
+
+template <typename maptype>
+minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
     {
         fix_arr<int, 8> neighbors; //neighbors of this pixel
         baseminkmap.originalMap.neighbors(pixnum,neighbors);
@@ -82,27 +106,6 @@ struct normalHealpixInterface
         }
         return output;
     }
-    
-    ///return 0 if pixnum not polar, 1 if north, 2 if south
-    uint ispolar(int pixnum) const 
-    {
-        int nside = baseminkmap.originalMap.Nside();
-        int npix = baseminkmap.originalMap.Npix();
-        
-        if(baseminkmap.originalMap.Scheme()==RING)
-        {
-            if(pixnum<=3 && pixnum>=0) return 1;
-            else if(pixnum<npix && pixnum>=npix-4) return 2;
-        }
-        else
-        {
-            int nsidesquared = nside*nside;
-            if(pixnum==(nsidesquared-1) || pixnum==(nsidesquared*2-1) || pixnum==(nsidesquared*3-1) || pixnum==(nsidesquared*4-1)) return 1;
-            else if(pixnum==(nsidesquared*8) || pixnum==(nsidesquared*9) || pixnum==(nsidesquared*10) || pixnum==(nsidesquared*11)) return 2;
-        }
-        return 0;
-    }
-};
 
 /** Generates scalar Healpix-type map from Minkmap(Family) via specified function
  * \param input normalHealpixInterface containing desired Minkmap

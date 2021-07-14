@@ -89,9 +89,9 @@ void checkParams(const auto &obj) {
 }
 
 /**
- * "Wrapper"  function that creates actual minkmap from given inputmap, params
+ * "Wrapper"  function that creates actual minkmap from given inputmap, params. Warning: degrades input map if Nside parameter set
  * \param map Input Healpix map
- * \param params struct containing MInkowski map generation parameters
+ * \param params struct containing Minkowski map generation parameters
  * \param outname path to and file prefix of outputfile
  */
 template <typename paramtype>
