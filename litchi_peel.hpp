@@ -52,6 +52,9 @@ struct normalHealpixInterface
      */
     minkTensorStack at(int pixnum) const;
     
+    template <typename tensortype>
+    Healpix_Map<double> toHealpix(double func(tensortype), uint smooth) const;
+    
     ///return 0 if pixnum not polar, 1 if north, 2 if south
     uint ispolar(int pixnum) const 
     {
@@ -113,10 +116,11 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
  * \param smooth Smoothing (downscaling) factor before calculating func at each pixel
  * \return Healpix_Map of desired Minkmap ready for saving to file
  */
+template <typename maptype>
 template <typename tensortype>
-Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input, double func(tensortype), uint smooth)
+Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tensortype), uint smooth) const
 {
-    int outputNside = input.baseminkmap.originalMap.Nside();
+    int outputNside = baseminkmap.originalMap.Nside();
     //if smoothing: reduce resolution of outputmap
     if(smooth>1)
     {
@@ -127,7 +131,7 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
         }
         outputNside /= smooth;
     }
-    Healpix_Map<double> map(outputNside, input.baseminkmap.originalMap.Scheme(), SET_NSIDE);
+    Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
     
     
     #pragma omp parallel for
@@ -147,13 +151,13 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
             std::vector<pointing> cornersPoint;
             for(auto corner : corners) {cornersPoint.push_back(pointing(corner));}
         
-            rangeset<int> pixelsNearbyRange = input.baseminkmap.originalMap.query_polygon(cornersPoint); //pixels in original map contained in pixel of outputmap
+            rangeset<int> pixelsNearbyRange = baseminkmap.originalMap.query_polygon(cornersPoint); //pixels in original map contained in pixel of outputmap
             std::vector<int> pixelsNearby = pixelsNearbyRange.toVector();
         
-            minkTensorStack tensorHere(input.baseminkmap.rankA, input.baseminkmap.rankB, input.baseminkmap.curvIndex, map.pix2ang(pixel));
+            minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
             for(auto pixelToAdd : pixelsNearby)
             {
-                tensorHere += input.at(pixelToAdd); //TODO parallel transport, not just add, DONE in minkTensorStack +=
+                tensorHere += at(pixelToAdd); //TODO parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = double(smooth*smooth)/(pixelsNearby.size());//normalize such that sum over all pixels remains same
             tensorHere *= 1./norm;
@@ -161,7 +165,7 @@ Healpix_Map<double> HealpixFromMinkmap(const normalHealpixInterface<auto>& input
         }
         else
         {
-            minkTensorStack tensorHere = input.at(pixel);
+            minkTensorStack tensorHere = at(pixel);
             map[pixel] = func( tensorHere );
         }
     }

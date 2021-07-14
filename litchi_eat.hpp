@@ -88,49 +88,9 @@ void checkParams(const auto &obj) {
     }
 }
 
-/**
- * "Wrapper"  function that creates actual minkmap from given inputmap, params. Warning: degrades input map if Nside parameter set
- * \param map Input Healpix map
- * \param params struct containing Minkowski map generation parameters
- * \param outname path to and file prefix of outputfile
- */
 template <typename paramtype>
-void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::string outname)
+void formatOutname(std::string& outname, const paramtype& params)
 {
-    checkParams(params);
-    
-    if(params.Nside)
-    {
-        Healpix_Map<double> degradedMap(params.Nside, map.Scheme(), SET_NSIDE);
-        degradedMap.Import_degrade(map);
-        map = degradedMap;
-    }
-    const std::vector<double> thresholds = params.linThresh ? makeIntervals_lin(params.mint, params.maxt, params.numt) : makeIntervals_log(params.mint, params.maxt, params.numt);
-    std::vector<minkmapSphere> maps;
-    for(double thresh : thresholds)
-    {
-        maps.push_back(minkmapSphere(map, params.rankA, params.rankB, params.curvIndex, thresh));
-    }
-    const minkmapStack sumOfMaps(maps);
-    
-    //Probably should smooth before adding, so can parallel transport n only
-    
-    const auto minkmapAverage = sumOfMaps*(1./params.numt);
-    const normalHealpixInterface interface(minkmapAverage);
-    Healpix_Map<double> outputmap;
-    if(params.useTrace)
-    {
-        outputmap = HealpixFromMinkmap(interface,trace<minkTensorStack>,params.smooth);
-    }
-    else
-    {
-        outputmap = HealpixFromMinkmap(interface,eigenValueQuotient<minkTensorStack>,params.smooth);
-    }
-    
-    
-    /**  Map is generated, now create outname  **/
-    
-    
     if (!params.forceOutname) //generate filename with all parameters
     {
         std::size_t fitspos = outname.find(".fits");
@@ -149,9 +109,11 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::
         }
         outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + (params.useTrace ? "_tr" : "_evq") + "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + ".fits";
     }
-    
-    /**** create Fitsfile with params in Header ****/
-    
+}
+
+template <typename paramtype>
+void writeToFile(const Healpix_Map<double>& outputmap, const paramtype& params, std::string outname)
+{
     fitshandle handle;
     std::filesystem::path f{outname};
     
@@ -195,6 +157,55 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::
     
     std::cout << "Writing file " << outname << std::endl;
     write_Healpix_map_to_fits(handle, outputmap, PLANCK_FLOAT32);
+}
+/**
+ * "Wrapper"  function that creates actual minkmap from given inputmap, params. Warning: degrades input map if Nside parameter set
+ * \param map Input Healpix map
+ * \param params struct containing Minkowski map generation parameters
+ * \param outname path to and file prefix of outputfile
+ */
+template <typename paramtype>
+void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::string outname)
+{
+    checkParams(params);
+    
+    if(params.Nside)
+    {
+        Healpix_Map<double> degradedMap(params.Nside, map.Scheme(), SET_NSIDE);
+        degradedMap.Import_degrade(map);
+        map = degradedMap;
+    }
+    const std::vector<double> thresholds = params.linThresh ? makeIntervals_lin(params.mint, params.maxt, params.numt) : makeIntervals_log(params.mint, params.maxt, params.numt);
+    std::vector<minkmapSphere> maps;
+    for(double thresh : thresholds)
+    {
+        maps.push_back(minkmapSphere(map, params.rankA, params.rankB, params.curvIndex, thresh));
+    }
+    const minkmapStack sumOfMaps(maps);
+    
+    //Probably should smooth before adding, so can parallel transport n only
+    
+    const auto minkmapAverage = sumOfMaps*(1./params.numt);
+    const normalHealpixInterface interface(minkmapAverage);
+    Healpix_Map<double> outputmap;
+    if(params.useTrace)
+    {
+        outputmap = interface.toHealpix(trace<minkTensorStack>,params.smooth);
+    }
+    else
+    {
+        outputmap = interface.toHealpix(eigenValueQuotient<minkTensorStack>,params.smooth);
+    }
+    
+    
+    /**  Map is generated, now create outname  **/
+    
+    formatOutname(outname, params);
+    
+    
+    /**** create Fitsfile with params in Header ****/
+    writeToFile(outputmap,params,outname);
+    
 }
 
 

@@ -203,7 +203,7 @@ int main ()
     //tensor2D pix4Tfail = (tensor2D) sumOfMapsT.at(67);
     
     cout << pix4S << " " << trace(pix4T) << " " << abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) ) << endl;
-    assert( abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) )<1e-3 && "Trace of (0,2,1) and boundary different in Interface" );
+    assert( abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) )<3e-4 && "Trace of (0,2,1) and boundary different in Interface" );
     
     return 0;
 }
