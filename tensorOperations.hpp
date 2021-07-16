@@ -80,7 +80,7 @@ struct minkTensorStack
     {
         for(uint i=0; i<ns.size(); ++i)
         {
-            ns[i] = parallelTransport(r, newR, n);
+            ns[i] = parallelTransport(r, newR, ns[i]);
         }
         r = newR;
     }
