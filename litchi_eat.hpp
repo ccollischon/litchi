@@ -15,6 +15,10 @@
 
 #include "litchi_peel.hpp"
 
+/** \file litchi_eat.hpp
+ * \brief Higher-level functions to create and save Healpix-Minkmaps generated from input map
+ */
+
 //C++20 solution for checking if params-struct has required members
 /*
 bool has_x(const auto &obj) {
@@ -87,7 +91,11 @@ void checkParams(const auto &obj) {
         throw std::invalid_argument("mint==0 && logThresh");
     }
 }
-
+/**
+ * Formats given outname to contain all relevant parameters if params.forceOutname is false
+ * \param outname Path and desired file prefix with or without .fits ending. Parameters are added accordingly
+ * \param params Struct containing Minkowski map generation parameters to write into header: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
+ */
 template <typename paramtype>
 void formatOutname(std::string& outname, const paramtype& params)
 {
@@ -111,6 +119,13 @@ void formatOutname(std::string& outname, const paramtype& params)
     }
 }
 
+/**
+ * Write given map to file specified by outname caontaining params in header
+ * Function checks if given path for outputfile exists and creates it if not. Files with same name are overwritten.
+ * \param outputmap Healpix map to be saved to file
+ * \param params Struct containing Minkowski map generation parameters to write into header: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
+ * \param outname Name of output file
+ */
 template <typename paramtype>
 void writeToFile(const Healpix_Map<double>& outputmap, const paramtype& params, std::string outname)
 {
@@ -158,11 +173,12 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramtype& params, 
     std::cout << "Writing file " << outname << std::endl;
     write_Healpix_map_to_fits(handle, outputmap, PLANCK_FLOAT32);
 }
-/**
+
+/*!
  * "Wrapper"  function that creates actual minkmap from given inputmap, params. Warning: degrades input map if Nside parameter set
  * \param map Input Healpix map
- * \param params struct containing Minkowski map generation parameters
- * \param outname path to and file prefix of outputfile
+ * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
+ * \param outname Path to and file prefix of outputfile
  */
 template <typename paramtype>
 void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::string outname)
@@ -198,21 +214,21 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::
     }
     
     
-    /**  Map is generated, now create outname  **/
+    /*  Map is generated, now create outname  */
     
     formatOutname(outname, params);
     
     
-    /**** create Fitsfile with params in Header ****/
+    /* create Fitsfile with params in Header */
     writeToFile(outputmap,params,outname);
     
 }
 
 
-/**
+/*!
  * "Wrapper"  function that creates actual minkmap from given input filename, params
  * \param inname Filename of input Healpix map
- * \param params Struct containing Minkowski map generation parameters
+ * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
  * \param outname Path to and file prefix of outputfile
  */
 template <typename paramtype>

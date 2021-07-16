@@ -11,6 +11,10 @@
 #include <vector>
 #include <cmath>
 #include "healpix_cxx/healpix_map.h"
+/** \file minkTensorIntegrand.hpp
+ * \brief minkTensorIntegrand struct contains symmetric tensor product part of Minkowski tensors
+ */
+
 
 ///struct to represent the r^a x n^b part of minkowski tensor calculation, only calculates value when necessary
 struct minkTensorIntegrand {

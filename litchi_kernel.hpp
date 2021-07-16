@@ -6,10 +6,14 @@
 #include "healpix_cxx/healpix_map.h"
 
 //#include "tensor2D.hpp"
-#include "tensorFamily.hpp"
+//#include "tensorFamily.hpp"
 #include "tensorOperations.hpp"
 
+/** \file litchi_kernel.hpp
+ * \brief minkmapFamily base class and operator templates for minkmaps
+ */
 
+/// Virtual base class for all minkmaps
 struct minkmapFamily {
     Healpix_Map<double>& originalMap;
     const uint rankA{}, rankB{};
@@ -21,7 +25,7 @@ struct minkmapFamily {
     minkmapFamily(const minkmapFamily& otherMap) : originalMap(otherMap.originalMap), rankA(otherMap.rankA), rankB(otherMap.rankB), curvIndex(otherMap.curvIndex) {}
 };
 
-
+/// Sum operator template for minkmaps
 template <typename ltype, typename rtype> //For sums of minkmaps
 struct minkmapSum : minkmapFamily
 {
@@ -50,6 +54,7 @@ minkmapSum<left, right> operator +(const left& a,const right& b)
     return minkmapSum<left,right> (&a, &b);
 }
 
+/// Product operator template for minkmaps
 template <typename maptype, typename scalar>
 struct minkmapTimes : minkmapFamily
 {
@@ -82,6 +87,7 @@ minkmapTimes<right,left> operator* (const left& lhs, const right& rhs)
     return minkmapTimes<right, left> (rhs, lhs);
 }
 
+/// Contains vector of Minkmaps to be summed
 template<typename maptype, typename std::enable_if_t<std::is_base_of<minkmapFamily,maptype>::value>* = nullptr>
 struct minkmapStack : minkmapFamily
 {

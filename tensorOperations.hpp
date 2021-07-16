@@ -3,11 +3,14 @@
 
 //#include "tensorFamily.hpp"
 #include "minkTensorIntegrand.hpp"
+#include <algorithm>
 #include <iostream>
 #include <type_traits>
 #include <vector>
 #include <stdexcept>
-
+/** \file tensorOperations.hpp
+ * \brief Helpful functions for geometry on the sphere
+ */
 
 ///Save all linear combinations of minkTensorIntegrands in one class
 struct minkTensorStack
@@ -71,22 +74,27 @@ struct minkTensorStack
         return retval;
     }
     
-    /// Parallel transport all normal vectors in stack to newR along geodesic
+    /** Parallel transport all normal vectors in stack to newR along geodesic
+     */
     void moveTo(const pointing& newR)
     {
-        for(auto n : ns)
+        for(uint i=0; i<ns.size(); ++i)
         {
-            n = parallelTransport(r, newR, n);
+            ns[i] = parallelTransport(r, newR, n);
         }
         r = newR;
     }
     
+    /** Add Tensor with given pointing and weight to stack
+     */
     void addTensor(pointing n, double weight)
     {
         ns.push_back(n);
         weights.push_back(weight);
     }
     
+    /** Add normal vector of minkTensorIntegrand with same ranks to stack. Normal vector is parallel transported to position of stack if positions differ
+     */
     void addMinkTensorIntegrand(const minkTensorIntegrand& tens, double weight=1)
     {
         assert(rankA==tens.rankA && rankB==tens.rankB && curvIndex==tens.curvIndex && "Trying to addMinkTensorIntegrand to minkTensorStack of different rank!");
@@ -96,6 +104,8 @@ struct minkTensorStack
         weights.push_back(weight);
     }
     
+    /** Add normal vectors and weights of other stack with same ranks to this stack. Normal vectors are parallel transported to position of this stack if positions differ
+     */
     void appendStack(minkTensorStack other)
     {
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to append minkTensorStacks of different rank!");

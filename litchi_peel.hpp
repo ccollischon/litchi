@@ -9,6 +9,10 @@
 #include "healpix_cxx/healpix_map.h"
 #include "litchi_pulp.hpp"
 
+/** \file litchi_peel.hpp
+ * \brief Everything between minkmap and Healpix map, as well as helper functions for creating vectors with numbers at constant intervals
+ */
+
 std::vector<double> makeIntervals_lin(double mint, double maxt, uint numt)
 {
     std::vector<double> thresholds;
@@ -104,13 +108,13 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
         {
             if(minkpix != -1)
             {
-                output += baseminkmap.at(minkpix); //TODO parallel transport, not just add. baseminkmap-pixels are already weighted with 1/nr of times they appear here, DONE in minkTensorStack +=
+                output += baseminkmap.at(minkpix); //parallel transport, not just add. baseminkmap-pixels are already weighted with 1/nr of times they appear here, DONE in minkTensorStack +=
             }
         }
         return output;
     }
 
-/** Generates scalar Healpix-type map from Minkmap(Family) via specified function
+/** Generates scalar Healpix-type map from baseminkmap via specified function
  * \param input normalHealpixInterface containing desired Minkmap
  * \param func Function accepting tensor and returning scalar, e.g. trace or eigenValueQuotient
  * \param smooth Smoothing (downscaling) factor before calculating func at each pixel
@@ -157,7 +161,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
             minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
             for(auto pixelToAdd : pixelsNearby)
             {
-                tensorHere += at(pixelToAdd); //TODO parallel transport, not just add, DONE in minkTensorStack +=
+                tensorHere += at(pixelToAdd); //parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = double(smooth*smooth)/(pixelsNearby.size());//normalize such that sum over all pixels remains same
             tensorHere *= 1./norm;

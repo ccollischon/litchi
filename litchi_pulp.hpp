@@ -16,6 +16,9 @@
 #include "minkTensorIntegrand.hpp"
 #include "geometryHelpers.hpp"
 
+/** \file litchi_pulp.hpp
+ * \brief minkmapSphere class, which does the heavy lifting when creating a minkmap
+ */
 
 extern const double pi;
 
@@ -141,7 +144,7 @@ struct minkmapSphere :  minkmapFamily{
         } else if (valuesSize==4)
         {
             //do 4 corner things
-            integralNumbers = std::move(fourCornerCases_oneEdge(neighborship, values, caseindex, area, length, curvature)*weight);
+            integralNumbers = std::move(fourCornerCases(neighborship, values, caseindex, area, length, curvature)*weight);
         }
         else{
             std::cerr << "Error: neighborhood has neither 3 nor 4 corners! Number of corners: " << valuesSize << " , this makes no sense. Eastern end of neighborhood: px number " << neighborship.at(0) << std::endl;
@@ -172,7 +175,7 @@ struct minkmapSphere :  minkmapFamily{
     }
     
     
-    minkTensorStack fourCornerCases_oneEdge(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
+    minkTensorStack fourCornerCases(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
         for(auto pixnum : neighborship) {positions.push_back(originalMap.pix2ang(pixnum));}
@@ -278,7 +281,7 @@ struct minkmapSphere :  minkmapFamily{
                 }
                 else //smaller mean = disconnected triangles
                 {
-                    return( fourCornerCases_oneEdge(neighborship,values,1,area,length,curvature) + fourCornerCases_oneEdge(neighborship,values,4,area,length,curvature) );
+                    return( fourCornerCases(neighborship,values,1,area,length,curvature) + fourCornerCases(neighborship,values,4,area,length,curvature) );
                     //theTensor *= length; already included in line above
                 }
                 break;
@@ -351,12 +354,12 @@ struct minkmapSphere :  minkmapFamily{
                     
                     pointing n1 = getN_cartesian(otherCorner,oneCorner);
                     pointing n2 = getN_cartesian(thirdCorner,fourthCorner);
-                    n2 = parallelTransport(thirdCorner, otherCorner, n2);    // Transport happened here                                             v ------ v
+                    n2 = parallelTransport(thirdCorner, otherCorner, n2);    // Transport happened here                                   v ------ v
                     return(minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n2)*length2 );
                 }
                 else //smaller mean = disconnected triangles
                 {
-                    return( fourCornerCases_oneEdge(neighborship,values,8,area,length,curvature) + fourCornerCases_oneEdge(neighborship,values,2,area,length,curvature) );
+                    return( fourCornerCases(neighborship,values,8,area,length,curvature) + fourCornerCases(neighborship,values,2,area,length,curvature) );
                     //theTensor *= length;
                 }
                 break;
