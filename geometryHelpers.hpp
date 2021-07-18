@@ -119,6 +119,24 @@ pointing getN_cartesian(pointing A, pointing B)//A, B should be given such that 
 }
 
 /**
+ * Calculate vector normal to contour given by two close points. Vector connecting the two positions is calculated by rotating the first point
+ * \param A One position
+ * \param B Other position
+ * \return Tangent space vector at position A normal to line from A to B
+ */
+pointing  getN_rotation(pointing A, pointing B)//A, B should be given such that AxB points away from body
+{
+    vec3 AcrossB = crossprod(A.to_vec3(),B.to_vec3());
+    vec3 rotAxis = crossprod(A.to_vec3(), AcrossB); //rotating A around this axis moves it along the desired normal vector
+    
+    pointing Arot(rotateAroundAxis(rotAxis,A.to_vec3(),0.001));
+    pointing n(Arot.theta-A.theta, Arot.phi-A.phi);
+    
+    normalizeVectorOnSphere(n,A.theta);
+    return n;
+}
+
+/**
  * Area on sphere in triangle defined by the three given corners
  */
 double sphereArea(pointing A, pointing B, pointing C) //Area of spherical triangle = sum of angles minus pi
