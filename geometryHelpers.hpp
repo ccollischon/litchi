@@ -182,12 +182,12 @@ void flipPointing(pointing& input)
  * \param depth Number of recursion layers this function call is deep (contains a recursive loop with upper limit). Leave at default zero when calling from outside
  * \return Transported vector at position stop
  */
-pointing parallelTransport(pointing start, pointing stop, pointing initialVector) //Transport along geodesic
+pointing parallelTransport(pointing start, pointing stop, pointing initialVector, int depth=0) //Transport along geodesic
 {
     start.normalize();
-    stop.normalize();
-    /*std::cout << depth << "\n" ;
-    for(int i=depth; (arclength(start,stop)/sin(start.theta)>1e-2) && i<15; ++i) //If two points are further apart use more steps
+    stop.normalize();/*
+    //std::cout << depth << "\n" ;
+    for(int i=depth; (arclength(start,stop)/sin(start.theta)>1e-2) && i<10; ++i) //If two points are further apart use more steps
     {
         pointing newstart = midpoint(start,stop);
         initialVector = parallelTransport(start,newstart,initialVector,i+1);

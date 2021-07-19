@@ -51,8 +51,8 @@ int main ()
     //Test ispolar
     minkmapSphere testmink(map);
     normalHealpixInterface interface(testmink);
-    fix_arr<int, 4> neighbors; 
-    fix_arr<double, 4> weight; 
+    fix_arr<int, 4> neighbors;
+    fix_arr<double, 4> weight;
     pointing north(0,0);
     map.get_interpol(north,neighbors,weight);
     for(uint i=0;i<neighbors.size();i++)
@@ -99,6 +99,18 @@ int main ()
     assert(abs(interpolation.theta)<1e-12 && "interpPointing() broken!");
     interpolation  = interpPointing(n, 0.5, r, 1.5, 1);
     assert(abs(interpolation.theta)<1e-12 && "interpPointing() broken!");
+    
+    pointing eq1(pi/2,0);
+    pointing eq2(pi/2+0.01, 0.01);
+    pointing eqn = getN_rotation(eq1,eq2);
+    
+    pointing pole1(rotateAroundAxis(vec3(0,1,0),eq1.to_vec3(),pi/2-0.01));
+    pointing pole2(rotateAroundAxis(vec3(0,1,0),eq2.to_vec3(),pi/2-0.01));
+    pointing polen1 = parallelTransport(eq1,pole1,eqn);
+    pointing polen2 = getN_rotation(pole1,pole2);
+    //Parallel transport with one step not that accurate, but phi here is >67. With recursion transported vector gets more similar to newly calculated one
+    assert( abs(polen1.theta-polen2.theta)<1e-2 && abs(polen1.phi-polen2.phi)<1e-1  && "getN_rotation or parallelTransport broken!");
+    
     
     //Test tensor functionality
     pointing nr(0.45*pi, 0.5*pi);
@@ -151,10 +163,10 @@ int main ()
     //Test parallel transport of vectors
     pointing myN(1,0);
     pointing moved = parallelTransport(pointing(pi/2,0), pointing(pi/2,-pi/4), myN);
-    assert( abs(moved.theta-1) < 1e-5 && abs(moved.phi) < 1e-3 && "parallelTransport broken (phi direction)!" );
+    assert( abs(moved.theta-1) < 1e-6 && abs(moved.phi) < 1e-3 && "parallelTransport broken (phi direction)!" );
     
     moved = parallelTransport(pointing(pi/2,0), pointing(pi/4,0), myN);
-    assert( abs(moved.theta-1) < 1e-5 && abs(moved.phi) < 1e-3 && "parallelTransport broken (theta direction)!" );
+    assert( abs(moved.theta-1) < 1e-12 && abs(moved.phi) < 1e-3 && "parallelTransport broken (theta direction)!" );
     
     moved = parallelTransport(pointing(pi/2,0), pointing(pi/2,-pi/4), myN);
     
@@ -183,17 +195,17 @@ int main ()
     minkTensorStack pix1T = mapsTensor.at(0).at(pixnum);
     cout << "Scalar   " << "tr(tensor) " << "relative difference" << endl;
     cout << pix1S << " " << trace(pix1T) << " " << abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) ) << endl;
-    assert( abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) )<1e-5 && "Trace of (0,2,1) and boundary different at thresh 0" );
+    assert( abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) )<1e-12 && "Trace of (0,2,1) and boundary different at thresh 0" );
     
     double pix2S = (double) mapsScalar.at(1).at(pixnum);
     minkTensorStack pix2T = mapsTensor.at(1).at(pixnum);
     cout << pix2S << " " << trace(pix2T) << " " << abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) ) << endl;
-    assert( abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) )<3e-4 && "Trace of (0,2,1) and boundary different at thresh > 0" );
+    assert( abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) )<1e-12 && "Trace of (0,2,1) and boundary different at thresh > 0" );
     
     double pix3S = (double) sumOfMapsS.at(pixnum);
     minkTensorStack pix3T = sumOfMapsT.at(pixnum);
     cout << pix3S << " " << trace(pix3T) << " " << abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) ) << endl;
-    assert( abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) )<3e-4 && "Trace of (0,2,1) and boundary different in sum of maps" );
+    assert( abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) )<1e-12 && "Trace of (0,2,1) and boundary different in sum of maps" );
     
     
     const normalHealpixInterface interfaceS(sumOfMapsS);
@@ -203,7 +215,7 @@ int main ()
     //tensor2D pix4Tfail = (tensor2D) sumOfMapsT.at(67);
     
     cout << pix4S << " " << trace(pix4T) << " " << abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) ) << endl;
-    assert( abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) )<3e-4 && "Trace of (0,2,1) and boundary different in Interface" );
+    assert( abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) )<1e-12 && "Trace of (0,2,1) and boundary different in Interface" );
     
     return 0;
 }

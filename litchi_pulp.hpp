@@ -131,7 +131,7 @@ struct minkmapSphere :  minkmapFamily{
             if(values.at(i)>=thresh) caseindex += pow(2,i);
         }
         
-        //tensor2D integralNumbers(rankA, rankB, curvIndex); //TODO evtl dont use tensor2d, this tensor holds tensor product times length atm
+        //tensor2D integralNumbers(rankA, rankB, curvIndex); //DONE evtl dont use tensor2d, this tensor holds tensor product times length atm
         minkTensorStack integralNumbers(rankA,rankB,curvIndex,pointing(1.5701963268,0)); 
         //using sumType = minkTensorSum< minkTensorTimes<minkTensorIntegrand,double> , minkTensorTimes<minkTensorIntegrand,double> >;
         //using nonSumType = minkTensorTimes<minkTensorIntegrand,double>;
@@ -210,7 +210,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(0),oneCorner,otherCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
+                    n = getN_rotation(oneCorner,otherCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*newlength);
                 }
                 
@@ -224,7 +224,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
+                    n = getN_rotation(oneCorner,otherCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*newlength);
                 }
                 
@@ -237,7 +237,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(otherCorner,oneCorner);
+                    n = getN_rotation(otherCorner,oneCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 break;
@@ -250,7 +250,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(2),oneCorner,otherCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
+                    n = getN_rotation(oneCorner,otherCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*newlength);
                 }
                 
@@ -273,8 +273,8 @@ struct minkmapSphere :  minkmapFamily{
                     double length2 = arclength(fourthCorner,otherCorner); //TODO getN, integrieren
                     length += length1+length2;
                     
-                    pointing n1 = getN_cartesian(oneCorner, thirdCorner);
-                    pointing n2 = getN_cartesian(fourthCorner,otherCorner);//transport n2 from fourthCorner to oneCorner
+                    pointing n1 = getN_rotation(oneCorner, thirdCorner);
+                    pointing n2 = getN_rotation(fourthCorner,otherCorner);//transport n2 from fourthCorner to oneCorner
                     n2 = parallelTransport(fourthCorner, oneCorner, n2);    // Transport happened here                                                                             v ------ v
                     return (minkTensorStack(minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n1),length1) + minkTensorStack(minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n2),length2)); //each section separately
                     
@@ -293,7 +293,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(1),otherCorner,oneCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
+                    n = getN_rotation(oneCorner,otherCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 break; 
@@ -306,7 +306,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(2),positions.at(1),oneCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
+                    n = getN_rotation(oneCorner,otherCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 break;
@@ -319,7 +319,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
+                    n = getN_rotation(oneCorner,otherCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*newlength);
                 }
                 
@@ -332,7 +332,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(0),positions.at(3),otherCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(otherCorner,oneCorner);
+                    n = getN_rotation(otherCorner,oneCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 break;
@@ -352,8 +352,8 @@ struct minkmapSphere :  minkmapFamily{
                     double length2 = arclength(thirdCorner,fourthCorner); //TODO getN, integrieren
                     length += length1+length2;
                     
-                    pointing n1 = getN_cartesian(otherCorner,oneCorner);
-                    pointing n2 = getN_cartesian(thirdCorner,fourthCorner);
+                    pointing n1 = getN_rotation(otherCorner,oneCorner);
+                    pointing n2 = getN_rotation(thirdCorner,fourthCorner);
                     n2 = parallelTransport(thirdCorner, otherCorner, n2);    // Transport happened here                                   v ------ v
                     return(minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n1)*length1 + minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n2)*length2 );
                 }
@@ -372,7 +372,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(1),positions.at(0),otherCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(otherCorner,oneCorner);
+                    n = getN_rotation(otherCorner,oneCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 break;
@@ -384,7 +384,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(3),positions.at(2),otherCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
+                    n = getN_rotation(oneCorner,otherCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 break;
@@ -397,7 +397,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(3),otherCorner,positions.at(0));
                 if(ranksum)
                 {
-                    n = getN_cartesian(otherCorner,oneCorner);
+                    n = getN_rotation(otherCorner,oneCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 break;
@@ -410,7 +410,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(2),otherCorner,positions.at(3));
                 if(ranksum)
                 {
-                    n = getN_cartesian(otherCorner,oneCorner);
+                    n = getN_rotation(otherCorner,oneCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 break;
@@ -459,7 +459,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(0),otherCorner,oneCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
+                    n = getN_rotation(oneCorner,otherCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 break;
@@ -470,7 +470,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(otherCorner,oneCorner);
+                    n = getN_rotation(otherCorner,oneCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 break;
@@ -482,7 +482,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(1),positions.at(0),oneCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(otherCorner,oneCorner);
+                    n = getN_rotation(otherCorner,oneCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 break;
@@ -493,7 +493,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(2),otherCorner,oneCorner);
                 if(ranksum)
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
+                    n = getN_rotation(oneCorner,otherCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 break;
@@ -505,7 +505,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(2),oneCorner,positions.at(0));
                 if(ranksum)
                 {
-                    n = getN_cartesian(oneCorner,otherCorner);
+                    n = getN_rotation(oneCorner,otherCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)*length);
                 }
                 break;
@@ -517,7 +517,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(1),otherCorner,positions.at(2));
                 if(ranksum)
                 {
-                    n = getN_cartesian(otherCorner,oneCorner);
+                    n = getN_rotation(otherCorner,oneCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)*length);
                 }
                 break;
