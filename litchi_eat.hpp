@@ -29,6 +29,13 @@ bool has_x(const auto &obj) {
 }
 */
 
+///Helper struct containing all necessary Minkmap generation parameters
+struct paramStruct{
+        uint rankA{0}, rankB{0}, curvIndex{0}, numt{1}, Nside{0}, smooth{0};
+        double mint{0}, maxt{1};
+        bool linThresh{true}, forceOutname{false}, useTrace{true};
+};
+
 void checkParams(const auto &obj) {
     if constexpr (!requires {obj.Nside;}) {
         std::cerr << "Error: parameter struct has no member named Nside. Use to set Nside to which input map is degraded" << std::endl;
@@ -96,8 +103,7 @@ void checkParams(const auto &obj) {
  * \param outname Path and desired file prefix with or without .fits ending. Parameters are added accordingly
  * \param params Struct containing Minkowski map generation parameters to write into header: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
  */
-template <typename paramtype>
-void formatOutname(std::string& outname, const paramtype& params)
+void formatOutname(std::string& outname, const paramStruct& params)
 {
     if (!params.forceOutname) //generate filename with all parameters
     {
@@ -126,8 +132,7 @@ void formatOutname(std::string& outname, const paramtype& params)
  * \param params Struct containing Minkowski map generation parameters to write into header: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
  * \param outname Name of output file
  */
-template <typename paramtype>
-void writeToFile(const Healpix_Map<double>& outputmap, const paramtype& params, std::string outname)
+void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params, std::string outname)
 {
     fitshandle handle;
     std::filesystem::path f{outname};
@@ -180,8 +185,7 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramtype& params, 
  * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
  * \param outname Path to and file prefix of outputfile
  */
-template <typename paramtype>
-void makeHealpixMinkmap(Healpix_Map<double>& map, const paramtype& params, std::string outname)
+void makeHealpixMinkmap(Healpix_Map<double>& map, const paramStruct& params, std::string outname)
 {
     checkParams(params);
     

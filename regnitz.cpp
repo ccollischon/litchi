@@ -32,11 +32,7 @@ int main(int argc,char **argv)
 {
     string inname = "../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits", outname = "testmap.fits";
     
-    struct {
-        uint rankA=0, rankB=0, curvIndex=0, numt=1, Nside=0, smooth=0;
-        double mint=0, maxt=1;
-        bool linThresh=true, forceOutname=false, useTrace=true;
-    } params;
+    paramStruct params{};
     
     
     vector<string> arguments(argv + 1, argv + argc);    
