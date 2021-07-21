@@ -115,20 +115,19 @@ void formatOutname(std::string& outname, const paramStruct& params, const int co
         char mintmaxtnumt[44];
         if(params.numt==1) //if just one threshold write that, else write mint_maxt_numt
         {
-            sprintf(mintmaxtnumt,"%g", params.mint); //printf %g for nicer formatting
+            sprintf(mintmaxtnumt,"%.3e", params.mint); //printf %g for nicer formatting
         }
         else
         {
-            sprintf(mintmaxtnumt,"%g_%g_%d_%s", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log"); //printf %g for nicer formatting
+            sprintf(mintmaxtnumt,"%.3e_%.3e_%d_%s", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log"); //printf %g for nicer formatting
         }
         outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + (params.useTrace ? "_tr" : "_evq") + "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + ".fits";
     }
-    else if(params.sequence)
+    else if(params.sequence) //for sequence cannot leave the outname unchanged, or else will overwrite one file over and over
     {
         std::cout << "Warning: creating sequence with --forceOutname active, adding counter not to overwrite everything\n";
         char buf[9];
-        auto num = std::sprintf(buf,"%03d", counter);
-        assert(num>0 && "Error: std::sprintf failed to create counter");
+        sprintf(buf,"%03d", counter);
         
         std::size_t fitspos = outname.find(".fit");
         if(fitspos!=std::string::npos)
