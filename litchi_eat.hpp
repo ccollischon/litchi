@@ -33,7 +33,7 @@ bool has_x(const auto &obj) {
 struct paramStruct{
         uint rankA{0}, rankB{0}, curvIndex{0}, numt{1}, Nside{0}, smooth{0};
         double mint{0}, maxt{1};
-        bool linThresh{true}, forceOutname{false}, useTrace{true};
+        bool linThresh{true}, forceOutname{false}, useTrace{true}, sequence{false};
 };
 
 void checkParams(const auto &obj) {
@@ -101,16 +101,16 @@ void checkParams(const auto &obj) {
 /**
  * Formats given outname to contain all relevant parameters if params.forceOutname is false
  * \param outname Path and desired file prefix with or without .fits ending. Parameters are added accordingly
- * \param params Struct containing Minkowski map generation parameters to write into header: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
+ * \param params Struct containing Minkowski map generation parameters to write into header: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname, sequence
  */
-void formatOutname(std::string& outname, const paramStruct& params)
+void formatOutname(std::string& outname, const paramStruct& params, const int counter=0)
 {
     if (!params.forceOutname) //generate filename with all parameters
     {
-        std::size_t fitspos = outname.find(".fits");
+        std::size_t fitspos = outname.find(".fit");
         if(fitspos!=std::string::npos)
         {
-            outname = outname.substr(0,fitspos); //remove given .fits ending, will be added later again
+            outname = outname.substr(0,fitspos); //remove given .fit(s) ending, will be added later again
         }
         char mintmaxtnumt[44];
         if(params.numt==1) //if just one threshold write that, else write mint_maxt_numt
@@ -123,13 +123,31 @@ void formatOutname(std::string& outname, const paramStruct& params)
         }
         outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + (params.useTrace ? "_tr" : "_evq") + "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + ".fits";
     }
+    else if(params.sequence)
+    {
+        std::cout << "Warning: creating sequence with --forceOutname active, adding counter not to overwrite everything\n";
+        char buf[9];
+        auto num = std::sprintf(buf,"%03d", counter);
+        assert(num>0 && "Error: std::sprintf failed to create counter");
+        
+        std::size_t fitspos = outname.find(".fit");
+        if(fitspos!=std::string::npos)
+        {
+            outname = outname.substr(0,fitspos); //remove given .fit(s) ending, will be added later again
+            outname = outname + buf + ".fits";
+        }
+        else
+        {
+            outname = outname + buf;
+        }
+    }
 }
 
 /**
  * Write given map to file specified by outname caontaining params in header
  * Function checks if given path for outputfile exists and creates it if not. Files with same name are overwritten.
  * \param outputmap Healpix map to be saved to file
- * \param params Struct containing Minkowski map generation parameters to write into header: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
+ * \param params Struct containing Minkowski map generation parameters to write into header: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname, sequence
  * \param outname Name of output file
  */
 void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params, std::string outname)
@@ -182,14 +200,14 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
 /*!
  * "Wrapper"  function that creates actual minkmap from given inputmap, params. Warning: degrades input map if Nside parameter set
  * \param map Input Healpix map
- * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
+ * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname, sequence
  * \param outname Path to and file prefix of outputfile
  */
-void makeHealpixMinkmap(Healpix_Map<double>& map, const paramStruct& params, std::string outname)
+void makeHealpixMinkmap(Healpix_Map<double>& map, const paramStruct& params, std::string outname, const int counter=0)
 {
     checkParams(params);
     
-    if(params.Nside)
+    if((int)params.Nside != map.Nside())
     {
         Healpix_Map<double> degradedMap(params.Nside, map.Scheme(), SET_NSIDE);
         degradedMap.Import_degrade(map);
@@ -220,7 +238,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, const paramStruct& params, std
     
     /*  Map is generated, now create outname  */
     
-    formatOutname(outname, params);
+    formatOutname(outname, params, counter);
     
     
     /* create Fitsfile with params in Header */
@@ -232,17 +250,34 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, const paramStruct& params, std
 /*!
  * "Wrapper"  function that creates actual minkmap from given input filename, params
  * \param inname Filename of input Healpix map
- * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname
+ * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname, sequence
  * \param outname Path to and file prefix of outputfile
  */
-template <typename paramtype>
-//void makeHealpixMinkmap(std::string inname, uint rankA, uint rankB, uint curvIndex, uint numt, double mint, double maxt, bool linthresh, double func(tensortype), std::string outname)
-void makeHealpixMinkmap(std::string inname, paramtype params, std::string outname)
+void makeHealpixMinkmap(std::string inname, paramStruct params, std::string outname)
 {
     Healpix_Map<double> map = read_Healpix_map_from_fits<double>(inname, 1, 2);
     makeHealpixMinkmap(map, params, outname);
 }
 
+/*!
+ * "Wrapper"  function that creates sequence of minkmaps from given input filename, params using numt as the number of minkmaps at thresholds between mint and maxt instead of averaging one map over several thresholds
+ * \param inname Filename of input Healpix map
+ * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname, sequence
+ * \param outname Path to and file prefix of outputfile
+ */
+void makeSequence(std::string inname, paramStruct params, std::string outname)
+{
+    Healpix_Map<double> map = read_Healpix_map_from_fits<double>(inname, 1, 2);
+    
+    const std::vector<double> thresholds = params.linThresh ? makeIntervals_lin(params.mint, params.maxt, params.numt) : makeIntervals_log(params.mint, params.maxt, params.numt);
+    for(uint i=0; i<params.numt; ++i)
+    {
+        paramStruct paramsHere(params);
+        paramsHere.numt = 1;
+        paramsHere.mint = thresholds.at(i);
+        makeHealpixMinkmap(map, paramsHere, outname, i);
+    }
+}
 
 
 #endif

@@ -135,6 +135,10 @@ int main(int argc,char **argv)
         {
             params.useTrace = false;
         }
+        else if (thisArg=="--sequence")
+        {
+            params.sequence = true;
+        }
         else
         {
             std::cerr << "Illegal argument: " << thisArg << "\n";
@@ -144,8 +148,10 @@ int main(int argc,char **argv)
     
     
     auto start = chrono::high_resolution_clock::now();
-    
-    makeHealpixMinkmap(inname, params, outname); //TODO schauen dass rankB nicht bei curvIndex 0
+    if(!params.sequence)
+        makeHealpixMinkmap(inname, params, outname); //TODO schauen dass rankB nicht bei curvIndex 0
+    else 
+        makeSequence(inname, params, outname); //TODO bei forceOutname wird die datei dauernd überschrieben
     
     auto stop = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
