@@ -267,6 +267,7 @@ void makeHealpixMinkmap(std::string inname, paramStruct params, std::string outn
 void makeSequence(std::string inname, paramStruct params, std::string outname)
 {
     Healpix_Map<double> map = read_Healpix_map_from_fits<double>(inname, 1, 2);
+    params.sequence = true; //should already be true when calling this function, but just to be sure. Can mess up outname otherwise
     
     const std::vector<double> thresholds = params.linThresh ? makeIntervals_lin(params.mint, params.maxt, params.numt) : makeIntervals_log(params.mint, params.maxt, params.numt);
     for(uint i=0; i<params.numt; ++i)

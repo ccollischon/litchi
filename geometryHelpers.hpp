@@ -179,10 +179,9 @@ void flipPointing(pointing& input)
  * \param start Starting position
  * \param stop Final position
  * \param initialVector Tangent space vector to be transported (the two coordinate components of the pointing class are used as vector components)
- * \param depth Number of recursion layers this function call is deep (contains a recursive loop with upper limit). Leave at default zero when calling from outside
  * \return Transported vector at position stop
  */
-pointing parallelTransport(pointing start, pointing stop, pointing initialVector, int depth=0) //Transport along geodesic
+pointing parallelTransport(pointing start, pointing stop, pointing initialVector) //Transport along geodesic
 {
     start.normalize();
     stop.normalize();/*
