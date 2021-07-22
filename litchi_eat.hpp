@@ -206,7 +206,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, const paramStruct& params, std
 {
     checkParams(params);
     
-    if((int)params.Nside != map.Nside())
+    if((int)params.Nside && (int)params.Nside != map.Nside())
     {
         Healpix_Map<double> degradedMap(params.Nside, map.Scheme(), SET_NSIDE);
         degradedMap.Import_degrade(map);
