@@ -9,7 +9,7 @@
 #include <vector>
 #include <stdexcept>
 /** \file tensorOperations.hpp
- * \brief Helpful functions for geometry on the sphere
+ * \brief minkTensorStack, trace, eigenvalue quotient: all operations involving tensors
  */
 
 ///Save all linear combinations of minkTensorIntegrands in one class

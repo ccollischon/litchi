@@ -153,7 +153,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
             std::vector<vec3> corners;
             map.boundaries(pixel, 1, corners); //find corners of pixel in outputmap (larger pixels)
             std::vector<pointing> cornersPoint;
-            for(auto corner : corners) {cornersPoint.push_back(pointing(corner));}
+            for(auto& corner : corners) {cornersPoint.push_back(pointing(corner));}
         
             rangeset<int> pixelsNearbyRange = baseminkmap.originalMap.query_polygon(cornersPoint); //pixels in original map contained in pixel of outputmap
             std::vector<int> pixelsNearby = pixelsNearbyRange.toVector();

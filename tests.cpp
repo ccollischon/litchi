@@ -112,6 +112,21 @@ int main ()
     assert( abs(polen1.theta-polen2.theta)<1e-2 && abs(polen1.phi-polen2.phi)<1e-1  && "getN_rotation or parallelTransport broken!");
     
     
+    pointing leftOfZero(pi*0.4,0.01);
+    pointing leftBelow(pi*0.4+0.01,-0.0);
+    leftOfZero.normalize();
+    leftBelow.normalize();
+    pointing rightOfZero(pi*0.4,-0.01);
+    pointing rightBelow(pi*0.4+0.01,-0.02);
+    //rightOfZero.normalize();
+    //rightBelow.normalize();
+    pointing leftn = getN_rotation(leftOfZero,leftBelow);
+    pointing transpn = parallelTransport(leftOfZero,rightOfZero,leftn);
+    pointing rightn = getN_rotation(rightOfZero,rightBelow);
+    cout << " left " << leftn;
+    cout << "transp " << transpn;
+    cout << "right " << rightn;
+    
     //Test tensor functionality
     pointing nr(0.45*pi, 0.5*pi);
     minkTensorIntegrand mytensor(0,2,0,r,n);

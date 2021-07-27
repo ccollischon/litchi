@@ -124,8 +124,10 @@ pointing getN_cartesian(pointing A, pointing B)//A, B should be given such that 
  * \param B Other position
  * \return Tangent space vector at position A normal to line from A to B
  */
-pointing  getN_rotation(pointing A, pointing B)//A, B should be given such that AxB points away from body
+pointing getN_rotation(pointing A, pointing B)//A, B should be given such that AxB points away from body
 {
+    if(A.phi<0 || A.theta>3.14159) A.normalize(); //A with negative phi would cause problems when constructing n
+    
     vec3 AcrossB = crossprod(A.to_vec3(),B.to_vec3());
     vec3 rotAxis = crossprod(A.to_vec3(), AcrossB); //rotating A around this axis moves it along the desired normal vector
     
@@ -203,7 +205,7 @@ pointing parallelTransport(pointing start, pointing stop, pointing initialVector
     auto rotaxis = crossprod(start.to_vec3(),midpointToAim.to_vec3());
     pointing fromStopAlongFinal(rotateAroundAxis(rotaxis, start.to_vec3(), dist));
     
-    pointing finalVector(fromStopAlongFinal.theta-stop.theta, fromStopAlongFinal.phi-stop.phi); //Take difference to return to tengent space
+    pointing finalVector(fromStopAlongFinal.theta-stop.theta, fromStopAlongFinal.phi-stop.phi); //Take difference to return to tangent space
     normalizeVectorOnSphere(finalVector,stop.theta);
     
     
