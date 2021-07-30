@@ -58,8 +58,8 @@ struct minkmapSphere :  minkmapFamily{
         return pointing(corners.at(3)); //position east of pixel is center of vertex
     }
     
-    ///Returns linear combination Minkowski tensors at given Minkmap-pixel (vertex east of Healpix pixel with same number) -11 = north pole, -5 = south pole
-    minkTensorStack at(int pixnum) const override
+    ///returns Healpix-pixel numbers of pixels surrounding given minkmap pixel, -11 = north pole, -5 = south pole
+    std::vector<int> minkmapPixelNeighbors(int pixnum) const
     {
         if(pixnum>=originalMap.Npix())
         {
@@ -71,6 +71,7 @@ struct minkmapSphere :  minkmapFamily{
             std::cerr << "Error: requesting negative undefined pixnum, pixnum is " << pixnum << ", Npix is " << originalMap.Npix() << std::endl;
             throw std::invalid_argument("minkmapSphere::at: pixnum invalid");
         }
+        
         if(pixnum==-5) //5OUTH pole
         {
             std::vector<int> southPolarCap;
@@ -84,7 +85,7 @@ struct minkmapSphere :  minkmapFamily{
                 int nsidesquared = originalMap.Nside()*originalMap.Nside();
                 southPolarCap = {nsidesquared*8, nsidesquared*9, nsidesquared*10, nsidesquared*11};
             }
-            return integrateMinktensor(southPolarCap);
+            return southPolarCap;
         }
         else if(pixnum==-11) //11ORTH pole
         {
@@ -98,14 +99,21 @@ struct minkmapSphere :  minkmapFamily{
                 int nsidesquared = originalMap.Nside()*originalMap.Nside();
                 northPolarCap = {nsidesquared-1, nsidesquared*2-1, nsidesquared*3-1, nsidesquared*4-1};
             }
-            return integrateMinktensor(northPolarCap);
+            return northPolarCap;
         }
         
         fix_arr<int, 8> neighbors; //neighbors of this pixel
         originalMap.neighbors(pixnum,neighbors);
         std::vector<int> easternNeighborship{pixnum, neighbors[4],neighbors[5],neighbors[6]}; //neighbors east of this pixel and this pixel
+        return easternNeighborship;
+    }
+    
+    ///Returns linear combination Minkowski tensors at given Minkmap-pixel (vertex east of Healpix pixel with same number) 
+    minkTensorStack at(int pixnum) const override
+    {
+        auto neighbors = minkmapPixelNeighbors(pixnum);
         //calculate one marching square/triangle
-        return integrateMinktensor(easternNeighborship);
+        return integrateMinktensor(neighbors);
     }
     
     

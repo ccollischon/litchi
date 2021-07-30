@@ -151,7 +151,7 @@ int main(int argc,char **argv)
     if(!params.sequence)
         makeHealpixMinkmap(inname, params, outname); //TODO schauen dass rankB nicht bei curvIndex 0
     else 
-        makeSequence(inname, params, outname); //TODO bei forceOutname wird die datei dauernd überschrieben
+        makeSequence(inname, params, outname);
     
     auto stop = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
