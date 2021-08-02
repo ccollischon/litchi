@@ -306,7 +306,7 @@ struct minkmapSphere :  minkmapFamily{
                     area += sphereArea(thirdCorner,oneCorner,fourthCorner);
                     area += sphereArea(otherCorner,fourthCorner,oneCorner);
                     double length1 = arclength(oneCorner,thirdCorner);
-                    double length2 = arclength(fourthCorner,otherCorner); //TODO getN, integrieren
+                    double length2 = arclength(fourthCorner,otherCorner); //getN, integrieren
                     length += length1+length2;
                     
                     
@@ -386,14 +386,14 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 if(curvIndex>1)
                 { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
-                    vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
+                    vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(3), positions.at(2), positions.at(3), positions.at(0));
                     curvature += newcurv;
                 }
                 if(ranksum)
                 {
-                    n = getN_rotation(oneCorner,otherCorner);
+                    n = getN_rotation(otherCorner,oneCorner);
                     return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)* ( (curvIndex>1) ? newcurv*newlength : newlength));
                 }
                 
@@ -430,7 +430,7 @@ struct minkmapSphere :  minkmapFamily{
                     area += sphereArea(thirdCorner,oneCorner,fourthCorner);
                     area += sphereArea(otherCorner,fourthCorner,oneCorner);
                     double length1 = arclength(otherCorner,oneCorner);
-                    double length2 = arclength(thirdCorner,fourthCorner); //TODO getN, integrieren
+                    double length2 = arclength(thirdCorner,fourthCorner); //getN, integrieren
                     length += length1+length2;
                     
                     pointing n1 = getN_rotation(otherCorner,oneCorner);
@@ -621,7 +621,6 @@ struct minkmapSphere :  minkmapFamily{
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     curvature += giveCurv(dirN, positions.at(0), positions.at(2), positions.at(1), positions.at(2));
-                    std::cout << "here\n";
                 }
                 if(ranksum)
                 {
