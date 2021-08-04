@@ -64,12 +64,12 @@ struct minkmapSphere :  minkmapFamily{
         if(pixnum>=originalMap.Npix())
         {
             std::cerr << "Error: requesting pixnum too large for Healpix_Map, pixnum is " << pixnum << ", Npix is " << originalMap.Npix() << std::endl;
-            throw std::invalid_argument("minkmapSphere::at: pixnum too high");
+            throw std::invalid_argument("minkmapSphere::minkmapPixelNeighbors: pixnum too high");
         }
         else if(pixnum<0 && pixnum!=-5 && pixnum!= -11)
         {
             std::cerr << "Error: requesting negative undefined pixnum, pixnum is " << pixnum << ", Npix is " << originalMap.Npix() << std::endl;
-            throw std::invalid_argument("minkmapSphere::at: pixnum invalid");
+            throw std::invalid_argument("minkmapSphere::minkmapPixelNeighbors: pixnum invalid");
         }
         
         if(pixnum==-5) //5OUTH pole

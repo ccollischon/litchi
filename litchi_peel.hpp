@@ -82,37 +82,37 @@ struct normalHealpixInterface
 
 template <typename maptype>
 minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
+{
+    fix_arr<int, 8> neighbors; //neighbors of this pixel
+    baseminkmap.originalMap.neighbors(pixnum,neighbors);
+    std::vector<int> westernNeighborship{pixnum, neighbors[0],neighbors[1],neighbors[2]}; // non-polar: {E, SW, W, NW} corners, N-polar: {E, S, notacorner, W} corners, S-polar: {E, W, notacorner, N} in minkmap, replace notacorner
+    
+    
+    uint pole = ispolar(pixnum);
+    switch(pole) //for polar pixels replace useless neighbors[1] with pole pixnum
     {
-        fix_arr<int, 8> neighbors; //neighbors of this pixel
-        baseminkmap.originalMap.neighbors(pixnum,neighbors);
-        std::vector<int> westernNeighborship{pixnum, neighbors[0],neighbors[1],neighbors[2]}; // non-polar: {E, SW, W, NW} corners, N-polar: {E, S, notacorner, W} corners, S-polar: {E, W, notacorner, N} in minkmap, replace notacorner
-        
-        
-        uint pole = ispolar(pixnum);
-        switch(pole) //for polar pixels replace useless neighbors[1] with pole pixnum
-        {
-            case 1: 
-                westernNeighborship.at(2) = -11; //11ORTH POLE
-                break;
-            case 2: 
-                westernNeighborship.at(2) = -5; //5OUTH POLE
-        }
-        
-        if(neighbors[1]==-1) //west does not exist for some pixels, need north instead
-        {
-            westernNeighborship.at(2) = neighbors[3];
-        }
-                
-        minkTensorStack output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex, baseminkmap.originalMap.pix2ang(pixnum));
-        for(int minkpix : westernNeighborship)
-        {
-            if(minkpix != -1)
-            {
-                output += baseminkmap.at(minkpix); //parallel transport, not just add. baseminkmap-pixels are already weighted with 1/nr of times they appear here, DONE in minkTensorStack +=
-            }
-        }
-        return output;
+        case 1: 
+            westernNeighborship.at(2) = -11; //11ORTH POLE
+            break;
+        case 2: 
+            westernNeighborship.at(2) = -5; //5OUTH POLE
     }
+    
+    if(neighbors[1]==-1) //west does not exist for some pixels, need north instead
+    {
+        westernNeighborship.at(2) = neighbors[3];
+    }
+            
+    minkTensorStack output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex, baseminkmap.originalMap.pix2ang(pixnum));
+    for(int minkpix : westernNeighborship)
+    {
+        if(minkpix != -1)
+        {
+            output += baseminkmap.at(minkpix); //parallel transport, not just add. baseminkmap-pixels are already weighted with 1/nr of times they appear here, DONE in minkTensorStack +=
+        }
+    }
+    return output;
+}
 
 /** Generates scalar Healpix-type map from baseminkmap via specified function
  * \param input normalHealpixInterface containing desired Minkmap
