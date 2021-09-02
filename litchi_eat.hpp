@@ -202,9 +202,10 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
  * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname, sequence
  * \param outname Path to and file prefix of outputfile
  */
-void makeHealpixMinkmap(Healpix_Map<double>& map, const paramStruct& params, std::string outname, const int counter=0)
+void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::string outname, const int counter=0)
 {
     checkParams(params);
+    if(!(int)params.Nside) params.Nside = (uint)map.Nside();
     
     if((int)params.Nside && (int)params.Nside != map.Nside())
     {
