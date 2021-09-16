@@ -31,6 +31,7 @@ int main ()
     assert( abs(midpoint(C,C).theta-C.theta)<1e-13 && abs(midpoint(C,C).phi-C.phi)<1e-13 && "midpoint broken when entering same vector twice!");
     assert( abs(midpoint(A,B).theta*(1/pi)-0.375)<1e-13 && abs(midpoint(A,B).phi)<1e-13 && "midpoint broken!");
     
+    assert( abs(arclength(A,B)-pi/4)<1e-13 && abs(arclength(A,C)-pi/4)<1e-13 && "arclength broken!" );
     
     flipPointing(A);
     assert( abs(A.theta-pi/2) < 1e-12 && abs(A.phi-pi) < 1e-12 && "flipPointing broken!" );

@@ -172,7 +172,7 @@ struct minkmapSphere :  minkmapFamily{
                     return minkTensorStack(minkTensorIntegrand(rankA,rankB,curvIndex),(length*weight));
                 case 2:
                     //std::cout << "Warning! Curvature functional not implemented in integrateMinktensor!" << std::endl;
-                    return minkTensorStack(minkTensorIntegrand(rankA,rankB,curvIndex),(curvature*weight)); //FIXME length factor out
+                    return minkTensorStack(minkTensorIntegrand(rankA,rankB,curvIndex),(curvature*weight)); //length factor out
                 default:
                     std::cerr << "Error: invalid curvIndex: " << curvIndex << " , this makes no sense. In 2D only up to two!" << std::endl;
                     throw std::invalid_argument( "minkmapSphere::integrateMinktensor: Weird curvIndex" );
@@ -217,7 +217,7 @@ struct minkmapSphere :  minkmapFamily{
                 length += newlength;
                 area += sphereArea(positions.at(0),oneCorner,otherCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(0), positions.at(3), positions.at(0), positions.at(1));
@@ -238,7 +238,7 @@ struct minkmapSphere :  minkmapFamily{
                 length += newlength;
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(1), positions.at(0), positions.at(1), positions.at(2));
@@ -258,7 +258,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(0),oneCorner,positions.at(1));
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(0), positions.at(3), positions.at(1), positions.at(2));
@@ -278,7 +278,7 @@ struct minkmapSphere :  minkmapFamily{
                 length += newlength;
                 area += sphereArea(positions.at(2),oneCorner,otherCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(2), positions.at(1), positions.at(2), positions.at(3));
@@ -316,7 +316,7 @@ struct minkmapSphere :  minkmapFamily{
                     
                     double curv1{0}, curv2{0};
                     if(curvIndex>1)
-                    { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                    { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                         vec3 dirN = crossprod(oneCorner.to_vec3(), thirdCorner.to_vec3());
                         dirN.Normalize();
                         curv1 = giveCurv(dirN, positions.at(2), positions.at(1), positions.at(0), positions.at(1));
@@ -345,7 +345,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(2),positions.at(1),oneCorner);
                 area += sphereArea(positions.at(1),otherCorner,oneCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(1), positions.at(0), positions.at(2), positions.at(3));
@@ -365,7 +365,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(1),otherCorner,oneCorner);
                 area += sphereArea(positions.at(2),positions.at(1),oneCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(0), positions.at(3), positions.at(2), positions.at(3));
@@ -385,7 +385,7 @@ struct minkmapSphere :  minkmapFamily{
                 length += newlength;
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(3), positions.at(2), positions.at(3), positions.at(0));
@@ -405,7 +405,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 area += sphereArea(positions.at(0),positions.at(3),otherCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(3), positions.at(2), positions.at(0), positions.at(1));
@@ -439,7 +439,7 @@ struct minkmapSphere :  minkmapFamily{
                     
                     double curv1{0}, curv2{0};
                     if(curvIndex>1)
-                    { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                    { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                         vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                         dirN.Normalize();
                         curv1 = giveCurv(dirN, positions.at(1), positions.at(0), positions.at(3), positions.at(0));
@@ -467,7 +467,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(0),oneCorner,otherCorner);
                 area += sphereArea(positions.at(1),positions.at(0),otherCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(3), positions.at(2), positions.at(1), positions.at(2));
@@ -486,7 +486,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(3),otherCorner,oneCorner);
                 area += sphereArea(positions.at(3),positions.at(2),otherCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(2), positions.at(1), positions.at(3), positions.at(0));
@@ -506,7 +506,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(3),oneCorner,otherCorner);
                 area += sphereArea(positions.at(3),otherCorner,positions.at(0));
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(2), positions.at(1), positions.at(0), positions.at(1));
@@ -526,7 +526,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(2),oneCorner,otherCorner);
                 area += sphereArea(positions.at(2),otherCorner,positions.at(3));
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     newcurv = giveCurv(dirN, positions.at(1), positions.at(0), positions.at(3), positions.at(0));
@@ -582,7 +582,7 @@ struct minkmapSphere :  minkmapFamily{
                 length += arclength(oneCorner,otherCorner);
                 area += sphereArea(positions.at(0),otherCorner,oneCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
                     dirN.Normalize();
                     curvature += giveCurv(dirN, positions.at(0), positions.at(2), positions.at(0), positions.at(1));
@@ -599,7 +599,7 @@ struct minkmapSphere :  minkmapFamily{
                 length += arclength(oneCorner,otherCorner);
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     curvature += giveCurv(dirN, positions.at(1), positions.at(0), positions.at(1), positions.at(2));
@@ -617,7 +617,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 area += sphereArea(positions.at(1),positions.at(0),oneCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     curvature += giveCurv(dirN, positions.at(0), positions.at(2), positions.at(1), positions.at(2));
@@ -634,7 +634,7 @@ struct minkmapSphere :  minkmapFamily{
                 length += arclength(oneCorner,otherCorner);
                 area += sphereArea(positions.at(2),otherCorner,oneCorner);
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
                     dirN.Normalize();
                     curvature += giveCurv(dirN, positions.at(2), positions.at(1), positions.at(2), positions.at(0));
@@ -652,7 +652,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(2),otherCorner,oneCorner);
                 area += sphereArea(positions.at(2),oneCorner,positions.at(0));
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
                     dirN.Normalize();
                     curvature += giveCurv(dirN, positions.at(2), positions.at(1), positions.at(0), positions.at(1));
@@ -670,7 +670,7 @@ struct minkmapSphere :  minkmapFamily{
                 area += sphereArea(positions.at(1),oneCorner,otherCorner);
                 area += sphereArea(positions.at(1),otherCorner,positions.at(2));
                 if(curvIndex>1)
-                { //Find angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
                     dirN.Normalize();
                     curvature += giveCurv(dirN, positions.at(1), positions.at(0), positions.at(2), positions.at(0));
@@ -692,7 +692,7 @@ struct minkmapSphere :  minkmapFamily{
     }
     
     /*
-     * Gives total change of boundary angle for one cell. Angle is calculated to hypothetical contour continuing perpendicular to cell wall
+     * Gives total exterior angle for one cell. Angle is calculated to hypothetical contour continuing perpendicular to cell wall
      * pointings should be given such that inBodyA (cross) outBodyA and outBodyB (cross) inBodyB points into cell ("right side first")
      */
     double giveCurv(vec3 dirAwayFromBody, const pointing& inBodyA, const pointing& outBodyA, const pointing& inBodyB, const pointing& outBodyB) const
