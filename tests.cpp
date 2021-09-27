@@ -203,35 +203,43 @@ int main ()
         mapsScalar.push_back(minkmapSphere(map, 0, 0, 1, thresh));
         mapsTensor.push_back(minkmapSphere(map, 0, 2, 1, thresh));
     }
-    int pixnum = 68; //1933
-    minkmapStack sumOfMapsS(mapsScalar);
-    minkmapStack sumOfMapsT(mapsTensor);
     
-    double pix1S = (double)mapsScalar.at(0).at(pixnum);
-    minkTensorStack pix1T = mapsTensor.at(0).at(pixnum);
-    cout << "Scalar   " << "tr(tensor) " << "relative difference" << endl;
-    cout << pix1S << " " << trace(pix1T) << " " << abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) ) << endl;
-    assert( abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) )<1e-12 && "Trace of (0,2,1) and boundary different at thresh 0" );
-    
-    double pix2S = (double) mapsScalar.at(1).at(pixnum);
-    minkTensorStack pix2T = mapsTensor.at(1).at(pixnum);
-    cout << pix2S << " " << trace(pix2T) << " " << abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) ) << endl;
-    assert( abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) )<1e-12 && "Trace of (0,2,1) and boundary different at thresh > 0" );
-    
-    double pix3S = (double) sumOfMapsS.at(pixnum);
-    minkTensorStack pix3T = sumOfMapsT.at(pixnum);
-    cout << pix3S << " " << trace(pix3T) << " " << abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) ) << endl;
-    assert( abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) )<1e-12 && "Trace of (0,2,1) and boundary different in sum of maps" );
-    
-    
-    const normalHealpixInterface interfaceS(sumOfMapsS);
-    const normalHealpixInterface interfaceT(sumOfMapsT);
-    double pix4S = (double) interfaceS.at(pixnum);
-    minkTensorStack pix4T = interfaceT.at(pixnum);
-    //tensor2D pix4Tfail = (tensor2D) sumOfMapsT.at(67);
-    
-    cout << pix4S << " " << trace(pix4T) << " " << abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) ) << endl;
-    assert( abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) )<1e-12 && "Trace of (0,2,1) and boundary different in Interface" );
+    std::vector<int> pixnums {68, 1933, 1235, 563, 1023, 585, 7169, 1123};
+    for( int pixnum : pixnums)
+    {
+        minkmapStack sumOfMapsS(mapsScalar);
+        minkmapStack sumOfMapsT(mapsTensor);
+        
+        double pix1S = (double)mapsScalar.at(0).at(pixnum);
+        minkTensorStack pix1T = mapsTensor.at(0).at(pixnum);
+        cout << "Scalar   " << "tr(tensor) " << "relative difference, pixnum: " << pixnum << endl;
+        cout << pix1S << " " << trace(pix1T) << " " << abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) ) << endl;
+        if(max(double(pix1S), trace(pix1T)) ) assert( abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) )<1e-12 && "Trace of (0,2,1) and boundary different at thresh 0" );
+        else assert( abs(pix1S-trace(pix1T))<1e-12 && "Trace of (0,2,1) and boundary different at thresh 0" );
+        
+        double pix2S = (double) mapsScalar.at(1).at(pixnum);
+        minkTensorStack pix2T = mapsTensor.at(1).at(pixnum);
+        cout << pix2S << " " << trace(pix2T) << " " << abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) ) << endl;
+        if(max(double(pix2S), trace(pix2T)) ) assert( abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) )<1e-12 && "Trace of (0,2,1) and boundary different at thresh > 0" );
+        else assert( abs(pix2S-trace(pix2T))<1e-12 && "Trace of (0,2,1) and boundary different at thresh > 0" );
+        
+        double pix3S = (double) sumOfMapsS.at(pixnum);
+        minkTensorStack pix3T = sumOfMapsT.at(pixnum);
+        cout << pix3S << " " << trace(pix3T) << " " << abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) ) << endl;
+        if(max(double(pix3S), trace(pix3T)) ) assert( abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) )<1e-12 && "Trace of (0,2,1) and boundary different in sum of maps" );
+        else assert( abs(pix3S-trace(pix3T))<1e-12 && "Trace of (0,2,1) and boundary different in sum of maps" );
+        
+        
+        const normalHealpixInterface interfaceS(sumOfMapsS);
+        const normalHealpixInterface interfaceT(sumOfMapsT);
+        double pix4S = (double) interfaceS.at(pixnum);
+        minkTensorStack pix4T = interfaceT.at(pixnum);
+        //tensor2D pix4Tfail = (tensor2D) sumOfMapsT.at(67);
+        
+        cout << pix4S << " " << trace(pix4T) << " " << abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) ) << endl;
+        if(max(double(pix4S), trace(pix4T)) ) assert( abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) )<1e-12 && "Trace of (0,2,1) and boundary different in Interface" );
+        else assert( abs(pix4S-trace(pix4T))<1e-12 && "Trace of (0,2,1) and boundary different in interface" );
+    }
     
     return 0;
 }
