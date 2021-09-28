@@ -205,6 +205,30 @@ struct minkmapSphere :  minkmapFamily{
         return minkTensorIntegrand(rankA, rankB, curvIndex)*0.; //return zero for scalar case
     }
     
+    //corners: two interpolated corners such that corners[0] cross corners[1] points away from body, corners[2] and [4] are within polytope, corners[3] and corners[5] needed for giveCurv and should be given in appropriate order (outBodyA, outBodyB)
+    minkTensorStack twoCornersOver(double& newlength, double& area, double& newcurv, const std::vector<pointing>& corners, bool ranksum) const
+    {
+        assert(corners.size()==6 && "minkmapSphere::twoCornersOver: corners-vector has wrong size!");
+        
+        double& factor{ curvIndex==0 ? area : curvIndex==1 ? newlength : newcurv };
+        
+        newlength = arclength(corners[0],corners[1]);
+        area += sphereArea(corners[4],corners[2],corners[0]);
+        area += sphereArea(corners[2],corners[1],corners[0]);
+        if(curvIndex>1)
+        { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+            vec3 dirN = crossprod(corners[0].to_vec3(), corners[1].to_vec3());
+            dirN.Normalize();
+            newcurv = giveCurv(dirN, corners[2], corners[3], corners[4], corners[5]);
+        }
+        if(ranksum)
+        {
+            pointing n = getN_rotation(corners[0],corners[1]);
+            return (minkTensorIntegrand(rankA, rankB, curvIndex, corners[0], n)* factor);
+        }
+        return minkTensorIntegrand(rankA, rankB, curvIndex)*0.; //return zero for scalar case
+    }
+    
     minkTensorStack fourCornerCases(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
@@ -241,7 +265,6 @@ struct minkmapSphere :  minkmapFamily{
                 length += newlength;
                 curvature += newcurv;
                 
-                
                 break;
             case 2: //other corner (pixel 1)
                 oneCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
@@ -251,27 +274,15 @@ struct minkmapSphere :  minkmapFamily{
                 length += newlength;
                 curvature += newcurv;
                 
-                
                 break;
             case 3: //0 and 1 over
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                newlength = arclength(oneCorner,otherCorner);
+                
+                returntens = twoCornersOver(newlength, area, newcurv, {otherCorner,oneCorner, positions.at(0), positions.at(3), positions.at(1), positions.at(2)}, (bool)ranksum);
                 length += newlength;
-                area += sphereArea(positions.at(0),oneCorner,positions.at(1));
-                area += sphereArea(positions.at(1),oneCorner,otherCorner);
-                if(curvIndex>1)
-                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
-                    vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
-                    dirN.Normalize();
-                    newcurv = giveCurv(dirN, positions.at(0), positions.at(3), positions.at(1), positions.at(2));
-                    curvature += newcurv;
-                }
-                if(ranksum)
-                {
-                    n = getN_rotation(otherCorner,oneCorner);
-                    return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)* factor);
-                }
+                curvature += newcurv;
+                
                 break;
             case 4: //other corner (pixel 2)
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
@@ -280,7 +291,6 @@ struct minkmapSphere :  minkmapFamily{
                 returntens = oneCornerOver(newlength, area, newcurv, {oneCorner, otherCorner, positions[2], positions[1], positions[3]}, (bool)ranksum);
                 length += newlength;
                 curvature += newcurv;
-                
                 
                 break;
             case 5: //2 and 0 over, check if average above or below thresh and view as connected or not accordingly
@@ -333,22 +343,11 @@ struct minkmapSphere :  minkmapFamily{
             case 6: //2 and 1 over
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
-                newlength = arclength(oneCorner,otherCorner);
+                
+                returntens = twoCornersOver(newlength, area, newcurv, {oneCorner,otherCorner, positions.at(1), positions.at(0), positions.at(2), positions.at(3)}, (bool)ranksum);
                 length += newlength;
-                area += sphereArea(positions.at(2),positions.at(1),oneCorner);
-                area += sphereArea(positions.at(1),otherCorner,oneCorner);
-                if(curvIndex>1)
-                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
-                    vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
-                    dirN.Normalize();
-                    newcurv = giveCurv(dirN, positions.at(1), positions.at(0), positions.at(2), positions.at(3));
-                    curvature += newcurv;
-                }
-                if(ranksum)
-                {
-                    n = getN_rotation(oneCorner,otherCorner);
-                    return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)* factor);
-                }
+                curvature += newcurv;
+                
                 break; 
             case 7: //all except pixel 3
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
@@ -379,27 +378,15 @@ struct minkmapSphere :  minkmapFamily{
                 length += newlength;
                 curvature += newcurv;
                 
-                
                 break;
             case 9: //3 and 0 over
                 oneCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
-                newlength += arclength(oneCorner,otherCorner);
-                length = newlength;
-                area += sphereArea(positions.at(3),oneCorner,otherCorner);
-                area += sphereArea(positions.at(0),positions.at(3),otherCorner);
-                if(curvIndex>1)
-                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
-                    vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
-                    dirN.Normalize();
-                    newcurv = giveCurv(dirN, positions.at(3), positions.at(2), positions.at(0), positions.at(1));
-                    curvature += newcurv;
-                }
-                if(ranksum)
-                {
-                    n = getN_rotation(otherCorner,oneCorner);
-                    return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)* factor);
-                }
+                
+                returntens = twoCornersOver(newlength, area, newcurv, {otherCorner,oneCorner, positions.at(3), positions.at(2), positions.at(0), positions.at(1)}, (bool)ranksum);
+                length += newlength;
+                curvature += newcurv;
+                
                 break;
             case 10: //3 and 1 over, check if average above or below thresh and view as connected or not accordingly
                 mean = std::accumulate(values.begin(), values.end(), 0.)/values.size();
@@ -467,22 +454,11 @@ struct minkmapSphere :  minkmapFamily{
             case 12: //2 and 3 over
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                newlength = arclength(oneCorner,otherCorner);
+                
+                returntens = twoCornersOver(newlength, area, newcurv, {oneCorner,otherCorner, positions.at(2), positions.at(1), positions.at(3), positions.at(0)}, (bool)ranksum);
                 length += newlength;
-                area += sphereArea(positions.at(3),otherCorner,oneCorner);
-                area += sphereArea(positions.at(3),positions.at(2),otherCorner);
-                if(curvIndex>1)
-                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
-                    vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
-                    dirN.Normalize();
-                    newcurv = giveCurv(dirN, positions.at(2), positions.at(1), positions.at(3), positions.at(0));
-                    curvature += newcurv;
-                }
-                if(ranksum)
-                {
-                    n = getN_rotation(oneCorner,otherCorner);
-                    return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)* factor);
-                }
+                curvature += newcurv;
+                
                 break;
             case 13: //all except pixel 1
                 oneCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
@@ -588,20 +564,24 @@ struct minkmapSphere :  minkmapFamily{
             case 3: //all except pixel 2
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                length += arclength(oneCorner,otherCorner);
-                area += sphereArea(positions.at(1),oneCorner,otherCorner);
-                area += sphereArea(positions.at(1),positions.at(0),oneCorner);
-                if(curvIndex>1)
-                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
-                    vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
-                    dirN.Normalize();
-                    curvature += giveCurv(dirN, positions.at(0), positions.at(2), positions.at(1), positions.at(2));
-                }
-                if(ranksum)
-                {
-                    n = getN_rotation(otherCorner,oneCorner);
-                    return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)* ( (curvIndex>1) ? curvature*length : length));
-                }
+                //length += arclength(oneCorner,otherCorner);
+                //area += sphereArea(positions.at(1),oneCorner,otherCorner);
+                //area += sphereArea(positions.at(1),positions.at(0),oneCorner);
+                //if(curvIndex>1)
+                //{ //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                //    vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
+                //    dirN.Normalize();
+                //    curvature += giveCurv(dirN, positions.at(0), positions.at(2), positions.at(1), positions.at(2));
+                //}
+                //if(ranksum)
+                //{
+                //    n = getN_rotation(otherCorner,oneCorner);
+                //    return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)* ( (curvIndex>1) ? curvature*length : length));
+                //}
+                returntens = twoCornersOver(newlength, area, newcurv, {otherCorner,oneCorner, positions.at(0), positions.at(2), positions.at(1), positions.at(2)}, (bool)ranksum);
+                length += newlength;
+                curvature += newcurv;
+                
                 break;
             case 4: //other corner (pixel 2)
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
@@ -615,38 +595,46 @@ struct minkmapSphere :  minkmapFamily{
             case 5: //all except pixel 1
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
-                length += arclength(oneCorner,otherCorner);
-                area += sphereArea(positions.at(2),otherCorner,oneCorner);
-                area += sphereArea(positions.at(2),oneCorner,positions.at(0));
-                if(curvIndex>1)
-                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
-                    vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
-                    dirN.Normalize();
-                    curvature += giveCurv(dirN, positions.at(2), positions.at(1), positions.at(0), positions.at(1));
-                }
-                if(ranksum)
-                {
-                    n = getN_rotation(oneCorner,otherCorner);
-                    return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)* ( (curvIndex>1) ? curvature*length : length));
-                }
+                //length += arclength(oneCorner,otherCorner);
+                //area += sphereArea(positions.at(2),otherCorner,oneCorner);
+                //area += sphereArea(positions.at(2),oneCorner,positions.at(0));
+                //if(curvIndex>1)
+                //{ //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                //    vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
+                //    dirN.Normalize();
+                //    curvature += giveCurv(dirN, positions.at(2), positions.at(1), positions.at(0), positions.at(1));
+                //}
+                //if(ranksum)
+                //{
+                //    n = getN_rotation(oneCorner,otherCorner);
+                //    return (minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n)* ( (curvIndex>1) ? curvature*length : length));
+                //}
+                returntens = twoCornersOver(newlength, area, newcurv, {oneCorner,otherCorner, positions.at(2), positions.at(1), positions.at(0), positions.at(1)}, (bool)ranksum);
+                length += newlength;
+                curvature += newcurv;
+                
                 break;
             case 6: //all except pixel 0
                 oneCorner = interpPointing(positions.at(0),values.at(0),positions.at(1),values.at(1),thresh);
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(2),values.at(2),thresh);
-                length += arclength(oneCorner,otherCorner);
-                area += sphereArea(positions.at(1),oneCorner,otherCorner);
-                area += sphereArea(positions.at(1),otherCorner,positions.at(2));
-                if(curvIndex>1)
-                { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
-                    vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
-                    dirN.Normalize();
-                    curvature += giveCurv(dirN, positions.at(1), positions.at(0), positions.at(2), positions.at(0));
-                }
-                if(ranksum)
-                {
-                    n = getN_rotation(otherCorner,oneCorner);
-                    return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)* ( (curvIndex>1) ? curvature*length : length));
-                }
+                //length += arclength(oneCorner,otherCorner);
+                //area += sphereArea(positions.at(1),oneCorner,otherCorner);
+                //area += sphereArea(positions.at(1),otherCorner,positions.at(2));
+                //if(curvIndex>1)
+                //{ //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
+                //    vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
+                //    dirN.Normalize();
+                //    curvature += giveCurv(dirN, positions.at(1), positions.at(0), positions.at(2), positions.at(0));
+                //}
+                //if(ranksum)
+                //{
+                //    n = getN_rotation(otherCorner,oneCorner);
+                //    return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)* ( (curvIndex>1) ? curvature*length : length));
+                //}
+                returntens = twoCornersOver(newlength, area, newcurv, {otherCorner,oneCorner, positions.at(1), positions.at(0), positions.at(2), positions.at(0)}, (bool)ranksum);
+                length += newlength;
+                curvature += newcurv;
+                
                 break;
             case 7: //alles
                 area += sphereArea(positions.at(0),positions.at(2),positions.at(1));
