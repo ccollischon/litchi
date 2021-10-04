@@ -524,7 +524,7 @@ struct minkmapSphere :  minkmapFamily{
         }
         pointing oneCorner;
         pointing otherCorner;
-        pointing n;
+        //pointing n;
         minkTensorStack returntens(rankA, rankB, curvIndex, positions[0]);
         double newlength{0}, newcurv{0};
         

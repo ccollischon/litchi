@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <vector>
 #include <stdexcept>
+#include <cmath>
 /** \file tensorOperations.hpp
  * \brief minkTensorStack, trace, eigenvalue quotient: all operations involving tensors
  */
@@ -242,6 +243,30 @@ double eigenValueQuotient(const tens& input) //TODO check
     {
         std::cerr << "Error: Eigenvalue quotient not implemented for rank higher than 2! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
         throw std::invalid_argument("eigenValueQuotient not implemented for higher ranks");
+    }
+}
+
+//Should return direction of eigenvector with highest eigenvalue. Zero means east, then counterclockwise
+double eigenVecDir(const auto& input)
+{
+    uint ranksum = input.rankA+input.rankB;
+    if (ranksum == 0)
+    {
+        std::cerr << "Error: Eigenvector direction not defined for rank 0!\n";
+        throw std::invalid_argument("eigenVecDir not defined for rank 0");
+    }
+    else if (ranksum==1)
+    {
+        pointing unitphi(0,1); //unittheta = (1,0) independent from colatitude
+        normalizeVectorOnSphere(unitphi,input.r.theta);
+        double scalarphi   = input.accessElement({1})*unitphi.phi *sin(input.r.theta)*sin(input.r.theta);
+        double scalartheta = input.accessElement({0})*1;
+        return std::atan2(scalartheta, scalarphi);
+    }
+    else
+    {
+        std::cerr << "Error: requesting eigenvector direction for ill-defined ranks: rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
+        throw std::invalid_argument("eigenVecDir not defined for this rank");
     }
 }
 

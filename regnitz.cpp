@@ -129,11 +129,15 @@ int main(int argc,char **argv)
         }
         else if (thisArg=="--trace")
         {
-            params.useTrace = true;
+            params.function = "trace";
         }
-        else if (thisArg=="--EVquotient" || thisArg=="--evquotient")
+        else if (thisArg=="--EVDir" || thisArg=="--evdir" || thisArg=="--evd")
         {
-            params.useTrace = false;
+            params.function = "EVDir";
+        }
+        else if (thisArg=="--EVquotient" || thisArg=="--evquotient" || thisArg=="--evq" || thisArg=="--EVQuo")
+        {
+            params.function = "EVQuo";
         }
         else if (thisArg=="--sequence")
         {
