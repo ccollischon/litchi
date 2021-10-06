@@ -271,16 +271,18 @@ double eigenVecDir(const auto& input)
         double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
         double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
         
-        pointing relevantVec(0,-1);
+        pointing relevantVec(0,1); //set phi=1 as free parameter here
         if(twolambda1>twolambda2)
         {
-            //relevantvec.theta = 
+            double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
+            relevantVec.theta = (aminusd + sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
         }
         else
         {
-            
+            double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
+            relevantVec.theta = (aminusd - sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
         }
-        return 0;
+        return eigenVecDir(minkTensorIntegrand(0,1,1,input.r,relevantVec));
     }
     else
     {
