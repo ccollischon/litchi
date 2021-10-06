@@ -167,15 +167,20 @@ int main ()
     assert( abs(trace(zahlenfriedhof) - (zahlenfriedhof.accessElement({1,1})*pow(sin(zahlenfriedhof.r.theta),2) + zahlenfriedhof.accessElement({0,0}))) < 1e-13 && "trace not working! (check normalization?)" );
     
     minkTensorIntegrand myVectorTheta(0,1,1,pointing(0.5*pi,0),pointing(1,0));
-    assert(abs(eigenVecDir(myVectorTheta)-pi/2)<1e-12 && "eigenVecDir not working (theta) for rank 1!");
+    cout << eigenVecDir(myVectorTheta) << endl;
+    assert(abs(eigenVecDir(myVectorTheta))<1e-12 && "eigenVecDir not working (theta) for rank 1!");
     minkTensorIntegrand myVectorPhi  (0,1,1,pointing(0.5*pi,0),pointing(0,1));
-    assert(abs(eigenVecDir(myVectorPhi))<1e-12 && "eigenVecDir not working (phi, equator) for rank 1!");
+    cout << eigenVecDir(myVectorPhi) << endl;
+    assert(abs(eigenVecDir(myVectorPhi)-pi/2)<1e-12 && "eigenVecDir not working (phi, equator) for rank 1!");
     myVectorPhi.moveTo(pointing(1.0,0));
-    assert(abs(eigenVecDir(myVectorPhi))<1e-4 && "eigenVecDir not working (phi, lat) for rank 1!");
+    cout << eigenVecDir(myVectorPhi) << endl;
+    assert(abs(eigenVecDir(myVectorPhi)-pi/2)<1e-4 && "eigenVecDir not working (phi, lat) for rank 1!");
     minkTensorIntegrand myVectorMix  (0,1,1,pointing(0.5*pi,0),pointing(1,1));
+    cout << eigenVecDir(myVectorMix) << endl;
     assert(abs(eigenVecDir(myVectorMix)-pi/4)<1e-12 && "eigenVecDir not working (mix, equator) for rank 1!");
-    myVectorPhi.moveTo(pointing(1.0,0));
-    assert(abs(eigenVecDir(myVectorMix)-pi/4)<1e-6 && "eigenVecDir not working (mix, lat) for rank 1!");
+    myVectorMix.moveTo(pointing(1.25,0));
+    cout << eigenVecDir(myVectorMix)-pi/4 << endl;
+    assert(abs(eigenVecDir(myVectorMix)-pi/4)<1e-4 && "eigenVecDir not working (mix, lat) for rank 1!");
     
     
     //Test minkTensorStack

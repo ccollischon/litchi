@@ -246,7 +246,7 @@ double eigenValueQuotient(const tens& input) //TODO check
     }
 }
 
-//Should return direction of eigenvector with highest eigenvalue. Zero means east, then counterclockwise
+//Should return direction of eigenvector with highest eigenvalue. Zero means south, pi/2 means east
 double eigenVecDir(const auto& input)
 {
     uint ranksum = input.rankA+input.rankB;
@@ -259,9 +259,28 @@ double eigenVecDir(const auto& input)
     {
         pointing unitphi(0,1); //unittheta = (1,0) independent from colatitude
         normalizeVectorOnSphere(unitphi,input.r.theta);
+        double scalartheta = input.accessElement({0})*(1); //TODO theta hier nach oben? ne erstmal so lassen, dass es mathematisch zur Konvention passt
         double scalarphi   = input.accessElement({1})*unitphi.phi *sin(input.r.theta)*sin(input.r.theta);
-        double scalartheta = input.accessElement({0})*1;
-        return std::atan2(scalartheta, scalarphi);
+        return std::atan2(scalarphi, scalartheta);
+    }
+    else if (ranksum==2)
+    {  //eigenvalues of matrix (a b, c d)
+        double sin2T = sin(input.r.theta)*sin(input.r.theta); //pull down one index = sin^2 (theta) factor wherever left index = 1 (arbitrary choice)
+        double dplusa = input.accessElement({1,1})*sin2T+input.accessElement({0,0});
+        double adminusbc = input.accessElement({0,0})*input.accessElement({1,1})*sin2T - pow(input.accessElement({0,1}),2)*sin2T; //tensors are symmetric here, one of them needs factor
+        double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
+        double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
+        
+        pointing relevantVec(0,-1);
+        if(twolambda1>twolambda2)
+        {
+            //relevantvec.theta = 
+        }
+        else
+        {
+            
+        }
+        return 0;
     }
     else
     {
