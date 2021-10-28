@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-
+# to use g++-10, if just g++ is too old: CC=gcc-10 CXX=g++-10 before calling cmake
 # set the project name
 project(Litchi)
 
@@ -9,10 +9,14 @@ link_directories(${healpix_parent_dir}lib/)
 
 # add the executable
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -std=c++20 -fopenmp -fconcepts -O3")
-
-
 set(CMAKE_CXX_STANDARD 20)
+
+
 add_executable(litchi regnitz.cpp)
 add_executable(tests tests.cpp)
 target_link_libraries(litchi -lhealpix_cxx)
-target_link_libraries(tests -lhealpix_cxx)
+target_link_libraries(tests PUBLIC -lhealpix_cxx)
+
+find_package(pybind11 REQUIRED)
+pybind11_add_module(litchieat pybindings.cpp)
+target_link_libraries(litchieat PUBLIC -lhealpix_cxx)

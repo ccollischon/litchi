@@ -65,6 +65,7 @@ pointing midpoint(pointing A, pointing B) //rotate starting from A by half arcle
  */
 pointing interpPointing(pointing A, double valA, pointing B, double valB, double thresh) // Do the Mantz et al 2008 interpolation between 2 lattice points
 {
+    //const double pi = 3.1415926535897962643;
     double sigma = arclength(A,B);//Angle between A and B
     double quotient = (thresh - valA)/(valB - valA); //Mantz et al 2008 style interpolation
     double angle = quotient*sigma;
@@ -132,6 +133,9 @@ pointing getN_rotation(pointing A, pointing B)//A, B should be given such that A
     vec3 rotAxis = crossprod(A.to_vec3(), AcrossB); //rotating A around this axis moves it along the desired normal vector
     
     pointing Arot(rotateAroundAxis(rotAxis,A.to_vec3(),0.001));
+    if(Arot.phi-A.phi > 5){
+        Arot.phi = Arot.phi - 2*3.14159;
+    }
     pointing n(Arot.theta-A.theta, Arot.phi-A.phi);
     
     normalizeVectorOnSphere(n,A.theta);

@@ -153,7 +153,7 @@ int main(int argc,char **argv)
     
     auto start = chrono::high_resolution_clock::now();
     if(!params.sequence)
-        makeHealpixMinkmap(inname, params, outname); //TODO schauen dass rankB nicht bei curvIndex 0
+        makeSingleMinkmap(inname, params, outname); //TODO schauen dass rankB nicht bei curvIndex 0
     else 
         makeSequence(inname, params, outname);
     

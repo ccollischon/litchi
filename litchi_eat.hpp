@@ -38,46 +38,6 @@ struct paramStruct{
 };
 
 void checkParams(const auto &obj) {
-    if constexpr (!requires {obj.Nside;}) {
-        std::cerr << "Error: parameter struct has no member named Nside. Use to set Nside to which input map is degraded" << std::endl;
-        throw std::invalid_argument("params.Nside non-existant");
-    }
-    if constexpr (!requires {obj.rankA;}) {
-        std::cerr << "Error: parameter struct has no member named rankA" << std::endl;
-        throw std::invalid_argument("params.rankA non-existant");
-    }
-    if constexpr (!requires {obj.rankB;}) {
-        std::cerr << "Error: parameter struct has no member named rankB" << std::endl;
-        throw std::invalid_argument("params.rankB non-existant");
-    }
-    if constexpr (!requires {obj.curvIndex;}) {
-        std::cerr << "Error: parameter struct has no member named curvIndex" << std::endl;
-        throw std::invalid_argument("params.curvIndex non-existant");
-    }
-    if constexpr (!requires {obj.mint;}) {
-        std::cerr << "Error: parameter struct has no member named mint" << std::endl;
-        throw std::invalid_argument("params.mint non-existant");
-    }
-    if constexpr (!requires {obj.maxt;}) {
-        std::cerr << "Error: parameter struct has no member named maxt" << std::endl;
-        throw std::invalid_argument("params.maxt non-existant");
-    }
-    if constexpr (!requires {obj.numt;}) {
-        std::cerr << "Error: parameter struct has no member named numt" << std::endl;
-        throw std::invalid_argument("params.numt non-existant");
-    }
-    if constexpr (!requires {obj.smooth;}) {
-        std::cerr << "Error: parameter struct has no member named smooth. Use to set factor by which output map is degraded" << std::endl;
-        throw std::invalid_argument("params.smooth non-existant");
-    }
-    if constexpr (!requires {obj.linThresh;}) {
-        std::cerr << "Error: parameter struct has no member named linThresh. Use to set linear (true) or logarithmic (false) thresholds" << std::endl;
-        throw std::invalid_argument("params.linThresh non-existant");
-    }
-    if constexpr (!requires {obj.function;}) {
-        std::cerr << "Error: parameter struct has no member named useTrace. Use to set trace (true) or eigenvalue quotient (false) calculation" << std::endl;
-        throw std::invalid_argument("params.useTrace non-existant");
-    }
     
     if(obj.curvIndex==0 && obj.rankB)
     {
@@ -267,8 +227,9 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
  * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname, sequence
  * \param outname Path to and file prefix of outputfile
  */
-void makeHealpixMinkmap(std::string inname, paramStruct params, std::string outname)
+void makeSingleMinkmap(std::string inname, paramStruct params, std::string outname)
 {
+    params.sequence = false; //should already be false when calling function, can mess up outname otherwise
     Healpix_Map<double> map = read_Healpix_map_from_fits<double>(inname, 1, 2);
     makeHealpixMinkmap(map, params, outname);
 }

@@ -100,6 +100,11 @@ int main ()
     assert(abs(interpolation.theta)<1e-12 && "interpPointing() broken!");
     interpolation  = interpPointing(n, 0.5, r, 1.5, 1);
     assert(abs(interpolation.theta)<1e-12 && "interpPointing() broken!");
+    interpolation = interpPointing(pointing(pi/2,-0.01), 0.5, pointing(pi/2, 0.01), 1.5, 1);
+    assert(abs(interpolation.phi)<1e-12 && "interpPointing() meridian negative phi broken!");
+    interpolation = interpPointing(pointing(pi/2,2*pi-0.01), 0.5, pointing(pi/2, 0.01), 1.5, 1);
+    cout << interpolation.phi -2*pi << endl;
+    assert(abs(interpolation.phi)<1e-12 && "interpPointing() meridian 2pi broken!");
     
     pointing eq1(pi/2,0);
     pointing eq2(pi/2+0.01, 0.01);
@@ -167,19 +172,14 @@ int main ()
     assert( abs(trace(zahlenfriedhof) - (zahlenfriedhof.accessElement({1,1})*pow(sin(zahlenfriedhof.r.theta),2) + zahlenfriedhof.accessElement({0,0}))) < 1e-13 && "trace not working! (check normalization?)" );
     
     minkTensorIntegrand myVectorTheta(0,1,1,pointing(0.5*pi,0),pointing(1,0));
-    cout << eigenVecDir(myVectorTheta) << endl;
     assert(abs(eigenVecDir(myVectorTheta))<1e-12 && "eigenVecDir not working (theta) for rank 1!");
     minkTensorIntegrand myVectorPhi  (0,1,1,pointing(0.5*pi,0),pointing(0,1));
-    cout << eigenVecDir(myVectorPhi) << endl;
     assert(abs(eigenVecDir(myVectorPhi)-pi/2)<1e-12 && "eigenVecDir not working (phi, equator) for rank 1!");
     myVectorPhi.moveTo(pointing(1.0,0));
-    cout << eigenVecDir(myVectorPhi) << endl;
     assert(abs(eigenVecDir(myVectorPhi)-pi/2)<1e-4 && "eigenVecDir not working (phi, lat) for rank 1!");
     minkTensorIntegrand myVectorMix  (0,1,1,pointing(0.5*pi,0),pointing(1,1));
-    cout << eigenVecDir(myVectorMix) << endl;
     assert(abs(eigenVecDir(myVectorMix)-pi/4)<1e-12 && "eigenVecDir not working (mix, equator) for rank 1!");
     myVectorMix.moveTo(pointing(1.25,0));
-    cout << eigenVecDir(myVectorMix)-pi/4 << endl;
     assert(abs(eigenVecDir(myVectorMix)-pi/4)<1e-4 && "eigenVecDir not working (mix, lat) for rank 1!");
     
     
@@ -194,16 +194,23 @@ int main ()
     
     //Test parallel transport of vectors
     pointing myN(1,0);
+    pointing myNphi (0,1);
     pointing moved = parallelTransport(pointing(pi/2,0), pointing(pi/2,-pi/4), myN);
-    assert( abs(moved.theta-1) < 1e-6 && abs(moved.phi) < 1e-3 && "parallelTransport broken (phi direction)!" );
+    pointing movedphi = parallelTransport(pointing(pi/2,0.01), pointing(pi/2,-0.01), myNphi);
+    assert( abs(moved.theta-1) < 1e-6 && abs(moved.phi) < 1e-3 && "parallelTransport thetavector broken (phi direction)!" );
+    assert( abs(movedphi.theta) < 1e-6 && abs(movedphi.phi-1) < 1e-3 && "parallelTransport phivector broken (phi direction)!" );
     
     moved = parallelTransport(pointing(pi/2,0), pointing(pi/4,0), myN);
-    assert( abs(moved.theta-1) < 1e-12 && abs(moved.phi) < 1e-3 && "parallelTransport broken (theta direction)!" );
+    movedphi = parallelTransport(pointing(pi/2,0), pointing(pi/4,0), myNphi);
+    assert( abs(moved.theta-1) < 1e-12 && abs(moved.phi) < 1e-3 && "parallelTransport thetavector broken (theta direction)!" );
+    assert( abs(movedphi.theta) < 1e-4 && abs( movedphi.phi-1/(pow(sin(pi/4),1)) ) < 1e-6 && "parallelTransport phivector broken (theta direction)!" );
     
-    moved = parallelTransport(pointing(pi/2,0), pointing(pi/2,-pi/4), myN);
     
-    minkTensorIntegrand asdfTensor (0,2,1,pointing(pi/2,0),myN);
-    asdfTensor.moveTo(pointing(pi/2,-pi/4));
+    minkTensorIntegrand asdfTensor (0,1,1,pointing(pi/2,0.01) ,pointing(1,1));
+    minkTensorIntegrand asdfTensor2(0,1,1,pointing(pi/2,2*pi-0.01),pointing(1,1));
+    auto asdfSum = asdfTensor2 + asdfTensor;
+    cout << asdfSum.accessElement({0}) - asdfSum.accessElement({1}) << "\n";
+    assert( abs(asdfSum.accessElement({0}) - asdfSum.accessElement({1}))<1e-4 && "sum of two tensors left and right of meridian broken" );
     
     
     //Test actual map, trace of W^(0,2)_1 should be equal to boundary length
