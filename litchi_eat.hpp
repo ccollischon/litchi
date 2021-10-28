@@ -53,6 +53,21 @@ void checkParams(const auto &obj) {
     {
         std::cerr << "Warning: rankA > 0 not implemented properly" << std::endl;
     }
+    if(obj.curvIndex > 2)
+    {
+        std::cerr << "Illegal value for curvIndex: " << obj.curvIndex << " , must be 0, 1, or 2 \n";
+        throw std::invalid_argument("curvIndex > 2");
+    }
+    if((obj.smooth&(obj.smooth-1)) != 0)
+    {
+        std::cerr << "Illegal value for smooth: " << obj.smooth << " , must be power of two or zero \n";
+        throw std::invalid_argument("smooth not power of two or zero");
+    }
+    if((obj.Nside&(obj.Nside-1)) != 0)
+    {
+        std::cerr << "Illegal value for Nside: " << obj.Nside << " , must be power of two or zero \n";
+        throw std::invalid_argument("Nside not power of two or zero");
+    }
     if(obj.mint==0. && !obj.linThresh)
     {
         std::cerr << "Minimal threshold zero not possible with logThresh!\n";
@@ -180,7 +195,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
     checkParams(params);
     if(!(int)params.Nside) params.Nside = (uint)map.Nside();
     
-    if((int)params.Nside && (int)params.Nside != map.Nside())
+    if((int)params.Nside != map.Nside())
     {
         Healpix_Map<double> degradedMap(params.Nside, map.Scheme(), SET_NSIDE);
         degradedMap.Import_degrade(map);
