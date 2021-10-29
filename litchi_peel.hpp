@@ -143,7 +143,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
     {
         if(!(pixel%10000))
         {
-            std::cout << "Converting pixel " << pixel << "..." << std::endl;
+            std::cout << "Converting pixel " << pixel << "...\n";
         }
         //smooth input
         //pointing thiscenter = map.pix2ang(pixel);
