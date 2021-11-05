@@ -65,7 +65,7 @@ pointing midpoint(pointing A, pointing B) //rotate starting from A by half arcle
  */
 pointing interpPointing(pointing A, double valA, pointing B, double valB, double thresh) // Do the Mantz et al 2008 interpolation between 2 lattice points
 {
-    //const double pi = 3.1415926535897962643;
+    const double pi = 3.1415926535897962643;
     double sigma = arclength(A,B);//Angle between A and B
     double quotient = (thresh - valA)/(valB - valA); //Mantz et al 2008 style interpolation
     double angle = quotient*sigma;
@@ -75,6 +75,10 @@ pointing interpPointing(pointing A, double valA, pointing B, double valB, double
     vec3 rotatedVec = rotateAroundAxis(rotAxis, Avec, angle);
     pointing retpoint(rotatedVec);
     retpoint.normalize();
+    if(retpoint.phi-2*pi > 0) {
+        std::cout << retpoint.phi << '\n';
+        retpoint.phi -= 2*pi;
+    }
     return retpoint;
 }
 

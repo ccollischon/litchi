@@ -17,7 +17,7 @@ using namespace std;
 int main ()
 {
     
-    const double pi = 3.14159265358979;
+    const double pi = 3.1415926535897962643;
     
     //Test midpoint, geometry helpers
     pointing A(pi/2,0);
@@ -27,7 +27,7 @@ int main ()
     pointing E(pi/2,pi);
     
     
-    assert( abs(midpoint(A,D).theta-pi/2)<1e-13 && abs(midpoint(A,D).phi-pi/4)<1e-13 && "midpoint broken!");
+    assert( abs(midpoint(A,D).theta-pi/2)<1e-12 && abs(midpoint(A,D).phi-pi/4)<1e-12 && "midpoint broken!");
     assert( abs(midpoint(C,C).theta-C.theta)<1e-13 && abs(midpoint(C,C).phi-C.phi)<1e-13 && "midpoint broken when entering same vector twice!");
     assert( abs(midpoint(A,B).theta*(1/pi)-0.375)<1e-13 && abs(midpoint(A,B).phi)<1e-13 && "midpoint broken!");
     
@@ -55,38 +55,69 @@ int main ()
     fix_arr<int, 4> neighbors;
     fix_arr<double, 4> weight;
     pointing north(0,0);
-    map.get_interpol(north,neighbors,weight);
+    try {
+        map.get_interpol(north,neighbors,weight);
+    } catch (...) {
+        cerr << "Interpolation of north pole RING failed in Healpix!\n";
+        return 1;
+    }
     for(uint i=0;i<neighbors.size();i++)
     {
         assert(interface.ispolar(neighbors[i])==1 && "ispolar RING north broken!");
     }
     pointing south(pi,0);
-    map.get_interpol(south,neighbors,weight);
+    south.normalize();
+    try {
+        map.get_interpol(south,neighbors,weight);
+    } catch (...) {
+        cerr << "Interpolation of south pole RING failed in Healpix!\n";
+        return 1;
+    }
     for(uint i=0;i<neighbors.size();i++)
     {
         assert(interface.ispolar(neighbors[i])==2 && "ispolar RING south broken!");
     }
     pointing random(4.76,1.345);
     random.normalize();
-    map.get_interpol(random,neighbors,weight);
+    try {
+        map.get_interpol(random,neighbors,weight);
+    } catch (...) {
+        cerr << "Interpolation of random point RING failed in Healpix!\n";
+        return 1;
+    }
     for(uint i=0;i<neighbors.size();i++)
     {
         assert(!interface.ispolar(neighbors[i]) && "ispolar RING broken (false-positive)!");
     }
     
     
-    map.get_interpol(north,neighbors,weight);
+    try {
+        map.get_interpol(north,neighbors,weight);
+    } catch (...) {
+        cerr << "Interpolation of north pole NEST failed in Healpix!\n";
+        return 1;
+    }
     for(uint i=0;i<neighbors.size();i++)
     {
         assert(interface.ispolar(neighbors[i])==1 && "ispolar NEST north broken!");
     }
-    map.get_interpol(south,neighbors,weight);
+    try {
+        map.get_interpol(south,neighbors,weight);
+    } catch (...) {
+        cerr << "Interpolation of south pole NEST failed in Healpix!\n";
+        return 1;
+    }
     for(uint i=0;i<neighbors.size();i++)
     {
         assert(interface.ispolar(neighbors[i])==2 && "ispolar NEST south broken!");
     }
     random.normalize();
-    map.get_interpol(random,neighbors,weight);
+    try {
+        map.get_interpol(random,neighbors,weight);
+    } catch (...) {
+        cerr << "Interpolation of random point NEST failed in Healpix!\n";
+        return 1;
+    }
     for(uint i=0;i<neighbors.size();i++)
     {
         assert(!interface.ispolar(neighbors[i]) && "ispolar NEST broken (false-positive)!");
@@ -103,7 +134,6 @@ int main ()
     interpolation = interpPointing(pointing(pi/2,-0.01), 0.5, pointing(pi/2, 0.01), 1.5, 1);
     assert(abs(interpolation.phi)<1e-12 && "interpPointing() meridian negative phi broken!");
     interpolation = interpPointing(pointing(pi/2,2*pi-0.01), 0.5, pointing(pi/2, 0.01), 1.5, 1);
-    cout << interpolation.phi -2*pi << endl;
     assert(abs(interpolation.phi)<1e-12 && "interpPointing() meridian 2pi broken!");
     
     pointing eq1(pi/2,0);
