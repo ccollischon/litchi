@@ -135,6 +135,10 @@ int main ()
     assert(abs(interpolation.phi)<1e-12 && "interpPointing() meridian negative phi broken!");
     interpolation = interpPointing(pointing(pi/2,2*pi-0.01), 0.5, pointing(pi/2, 0.01), 1.5, 1);
     assert(abs(interpolation.phi)<1e-12 && "interpPointing() meridian 2pi broken!");
+    interpolation = interpPointing( pointing(pi/2, 0), 0.5, pointing(pi/2-1,0), 2, 1 );
+    cout << interpolation;
+    assert( abs(interpolation.theta-(pi/2-(1./3)) )<1e-12 && "interpPointing() 1/3 broken" );
+    
     
     pointing eq1(pi/2,0);
     pointing eq2(pi/2+0.01, 0.01);

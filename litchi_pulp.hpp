@@ -182,7 +182,7 @@ struct minkmapSphere :  minkmapFamily{
         return integralNumbers;
     }
     
-    //corners: two interpolated corners such that corners[0] cross corners[1] points away from body, corners[2] is withon triangle, corners[3] and corners[4] needed for giveCurv and should be given in appropriate order (outBodyA, outBodyB)
+    //corners: two interpolated corners such that corners[0] cross corners[1] points away from body, corners[2] is within triangle, corners[3] and corners[4] needed for giveCurv and should be given in appropriate order (outBodyA, outBodyB)
     minkTensorStack oneCornerOver(double& newlength, double& area, double& newcurv, const std::vector<pointing>& corners, bool ranksum) const
     {
         assert(corners.size()==5 && "minkmapSphere::oneCornerOver: corners-vector has wrong size!");
