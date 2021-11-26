@@ -68,6 +68,9 @@ pointing interpPointing(pointing A, double valA, pointing B, double valB, double
     const double pi = 3.1415926535897962643;
     double sigma = arclength(A,B);//Angle between A and B
     double quotient = (thresh - valA)/(valB - valA); //Mantz et al 2008 style interpolation
+    //double fun = sin(quotient*(pi/2))*sin(quotient*(pi/2)); //nonlinearity via sin^2(x), scaled to fit into [0,1]
+    //double fun = asin(sqrt(quotient))/(pi/2);
+    //double fun = 0.5;
     double angle = quotient*sigma;
     
     vec3 rotAxis = crossprod(A.to_vec3(),B.to_vec3());
