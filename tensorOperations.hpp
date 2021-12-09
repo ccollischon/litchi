@@ -2,13 +2,13 @@
 #define tensorOperations
 
 //#include "tensorFamily.hpp"
-#include "minkTensorIntegrand.hpp"
+#include <cmath>
 #include <algorithm>
 #include <iostream>
 #include <type_traits>
 #include <vector>
 #include <stdexcept>
-#include <cmath>
+#include "minkTensorIntegrand.hpp"
 /** \file tensorOperations.hpp
  * \brief minkTensorStack, trace, eigenvalue quotient: all operations involving tensors
  */
@@ -236,8 +236,10 @@ double eigenValueQuotient(const tens& input) //TODO check
         double adminusbc = input.accessElement({0,0})*input.accessElement({1,1})*sin2T - pow(input.accessElement({0,1}),2)*sin2T; //tensors are symmetric here, one of them needs factor
         double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
         double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
-        if(twolambda1>twolambda2) return twolambda1/twolambda2;
-        else return twolambda2/twolambda1;
+        double retval;
+        if(twolambda1>twolambda2) retval = twolambda1/twolambda2;
+        else retval = twolambda2/twolambda1;
+        return std::isnan(retval) ? 0 : retval; //return 0 instead of nan in case of division by zero
         
     } else
     {
