@@ -136,7 +136,8 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
         outputNside /= smooth;
     }
     Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
-    
+    double pixrad = map.max_pixrad(); //distance pixel center-corners in new map
+    double smoothrad = 1.5*pixrad; //in smoothed map, consider all input map pixels up to 1.5* that distance
     
     #pragma omp parallel for
     for(int pixel=0; pixel<map.Npix(); ++pixel)
@@ -150,12 +151,13 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
         //double radius = 1.; //TODO properly based on smooth, smoothing radius evtl larger than outputpixel
         if(smooth>1)
         {
-            std::vector<vec3> corners;
+            /*std::vector<vec3> corners;
             map.boundaries(pixel, 1, corners); //find corners of pixel in outputmap (larger pixels)
             std::vector<pointing> cornersPoint;
             for(auto& corner : corners) {cornersPoint.push_back(pointing(corner));}
         
-            rangeset<int> pixelsNearbyRange = baseminkmap.originalMap.query_polygon(cornersPoint); //pixels in original map contained in pixel of outputmap
+            rangeset<int> pixelsNearbyRange = baseminkmap.originalMap.query_polygon(cornersPoint); //pixels in original map contained in pixel of outputmap */
+            auto pixelsNearbyRange = baseminkmap.originalMap.query_disc(map.pix2ang(pixel), smoothrad);
             std::vector<int> pixelsNearby = pixelsNearbyRange.toVector();
         
             minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
