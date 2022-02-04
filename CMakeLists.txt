@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.10)
 project(Litchi)
 
 set(healpix_parent_dir "/userdata/data/collischon/Healpix_3.70/")
+#include_directories(${PROJECT_SOURCE_DIR}/pybind11)
+add_subdirectory("pybind11")
 include_directories(${healpix_parent_dir}include/)
 link_directories(${healpix_parent_dir}lib/)
 
@@ -17,6 +19,6 @@ add_executable(tests tests.cpp)
 target_link_libraries(litchi -lhealpix_cxx)
 target_link_libraries(tests PUBLIC -lhealpix_cxx)
 
-find_package(pybind11 REQUIRED)
+#find_package(pybind11 REQUIRED)
 pybind11_add_module(litchieat pybindings.cpp)
 target_link_libraries(litchieat PUBLIC -lhealpix_cxx)
