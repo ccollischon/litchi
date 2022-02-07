@@ -6,7 +6,7 @@ project(Litchi)
 if(DEFINED ENV{HEALPIX})
     set(healpix_parent_dir $ENV{HEALPIX} )
 else()
-    message(FATAL_ERROR "HEALPIX_DIR not defined")
+    message(WARNING "HEALPIX not defined, should contain path to Healpix-folder (with include/, lib/ subdirectories).\n Set if not installed with package manager!")
 endif()
 set(CMAKE_FIND_LIBRARY_SUFFIXES .a .lib)
 
