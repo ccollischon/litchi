@@ -3,7 +3,13 @@ cmake_minimum_required(VERSION 3.10)
 # set the project name
 project(Litchi)
 
-set(healpix_parent_dir "/userdata/data/collischon/Healpix_3.70" )
+if(DEFINED ENV{HEALPIX})
+    set(healpix_parent_dir $ENV{HEALPIX} )
+else()
+    message(FATAL_ERROR "HEALPIX_DIR not defined")
+endif()
+set(CMAKE_FIND_LIBRARY_SUFFIXES .a .lib)
+
 #include_directories(${PROJECT_SOURCE_DIR}/pybind11)
 add_subdirectory("pybind11")
 include_directories(${healpix_parent_dir}/include/)
