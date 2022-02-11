@@ -20,6 +20,10 @@ int main ()
     
     const double pi = 3.1415926535897962643;
     
+    
+    cout << std::atan2(1,0) << endl;
+    
+    
     //Test midpoint, geometry helpers
     pointing A(pi/2,0);
     pointing B(pi/4,0);

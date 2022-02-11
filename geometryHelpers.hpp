@@ -188,6 +188,21 @@ void flipPointing(pointing& input)
 }
 
 /**
+ * Creates tangential space vector between two positions on sphere, pointing from right to left
+ */
+pointing pointingDiff(const pointing& left, const pointing& right)
+{
+    const double pi = 3.14159265359;
+    double thetaDir = left.theta-right.theta;
+    double phiDir{};
+    //When right is close to 2 pi and left close to zero, use other convention where phi goes from -pi to pi
+    if(right.phi > left.phi+pi) phiDir = left.phi - (right.phi-2*pi);
+    else if(left.phi > right.phi+pi) phiDir = (left.phi-2*pi) - right.phi;
+    else phiDir = left.phi-right.phi;
+    return pointing(thetaDir, phiDir);
+}
+
+/**
  * Parallel transport tangent vector on Sphere along geodesic from start to stop. Uses Schild's ladder procedure.
  * \param start Starting position
  * \param stop Final position
@@ -216,7 +231,7 @@ pointing parallelTransport(pointing start, pointing stop, pointing initialVector
     auto rotaxis = crossprod(start.to_vec3(),midpointToAim.to_vec3());
     pointing fromStopAlongFinal(rotateAroundAxis(rotaxis, start.to_vec3(), dist));
     
-    pointing finalVector(fromStopAlongFinal.theta-stop.theta, fromStopAlongFinal.phi-stop.phi); //Take difference to return to tangent space
+    pointing finalVector(pointingDiff(fromStopAlongFinal, stop)); //Take difference to return to tangent space
     normalizeVectorOnSphere(finalVector,stop.theta);
     
     
