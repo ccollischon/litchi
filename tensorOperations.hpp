@@ -277,12 +277,12 @@ double eigenVecDir(const auto& input)
         if(twolambda1>twolambda2)
         {
             double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
-            relevantVec.theta = sin2T*(aminusd + sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
+            relevantVec.theta = (aminusd + sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
         }
         else
         {
             double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
-            relevantVec.theta = sin2T*(aminusd - sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
+            relevantVec.theta = (aminusd - sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
         }
         return eigenVecDir(minkTensorIntegrand(0,1,1,input.r,relevantVec));
     }
