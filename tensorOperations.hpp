@@ -259,11 +259,7 @@ double eigenVecDir(const auto& input)
     }
     else if (ranksum==1)
     {
-        pointing unitphi(0,1); //unittheta = (1,0) independent from colatitude
-        normalizeVectorOnSphere(unitphi,input.r.theta);
-        double scalartheta = input.accessElement({0})*(1); //TODO theta hier nach oben? ne erstmal so lassen, dass es mathematisch zur Konvention passt
-        double scalarphi   = input.accessElement({1})*unitphi.phi *sin(input.r.theta)*sin(input.r.theta);
-        return std::atan2(scalarphi, scalartheta);
+        return giveAngle(pointing(input.accessElement({0}),input.accessElement({1})), input.r);
     }
     else if (ranksum==2)
     {  //eigenvalues of matrix (a b, c d)
@@ -284,7 +280,7 @@ double eigenVecDir(const auto& input)
             double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
             relevantVec.theta = (aminusd - sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
         }
-        return eigenVecDir(minkTensorIntegrand(0,1,1,input.r,relevantVec));
+        return giveAngle(relevantVec,input.r);
     }
     else
     {

@@ -202,6 +202,31 @@ pointing pointingDiff(const pointing& left, const pointing& right)
     return pointing(thetaDir, phiDir);
 }
 
+/** 
+ * Should return direction in which "direction" is pointing. Zero means south, pi/2 means east
+ * */
+double giveAngle(const pointing& direction, const pointing& position)
+{
+    pointing unitphi(0,1); //unittheta = (1,0) independent from colatitude
+    normalizeVectorOnSphere(unitphi,position.theta);
+    double scalartheta = direction.theta*(1); //theta hier nach oben? ne erstmal so lassen, dass es mathematisch zur Konvention passt
+    double scalarphi   = direction.phi*unitphi.phi *sin(position.theta)*sin(position.theta);
+    return std::atan2(scalarphi, scalartheta);
+}
+
+/**
+ * Moves start in direction of "direction" over a distance of dist. Done via rotations
+ */
+pointing moveAlongVector(const pointing& start, const pointing& direction, double dist=0.001)
+{
+    const double pi = 3.14159265359;
+    pointing startrot(start.theta+pi/2, start.phi); //go to plane perpendicular to start
+    startrot.normalize();
+    double angle=giveAngle(direction, start); //direction in which direction-vector is pointing
+    auto dirCart = rotateAroundAxis(start.to_vec3(), startrot.to_vec3(), angle+pi/2); //convert direction to position pointing in same direction, then keep rotating by pi/2 and use that as rotation axis
+    return pointing(rotateAroundAxis(dirCart, start.to_vec3(), dist));
+}
+
 /**
  * Parallel transport tangent vector on Sphere along geodesic from start to stop. Uses Schild's ladder procedure.
  * \param start Starting position
@@ -222,8 +247,9 @@ pointing parallelTransport(pointing start, pointing stop, pointing initialVector
     }*/
     
     //Schild's ladder
-    pointing initShort(initialVector.theta*0.001, initialVector.phi*0.001);
+    pointing initShort(initialVector.theta*0.0001, initialVector.phi*0.0001);
     pointing fromStartAlongInit(start.theta + initShort.theta, start.phi + initShort.phi); //move small distance along init
+    //pointing fromStartAlongInit = moveAlongVector(start, initialVector, 0.001); //move small distance along init
     pointing midpointToAim = midpoint(fromStartAlongInit, stop); //find midpoint between pointing above and endpoint of transport
     
     //Now find point at twice distance from start to midpoint along geodesic, the geodesic through stop along transported vector passes through here
