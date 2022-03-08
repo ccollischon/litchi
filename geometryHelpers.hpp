@@ -55,6 +55,21 @@ pointing midpoint(pointing A, pointing B) //rotate starting from A by half arcle
 }
 
 /**
+ * Creates tangential space vector between two positions on sphere, pointing from right to left
+ */
+pointing pointingDiff(const pointing& left, const pointing& right)
+{
+    const double pi = 3.14159265359;
+    double thetaDir = left.theta-right.theta;
+    double phiDir{};
+    //When right is close to 2 pi and left close to zero, use other convention where phi goes from -pi to pi
+    if(right.phi > left.phi+pi) phiDir = left.phi - (right.phi-2*pi);
+    else if(left.phi > right.phi+pi) phiDir = (left.phi-2*pi) - right.phi;
+    else phiDir = left.phi-right.phi;
+    return pointing(thetaDir, phiDir);
+}
+
+/**
  * Mantz et al 2008 interpolation between 2 lattice points. If the field value at one point is close to the threshold the interpolated point will be close to it and vice versa
  * \param A Position on sphere of one point
  * \param valA Field value at A
@@ -139,11 +154,8 @@ pointing getN_rotation(pointing A, pointing B)//A, B should be given such that A
     vec3 AcrossB = crossprod(A.to_vec3(),B.to_vec3());
     vec3 rotAxis = crossprod(A.to_vec3(), AcrossB); //rotating A around this axis moves it along the desired normal vector
     
-    pointing Arot(rotateAroundAxis(rotAxis,A.to_vec3(),0.001));
-    if(Arot.phi-A.phi > 5){
-        Arot.phi = Arot.phi - 2*3.14159;
-    }
-    pointing n(Arot.theta-A.theta, Arot.phi-A.phi);
+    pointing Arot(rotateAroundAxis(rotAxis,A.to_vec3(),0.00000001)); //very short rotation, converges at around this point when comparing to parallelTransport (see tests.cpp polen1/2)
+    pointing n = pointingDiff(Arot, A);
     
     normalizeVectorOnSphere(n,A.theta);
     return n;
@@ -187,20 +199,7 @@ void flipPointing(pointing& input)
     input.normalize();
 }
 
-/**
- * Creates tangential space vector between two positions on sphere, pointing from right to left
- */
-pointing pointingDiff(const pointing& left, const pointing& right)
-{
-    const double pi = 3.14159265359;
-    double thetaDir = left.theta-right.theta;
-    double phiDir{};
-    //When right is close to 2 pi and left close to zero, use other convention where phi goes from -pi to pi
-    if(right.phi > left.phi+pi) phiDir = left.phi - (right.phi-2*pi);
-    else if(left.phi > right.phi+pi) phiDir = (left.phi-2*pi) - right.phi;
-    else phiDir = left.phi-right.phi;
-    return pointing(thetaDir, phiDir);
-}
+
 
 /** 
  * Should return direction in which "direction" is pointing. Zero means south, pi/2 means east
@@ -247,7 +246,7 @@ pointing parallelTransport(pointing start, pointing stop, pointing initialVector
     }*/
     
     //Schild's ladder
-    pointing initShort(initialVector.theta*0.0001, initialVector.phi*0.0001);
+    pointing initShort(initialVector.theta*0.00000001, initialVector.phi*0.00000001); //very short vector, converges at around this point when comparing to getN_rotation (see tests.cpp polen1, polen2 comparison)
     pointing fromStartAlongInit(start.theta + initShort.theta, start.phi + initShort.phi); //move small distance along init
     //pointing fromStartAlongInit = moveAlongVector(start, initialVector, 0.001); //move small distance along init
     pointing midpointToAim = midpoint(fromStartAlongInit, stop); //find midpoint between pointing above and endpoint of transport

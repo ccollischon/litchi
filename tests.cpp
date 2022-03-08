@@ -154,7 +154,7 @@ int main ()
     pointing polen1 = parallelTransport(eq1,pole1,eqn);
     pointing polen2 = getN_rotation(pole1,pole2);
     //Parallel transport with one step not that accurate, but phi here is >67. With recursion transported vector gets more similar to newly calculated one
-    assert( abs(polen1.theta-polen2.theta)<1e-2 && abs(polen1.phi-polen2.phi)<1e-1  && "getN_rotation or parallelTransport broken!");
+    assert( abs(polen1.theta-polen2.theta)<1e-4 && abs(polen1.phi-polen2.phi)<1e-4  && "getN_rotation or parallelTransport broken!");
     
     
     pointing leftOfZero(pi*0.4,0.01);
