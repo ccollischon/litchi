@@ -3,6 +3,8 @@
 #include <vector>
 #include <iostream>
 
+#include "eigen/Eigen/Dense"
+
 #include "healpix_cxx/healpix_map.h"
 #include "healpix_cxx/healpix_map_fitsio.h"
 
@@ -15,13 +17,19 @@
 #include "litchi_eat.hpp"
 
 using namespace std;
+using Eigen::MatrixXd;
 int main ()
 {
     
     const double pi = 3.1415926535897962643;
-    
-    
-    cout << std::atan2(1,0) << endl;
+
+
+    MatrixXd m(2,2);
+    m(0,0) = 3;
+    m(1,0) = 2.5;
+    m(0,1) = -1;
+    m(1,1) = m(1,0) + m(0,1);
+    std::cout << m << std::endl;
     
     
     //Test midpoint, geometry helpers

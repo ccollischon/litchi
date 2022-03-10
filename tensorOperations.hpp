@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <vector>
 #include <stdexcept>
+
+#include "eigen/Eigen/Eigenvalues"
 #include "minkTensorIntegrand.hpp"
 /** \file tensorOperations.hpp
  * \brief minkTensorStack, trace, eigenvalue quotient: all operations involving tensors
