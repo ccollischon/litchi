@@ -12,6 +12,7 @@ set(CMAKE_FIND_LIBRARY_SUFFIXES .a .lib)
 
 #include_directories(${PROJECT_SOURCE_DIR}/pybind11)
 add_subdirectory("pybind11")
+add_subdirectory("eigen")
 include_directories(${healpix_parent_dir}/include/)
 link_directories(${healpix_parent_dir}/lib/)
 
