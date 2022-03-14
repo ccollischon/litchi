@@ -265,11 +265,11 @@ double eigenValueQuotient(const tens& input)
     {
         double sin2T = sin(input.r.theta)*sin(input.r.theta);
         //Only need these 5 because of total symmetry:
-        double W0000 = input.accessElement_noweights({0,0,0,0});
-        double W1100 = input.accessElement_noweights({1,1,0,0});
-        double W1111 = input.accessElement_noweights({1,1,1,1});
-        double W0001 = input.accessElement_noweights({0,0,0,1});
-        double W1101 = input.accessElement_noweights({1,1,0,1});
+        double W0000 = input.accessElement({0,0,0,0});
+        double W1100 = input.accessElement({1,1,0,0});
+        double W1111 = input.accessElement({1,1,1,1});
+        double W0001 = input.accessElement({0,0,0,1});
+        double W1101 = input.accessElement({1,1,0,1});
         //Create matrix, calculate eigenvalues
         Eigen::Matrix3d mehrabadimatrix{
             {W0000,2.*sin2T*W0001,sin2T*sin2T*W1100},

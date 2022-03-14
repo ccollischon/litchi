@@ -177,7 +177,7 @@ struct minkmapSphere :  minkmapFamily{
                     std::cerr << "Error: invalid curvIndex: " << curvIndex << " , this makes no sense. In 2D only up to two!" << std::endl;
                     throw std::invalid_argument( "minkmapSphere::integrateMinktensor: Weird curvIndex" );
             }
-                    
+            
         }
         return integralNumbers;
     }
