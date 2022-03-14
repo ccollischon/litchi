@@ -77,6 +77,24 @@ struct minkTensorStack
         return retval;
     }
     
+    /**
+     * Access element of linear combination of tensors without multiplying by weights
+     * \param indices Indices of desired element
+     * \return Value of desired element
+     */
+    double accessElement_noweights(const std::vector<uint_fast8_t>& indices) const
+    {
+        assert(ns.size()==weights.size() && "Error: number of weights different from number of normal vectors!");
+        
+        double retval = 0.;
+        for(uint i=0; i<ns.size(); ++i)
+        {
+            minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, ns[i]);
+            retval+= tensorHere.accessElement(indices);
+        }
+        return retval;
+    }
+    
     /** Parallel transport all normal vectors in stack to newR along geodesic
      */
     void moveTo(const pointing& newR)
@@ -221,7 +239,7 @@ double trace(const tens& input) //sum of eigenvalues
 }
 
 template<typename tens>
-double eigenValueQuotient(const tens& input) //TODO check
+double eigenValueQuotient(const tens& input)
 {
     uint ranksum = input.rankA+input.rankB;
     if (ranksum == 1)
@@ -243,6 +261,26 @@ double eigenValueQuotient(const tens& input) //TODO check
         else retval = twolambda2/twolambda1;
         return std::isnan(retval) ? 0 : retval; //return 0 instead of nan in case of division by zero
         
+    } else if(ranksum == 4)
+    {
+        double sin2T = sin(input.r.theta)*sin(input.r.theta);
+        //Only need these 5 because of total symmetry:
+        double W0000 = input.accessElement_noweights({0,0,0,0});
+        double W1100 = input.accessElement_noweights({1,1,0,0});
+        double W1111 = input.accessElement_noweights({1,1,1,1});
+        double W0001 = input.accessElement_noweights({0,0,0,1});
+        double W1101 = input.accessElement_noweights({1,1,0,1});
+        //Create matrix, calculate eigenvalues
+        Eigen::Matrix3d mehrabadimatrix{
+            {W0000,2.*sin2T*W0001,sin2T*sin2T*W1100},
+            {W0001,2.*sin2T*W1100,sin2T*sin2T*W1101},
+            {W1100,2.*sin2T*W1101,sin2T*sin2T*W1111}
+        };
+        Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,false);
+        auto EVvec = solver.eigenvalues();
+        double norm = std::abs(sqrt(EVvec.dot(EVvec)));
+        
+        return norm;
     } else
     {
         std::cerr << "Error: Eigenvalue quotient not implemented for rank higher than 2! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;

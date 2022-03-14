@@ -31,6 +31,14 @@ int main ()
     m(1,1) = m(1,0) + m(0,1);
     std::cout << m << std::endl;
     
+    Eigen::Matrix3d mehrabadimatrix{
+        {3,1,0},
+        {0,2,0},
+        {0,0,7}
+    };
+    Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,false);
+    auto EVvec = solver.eigenvalues();
+    cout << EVvec << endl;
     
     //Test midpoint, geometry helpers
     pointing A(pi/2,0);
