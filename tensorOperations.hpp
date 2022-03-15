@@ -21,10 +21,11 @@ struct minkTensorStack
     const uint rankA{0}, rankB{0};
     const uint curvIndex{0};
     pointing r{1.5701963268,0};
-    std::vector<pointing> ns{}; ///< list of normal Vectors from which minkTensorIntegrands should be generated
-    std::vector<double> weights{}; ///< list of weights for minkTensorIntegrands
+    //std::vector<pointing> ns{}; ///< list of normal Vectors from which minkTensorIntegrands should be generated
+    //std::vector<double> weights{}; ///< list of weights for minkTensorIntegrands
+    std::vector<std::pair<pointing,double>> nweights{}; ///< list normal Vectors from which minkTensorIntegrands should be generated and their respective weights
     
-    minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), ns(left.ns), weights(left.weights)
+    minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), nweights(left.nweights)
     {
         appendStack(right);
     }
@@ -32,7 +33,7 @@ struct minkTensorStack
     minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
     {}
     
-    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), ns{inp.n}, weights{weight}
+    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), nweights{std::make_pair(inp.n,weight)}
     {}
     
     //Move/copy constructors default
@@ -44,8 +45,7 @@ struct minkTensorStack
     minkTensorStack& operator= (const minkTensorStack& other)
     {
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to copy assign minkTensorStacks of different rank!");
-        ns = other.ns;
-        weights = other.weights;
+        nweights = other.nweights;
         r = other.r;
         return *this;
     }
@@ -53,8 +53,7 @@ struct minkTensorStack
     minkTensorStack& operator= (minkTensorStack&& other)
     {
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to move assign minkTensorStacks of different rank!");
-        ns = std::move(other.ns);
-        weights = std::move(other.weights);
+        nweights = std::move(other.nweights);
         r = std::move(other.r);
         return *this;
     }
@@ -66,13 +65,11 @@ struct minkTensorStack
      */
     double accessElement(const std::vector<uint_fast8_t>& indices) const
     {
-        assert(ns.size()==weights.size() && "Error: number of weights different from number of normal vectors!");
-        
         double retval = 0.;
-        for(uint i=0; i<ns.size(); ++i)
+        for(uint i=0; i<nweights.size(); ++i)
         {
-            minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, ns[i]);
-            retval+= tensorHere.accessElement(indices)*weights[i];
+            minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, std::get<0>(nweights[i]));
+            retval+= tensorHere.accessElement(indices)*std::get<1>(nweights[i]);
         }
         return retval;
     }
@@ -84,12 +81,10 @@ struct minkTensorStack
      */
     double accessElement_noweights(const std::vector<uint_fast8_t>& indices) const
     {
-        assert(ns.size()==weights.size() && "Error: number of weights different from number of normal vectors!");
-        
         double retval = 0.;
-        for(uint i=0; i<ns.size(); ++i)
+        for(uint i=0; i<nweights.size(); ++i)
         {
-            minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, ns[i]);
+            minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, std::get<0>(nweights[i]));
             retval+= tensorHere.accessElement(indices);
         }
         return retval;
@@ -99,9 +94,9 @@ struct minkTensorStack
      */
     void moveTo(const pointing& newR)
     {
-        for(uint i=0; i<ns.size(); ++i)
+        for(uint i=0; i<nweights.size(); ++i)
         {
-            ns[i] = parallelTransport(r, newR, ns[i]);
+            std::get<0>(nweights[i]) = parallelTransport(r, newR, std::get<0>(nweights[i]));
         }
         r = newR;
     }
@@ -110,8 +105,7 @@ struct minkTensorStack
      */
     void addTensor(pointing n, double weight)
     {
-        ns.push_back(n);
-        weights.push_back(weight);
+        nweights.push_back(std::make_pair(n,weight));
     }
     
     /** Add normal vector of minkTensorIntegrand with same ranks to stack. Normal vector is parallel transported to position of stack if positions differ
@@ -121,8 +115,7 @@ struct minkTensorStack
         assert(rankA==tens.rankA && rankB==tens.rankB && curvIndex==tens.curvIndex && "Trying to addMinkTensorIntegrand to minkTensorStack of different rank!");
         pointing newn = tens.n;
         if(arclength(r,tens.r)>1e-12)   newn = parallelTransport(tens.r,r,newn);
-        ns.push_back(newn);
-        weights.push_back(weight);
+        nweights.push_back(std::make_pair(newn,weight));
     }
     
     /** Add normal vectors and weights of other stack with same ranks to this stack. Normal vectors are parallel transported to position of this stack if positions differ
@@ -132,11 +125,9 @@ struct minkTensorStack
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to append minkTensorStacks of different rank!");
         if(arclength(r,other.r)>1e-12)   other.moveTo(r);
         
-        ns.reserve(ns.size()+other.ns.size());
-        weights.reserve(weights.size()+other.weights.size());
+        nweights.reserve(nweights.size()+other.nweights.size());
         
-        ns.insert(ns.end(), other.ns.begin(), other.ns.end());
-        weights.insert(weights.end(), other.weights.begin(), other.weights.end());
+        nweights.insert(nweights.end(), other.nweights.begin(), other.nweights.end());
     }
     
     explicit operator double() const
@@ -166,7 +157,7 @@ struct minkTensorStack
     
     minkTensorStack& operator*= (double other)
     {
-        std::for_each(weights.begin(), weights.end(), [&other](double& inp){inp*=other;});
+        std::for_each(nweights.begin(), nweights.end(), [&other](auto& inp){std::get<1>(inp)*=other;});
         return *this;
     }
 };
