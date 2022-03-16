@@ -21,7 +21,7 @@ struct minkTensorIntegrand {
     const uint rankA{0}, rankB{0};
     const uint curvIndex{0};
     pointing r{1.5701963268,0};
-    pointing n {0,1};
+    pointing n {1,0};
     
     minkTensorIntegrand(uint rank1, uint rank2, uint curvInd = 0) : rankA(rank1), rankB(rank2), curvIndex(curvInd), n(0,1)
     { //simple constructor for empty tensor, just give ranks
@@ -75,10 +75,8 @@ struct minkTensorIntegrand {
         } while ( std::next_permutation(indices.begin(), indices.end()) );
         
         
-        //Calculate binomialCoeff, not factorial because next_permutation  does not create degeneracies
         
-        
-        returnval /= numberOfPermutations; //binomialCoeff(indicesSize, numberOfOnes);
+        returnval /= numberOfPermutations;
         return returnval;
         
     }
