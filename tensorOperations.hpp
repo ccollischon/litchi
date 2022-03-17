@@ -269,9 +269,10 @@ double eigenValueQuotient(const tens& input)
         };
         Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,false);
         auto EVvec = solver.eigenvalues();
-        double norm = std::abs(sqrt(EVvec.dot(EVvec)));
+        Eigen::Vector3d realVec(std::abs(EVvec(0)), std::abs(EVvec(1)),std::abs(EVvec(2)));
+        double ratio = std::abs(realVec.maxCoeff()/realVec.minCoeff());
         
-        return norm;
+        return std::isnan(ratio) ? 0 : ratio;
     } else
     {
         std::cerr << "Error: Eigenvalue quotient not implemented for rank higher than 2! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;

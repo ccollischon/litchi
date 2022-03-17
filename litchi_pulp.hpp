@@ -133,7 +133,7 @@ struct minkmapSphere :  minkmapFamily{
         uint caseindex = 0; //caseindex: every corner gets a position in a 4 bit number, bit set to 1 if corner>thresh 0 else. Gives number of each case. If diagonal above/below, check overall average to see whether connected
         for(uint i=0;i<valuesSize;i++)
         {
-            if(values.at(i)>=thresh) caseindex += pow(2,i);
+            if(values[i]>=thresh) caseindex += pow(2,i);
         }
         
         minkTensorStack integralNumbers(rankA,rankB,curvIndex,pointing(1.5701963268,0)); 
@@ -587,8 +587,8 @@ struct minkmapSphere :  minkmapFamily{
                 
                 break;
             case 7: //alles
-                if(curvIndex==0)
                 area += sphereArea(positions.at(0),positions.at(2),positions.at(1));
+                if(curvIndex==0)
                 {
                     return minkTensorIntegrand(rankA, rankB, curvIndex, positions.at(0),pointing(1,0))*area;
                 }
