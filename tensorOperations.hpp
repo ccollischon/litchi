@@ -10,6 +10,7 @@
 #include <stdexcept>
 
 #include "eigen/Eigen/Eigenvalues"
+#include "eigen/Eigen/Dense"
 #include "minkTensorIntegrand.hpp"
 /** \file tensorOperations.hpp
  * \brief minkTensorStack, trace, eigenvalue quotient: all operations involving tensors
@@ -269,10 +270,13 @@ double eigenValueQuotient(const tens& input)
         };
         Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,false);
         auto EVvec = solver.eigenvalues();
-        Eigen::Vector3d realVec(std::abs(EVvec(0)), std::abs(EVvec(1)),std::abs(EVvec(2)));
-        double ratio = std::abs(realVec.maxCoeff()/realVec.minCoeff());
+        Eigen::Vector3d reduced(std::abs(EVvec(0))-0., std::abs(EVvec(1))-0.,std::abs(EVvec(2))-0.);
+        double retval = std::abs(reduced.norm());
+        return retval;
         
-        return std::isnan(ratio) ? 0 : ratio;
+        //double ratio = std::abs(realVec.maxCoeff()/realVec.minCoeff());
+        
+        //return std::isnan(ratio) ? 0 : ratio;
     } else
     {
         std::cerr << "Error: Eigenvalue quotient not implemented for rank higher than 2! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
@@ -313,8 +317,31 @@ double eigenVecDir(const auto& input)
             relevantVec.theta = (aminusd - sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
         }
         return giveAngle(relevantVec,input.r);
-    }
-    else
+    } else if(ranksum == 4 && false)
+    {
+        double sin2T = sin(input.r.theta)*sin(input.r.theta);
+        //Only need these 5 because of total symmetry:
+        double W0000 = input.accessElement({0,0,0,0});
+        double W1100 = input.accessElement({1,1,0,0});
+        double W1111 = input.accessElement({1,1,1,1});
+        double W0001 = input.accessElement({0,0,0,1});
+        double W1101 = input.accessElement({1,1,0,1});
+        //Create matrix, calculate eigenvalues
+        Eigen::Matrix3d mehrabadimatrix{
+            {W0000,2.*sin2T*W0001,sin2T*sin2T*W1100},
+            {W0001,2.*sin2T*W1100,sin2T*sin2T*W1101},
+            {W1100,2.*sin2T*W1101,sin2T*sin2T*W1111}
+        };
+        Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,true);
+        auto EVvec = solver.eigenvalues();
+        Eigen::Vector3d reduced(std::abs(EVvec(0))-0., std::abs(EVvec(1))-0.,std::abs(EVvec(2))-0.);
+        double retval = std::abs(reduced.norm());
+        return retval;
+        
+        //double ratio = std::abs(realVec.maxCoeff()/realVec.minCoeff());
+        
+        //return std::isnan(ratio) ? 0 : ratio;
+    } else
     {
         std::cerr << "Error: requesting eigenvector direction for ill-defined ranks: rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
         throw std::invalid_argument("eigenVecDir not defined for this rank");
