@@ -279,7 +279,7 @@ double eigenValueQuotient(const tens& input)
         //return std::isnan(ratio) ? 0 : ratio;
     } else
     {
-        std::cerr << "Error: Eigenvalue quotient not implemented for rank higher than 2! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
+        std::cerr << "Error: Eigenvalue quotient not implemented for rank 3 and higher than 4! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
         throw std::invalid_argument("eigenValueQuotient not implemented for higher ranks");
     }
 }
