@@ -39,6 +39,28 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
     return thresholds;
 }
 
+
+void maskMap(Healpix_Map<double>& map, const Healpix_Map<double>& mask, double thresh = 0.9)
+{
+    auto nside = map.Nside();
+    if(map.Nside() != mask.Nside())
+    {
+        std::cerr<< "Error: Nside of mask not equal to Nside of input!" << std::endl;
+        throw std::invalid_argument( "maskMap: Incompatible Nside!" );
+    }
+    if(map.Scheme()!=mask.Scheme())
+    {
+        std::cerr<< "Error: Scheme of mask not equal to Scheme of input!" << std::endl;
+        throw std::invalid_argument( "maskMap: Incompatible scheme!" );
+    }
+    
+    for(int i=0; i<4*nside; ++i)
+    {
+        if(mask[i]<thresh) map[i] = NAN;
+    }
+    
+}
+
 ///Struct only for giving minkmaps normal pixel numbering
 template <typename maptype>//, typename std::enable_if_t<std::is_base_of<minkmapFamily,maptype>::value>* = nullptr >
 struct normalHealpixInterface 

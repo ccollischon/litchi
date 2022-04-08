@@ -131,9 +131,15 @@ struct minkmapSphere :  minkmapFamily{
         const uint valuesSize = values.size();
         
         uint caseindex = 0; //caseindex: every corner gets a position in a 4 bit number, bit set to 1 if corner>thresh 0 else. Gives number of each case. If diagonal above/below, check overall average to see whether connected
+        //If one of the pixels is masked, i.e. equal to nan, set caseindex to zero and treat the area as empty
         for(uint i=0;i<valuesSize;i++)
         {
+            if(std::isnan(values[i])) {
+                caseindex = 0;
+                break;
+            }
             if(values[i]>=thresh) caseindex += pow(2,i);
+            
         }
         
         minkTensorStack integralNumbers(rankA,rankB,curvIndex,pointing(1.5701963268,0)); 
