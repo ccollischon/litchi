@@ -32,9 +32,9 @@ bool has_x(const auto &obj) {
 ///Helper struct containing all necessary Minkmap generation parameters
 struct paramStruct{
         uint rankA{0}, rankB{0}, curvIndex{0}, numt{1}, Nside{0}, smooth{0};
-        double mint{0}, maxt{1};
+        double mint{0}, maxt{1}, maskThresh{0.9};
         bool linThresh{true}, forceOutname{false}, sequence{false};
-        std::string function{"trace"};
+        std::string function{"trace"}, maskname{""};
 };
 
 void checkParams(const auto &obj) {
@@ -103,7 +103,9 @@ void formatOutname(std::string& outname, const paramStruct& params, const int co
             sprintf(mintmaxtnumt,"%.3e_%.3e_%d_%s", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log"); //printf %g for nicer formatting
         }
         std::string funString = (params.function=="trace") ? "_tr" : (params.function=="EVQuo") ? "_evq" : (params.function=="EVDir") ? "_evd" : "_error";
-        outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + funString + "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + ".fits";
+        char maskString[20];
+        if(params.maskname!="") sprintf(maskString,"_mask_%4.2f", params.maskThresh);
+        outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + funString + "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + maskString + ".fits";
     }
     else if(params.sequence) //for sequence cannot leave the outname unchanged, or else will overwrite one file over and over
     {
@@ -166,6 +168,12 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
         handle.set_key("lin/logThresh ", std::string("log"), "linear or logarithmic spacing");
     }
     
+    if(params.maskname!="")
+    {
+        handle.set_key("mask", params.maskname, "mask used before generating map");
+        handle.set_key("maskThresh", params.maskThresh, "All mask pixels above this threshold were treated as not masked");
+    }
+    
     std::vector<std::string> funStrings; //Description of function used to generate scalar from tensor
     if(params.function=="trace"){
         funStrings = {"trace", "Trace of Tensor"};
@@ -201,6 +209,13 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
         degradedMap.Import_degrade(map);
         map = degradedMap;
     }
+    
+    if(params.maskname!="")
+    {
+        Healpix_Map<double> mask = read_Healpix_map_from_fits<double>(params.maskname, 1, 2);
+        maskMap(map, mask, params.maskThresh);
+    }
+    
     const std::vector<double> thresholds = params.linThresh ? makeIntervals_lin(params.mint, params.maxt, params.numt) : makeIntervals_log(params.mint, params.maxt, params.numt);
     std::vector<minkmapSphere> maps;
     for(double thresh : thresholds)

@@ -54,7 +54,7 @@ void maskMap(Healpix_Map<double>& map, const Healpix_Map<double>& mask, double t
         throw std::invalid_argument( "maskMap: Incompatible scheme!" );
     }
     
-    for(int i=0; i<4*nside; ++i)
+    for(int i=0; i<12*nside*nside; ++i)
     {
         if(mask[i]<thresh) map[i] = NAN;
     }

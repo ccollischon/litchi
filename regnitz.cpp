@@ -143,6 +143,14 @@ int main(int argc,char **argv)
         {
             params.sequence = true;
         }
+        else if (thisArg=="--mask" || thisArg=="-m")
+        {
+            params.maskname = arguments.at(++i);
+        }
+        else if (thisArg=="--maskThresh")
+        {
+            params.maskThresh = stod(arguments.at(++i));
+        }
         else
         {
             std::cerr << "Illegal argument: " << thisArg << "\n";

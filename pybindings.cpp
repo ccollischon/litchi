@@ -36,7 +36,7 @@ namespace py = pybind11;
 //
 //}
 
-//Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, function, forceOutname, sequence
+//Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, function, forceOutname, sequence, maskname, maskThresh
 PYBIND11_MODULE(litchieat, m) {
     py::class_<paramStruct>(m, "paramStruct")
         .def(py::init<>())
@@ -51,7 +51,9 @@ PYBIND11_MODULE(litchieat, m) {
         .def_readwrite("linThresh", &paramStruct::linThresh)
         .def_readwrite("function", &paramStruct::function)
         .def_readwrite("forceOutname", &paramStruct::forceOutname)
-        .def_readwrite("sequence", &paramStruct::sequence);
+        .def_readwrite("sequence", &paramStruct::sequence)
+        .def_readwrite("maskname", &paramStruct::maskname)
+        .def_readwrite("maskThresh", &paramStruct::maskThresh);
     m.def("makeSingleMinkmap", &makeSingleMinkmap, "Reads file given by inname, creates Minkmap according to params, writes to outname", py::arg("inname"), py::arg("params"), py::arg("outname"));
     m.def("makeSequence", &makeSequence, "Reads file given by inname, creates threshold sequence of Minkmaps according to params, writes to outname", py::arg("inname"), py::arg("params"), py::arg("outname"));
 }
