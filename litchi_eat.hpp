@@ -104,7 +104,7 @@ void formatOutname(std::string& outname, const paramStruct& params, const int co
         }
         std::string funString = (params.function=="trace") ? "_tr" : (params.function=="EVQuo") ? "_evq" : (params.function=="EVDir") ? "_evd" : "_error";
         char maskString[20];
-        if(params.maskname!="") sprintf(maskString,"_mask_%4.2f", params.maskThresh);
+        (params.maskname!="") ? sprintf(maskString,"_mask_%4.2f", params.maskThresh) : sprintf(maskString,"_nomask");
         outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + funString + "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + maskString + ".fits";
     }
     else if(params.sequence) //for sequence cannot leave the outname unchanged, or else will overwrite one file over and over
