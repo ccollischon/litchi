@@ -22,6 +22,7 @@ struct minkTensorIntegrand {
     const uint curvIndex{0};
     pointing r{1.5701963268,0};
     pointing n {1,0};
+    const static bool isnan{false}; //for compatibility with minkTensorStack
     
     minkTensorIntegrand(uint rank1, uint rank2, uint curvInd = 0) : rankA(rank1), rankB(rank2), curvIndex(curvInd)
     { //simple constructor for empty tensor, just give ranks

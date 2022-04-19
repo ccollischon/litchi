@@ -22,20 +22,31 @@ struct minkTensorStack
     const uint rankA{0}, rankB{0};
     const uint curvIndex{0};
     pointing r{1.5701963268,0};
+    bool isnan{false}; ///< setting whether this tensor contains contributions from a masked pixel. If true, pervasive in all operations.
     //std::vector<pointing> ns{}; ///< list of normal Vectors from which minkTensorIntegrands should be generated
     //std::vector<double> weights{}; ///< list of weights for minkTensorIntegrands
     std::vector<std::pair<pointing,double>> nweights{}; ///< list normal Vectors from which minkTensorIntegrands should be generated and their respective weights
     
     minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), nweights(left.nweights)
     {
-        appendStack(right);
+        if(left.isnan || right.isnan) {
+            isnan = true;
+            nweights.clear();
+        }
+        else {
+            appendStack(right);
+        }
     }
     
     minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
     {}
     
-    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), nweights{std::make_pair(inp.n,weight)}
-    {}
+    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), isnan{std::isnan(weight)}, nweights{}
+    {
+        if(!isnan) {
+            nweights.push_back(std::make_pair(inp.n,weight));
+        }
+    }
     
     //Move/copy constructors default
     minkTensorStack(minkTensorStack&& other) = default;
@@ -48,6 +59,7 @@ struct minkTensorStack
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to copy assign minkTensorStacks of different rank!");
         nweights = other.nweights;
         r = other.r;
+        isnan = other.isnan;
         return *this;
     }
     
@@ -56,6 +68,7 @@ struct minkTensorStack
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to move assign minkTensorStacks of different rank!");
         nweights = std::move(other.nweights);
         r = std::move(other.r);
+        isnan = other.isnan;
         return *this;
     }
     
@@ -66,6 +79,8 @@ struct minkTensorStack
      */
     double accessElement(const std::vector<uint_fast8_t>& indices) const
     {
+        if(isnan) {return NAN;}
+        
         double retval = 0.;
         for(uint i=0; i<nweights.size(); ++i)
         {
@@ -82,6 +97,8 @@ struct minkTensorStack
      */
     double accessElement_noweights(const std::vector<uint_fast8_t>& indices) const
     {
+        if(isnan) {return NAN;}
+        
         double retval = 0.;
         for(uint i=0; i<nweights.size(); ++i)
         {
@@ -106,7 +123,13 @@ struct minkTensorStack
      */
     void addTensor(pointing n, double weight)
     {
-        nweights.push_back(std::make_pair(n,weight));
+        if(std::isnan(weight) || isnan) {
+            isnan = true;
+            nweights.clear();
+        }
+        else {
+            nweights.push_back(std::make_pair(n,weight));
+        }
     }
     
     /** Add normal vector of minkTensorIntegrand with same ranks to stack. Normal vector is parallel transported to position of stack if positions differ
@@ -114,9 +137,17 @@ struct minkTensorStack
     void addMinkTensorIntegrand(const minkTensorIntegrand& tens, double weight=1)
     {
         assert(rankA==tens.rankA && rankB==tens.rankB && curvIndex==tens.curvIndex && "Trying to addMinkTensorIntegrand to minkTensorStack of different rank!");
-        pointing newn = tens.n;
-        if(arclength(r,tens.r)>1e-12)   newn = parallelTransport(tens.r,r,newn);
-        nweights.push_back(std::make_pair(newn,weight));
+        if(std::isnan(weight) || isnan)
+        {
+            isnan = true;
+            nweights.clear();
+        }
+        else
+        {
+            pointing newn = tens.n;
+            if(arclength(r,tens.r)>1e-12)   newn = parallelTransport(tens.r,r,newn);
+            nweights.push_back(std::make_pair(newn,weight));
+        }
     }
     
     /** Add normal vectors and weights of other stack with same ranks to this stack. Normal vectors are parallel transported to position of this stack if positions differ
@@ -124,11 +155,19 @@ struct minkTensorStack
     void appendStack(minkTensorStack other)
     {
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to append minkTensorStacks of different rank!");
-        if(arclength(r,other.r)>1e-12)   other.moveTo(r);
-        
-        nweights.reserve(nweights.size()+other.nweights.size());
-        
-        nweights.insert(nweights.end(), other.nweights.begin(), other.nweights.end());
+        if(other.isnan || isnan)
+        {
+            isnan = true;
+            nweights.clear();
+        }
+        else
+        {
+            if(arclength(r,other.r)>1e-12)   other.moveTo(r);
+            
+            nweights.reserve(nweights.size()+other.nweights.size());
+            
+            nweights.insert(nweights.end(), other.nweights.begin(), other.nweights.end());
+        }
     }
     
     explicit operator double() const
@@ -158,7 +197,15 @@ struct minkTensorStack
     
     minkTensorStack& operator*= (double other)
     {
-        std::for_each(nweights.begin(), nweights.end(), [&other](auto& inp){std::get<1>(inp)*=other;});
+        if(std::isnan(other) || isnan)
+        {
+            isnan = true;
+            nweights.clear();
+        }
+        else
+        {
+            std::for_each(nweights.begin(), nweights.end(), [&other](auto& inp){std::get<1>(inp)*=other;});
+        }
         return *this;
     }
 };
@@ -217,6 +264,8 @@ minkTensorStack operator* (double lhs, const right& rhs)
 template<typename tens>
 double trace(const tens& input) //sum of eigenvalues
 {
+    if(input.isnan) {return NAN;}
+    
     double sinT = sin(input.r.theta);
     if(input.rankA+input.rankB == 0) return input.accessElement({});
     
@@ -233,6 +282,8 @@ double trace(const tens& input) //sum of eigenvalues
 template<typename tens>
 double eigenValueQuotient(const tens& input)
 {
+    if(input.isnan) {return NAN;}
+    
     uint ranksum = input.rankA+input.rankB;
     if (ranksum == 1)
     {
@@ -287,6 +338,8 @@ double eigenValueQuotient(const tens& input)
 //Should return direction of eigenvector with highest eigenvalue. Zero means south, pi/2 means east
 double eigenVecDir(const auto& input)
 {
+    if(input.isnan) {return NAN;}
+    
     uint ranksum = input.rankA+input.rankB;
     if (ranksum == 0)
     {

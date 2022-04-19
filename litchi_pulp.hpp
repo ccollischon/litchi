@@ -135,8 +135,7 @@ struct minkmapSphere :  minkmapFamily{
         for(uint i=0;i<valuesSize;i++)
         {
             if(std::isnan(values[i])) {
-                caseindex = 0;
-                break;
+                return minkTensorStack(rankA,rankB,curvIndex,pointing(1.5701963268,0))*NAN;
             }
             if(values[i]>=thresh) caseindex += pow(2,i);
             
