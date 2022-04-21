@@ -30,7 +30,7 @@ using namespace std;
 
 int main(int argc,char **argv)
 {
-    string inname = "../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits", outname = "testmap.fits";
+    string inname = "../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits", outname = "./testmap.fits";
     
     paramStruct params{};
     
@@ -161,7 +161,7 @@ int main(int argc,char **argv)
     
     auto start = chrono::high_resolution_clock::now();
     if(!params.sequence)
-        makeSingleMinkmap(inname, params, outname); //TODO schauen dass rankB nicht bei curvIndex 0
+        makeSingleMinkmap(inname, params, outname);
     else 
         makeSequence(inname, params, outname);
     
