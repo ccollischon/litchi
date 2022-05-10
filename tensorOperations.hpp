@@ -22,28 +22,34 @@ struct minkTensorStack
     const uint rankA{0}, rankB{0};
     const uint curvIndex{0};
     pointing r{1.5701963268,0};
-    bool isnan{false}; ///< setting whether this tensor contains contributions from a masked pixel. If true, pervasive in all operations.
+    uint numnan{0}; ///< tracking how many contributions from a masked pixel this tensor contains (in addition to content in nweights)
+    uint numnull{0}; ///< tracking how many contributions from empty windows this tensor contains (in addition to content in nweights)
     //std::vector<pointing> ns{}; ///< list of normal Vectors from which minkTensorIntegrands should be generated
     //std::vector<double> weights{}; ///< list of weights for minkTensorIntegrands
     std::vector<std::pair<pointing,double>> nweights{}; ///< list normal Vectors from which minkTensorIntegrands should be generated and their respective weights
     
-    minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), nweights(left.nweights)
+    minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(left.nweights)
     {
-        if(left.isnan || right.isnan) {
-            isnan = true;
-            nweights.clear();
-        }
-        else {
-            appendStack(right);
-        }
+        numnan += right.numnan;
+        numnull += right.numnull;
+        appendStack(right);
     }
     
     minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
     {}
     
-    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), isnan{std::isnan(weight)}, nweights{}
+    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), nweights{}
     {
-        if(!isnan) {
+        if(std::isnan(weight)) 
+        {
+            numnan = 1;
+        }
+        else if (std::abs(weight)<1e-15)
+        {
+            numnull = 1;
+        }
+        else
+        {
             nweights.push_back(std::make_pair(inp.n,weight));
         }
     }
@@ -59,7 +65,8 @@ struct minkTensorStack
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to copy assign minkTensorStacks of different rank!");
         nweights = other.nweights;
         r = other.r;
-        isnan = other.isnan;
+        numnan = other.numnan;
+        numnull = other.numnull;
         return *this;
     }
     
@@ -68,8 +75,18 @@ struct minkTensorStack
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to move assign minkTensorStacks of different rank!");
         nweights = std::move(other.nweights);
         r = std::move(other.r);
-        isnan = other.isnan;
+        numnan = other.numnan;
+        numnull = other.numnull;
         return *this;
+    }
+    
+    /**
+     * Checks whether the amont of masked/NAN contributionsto this stack is too high.
+     * Allows for about 10% masked pixels
+     */
+    bool isMasked() const
+    {
+        return 15*numnan > nweights.size()+numnull; //Allow for up to 10% contribution from masked pixels
     }
     
     /**
@@ -79,7 +96,7 @@ struct minkTensorStack
      */
     double accessElement(const std::vector<uint_fast8_t>& indices) const
     {
-        if(isnan) {return NAN;}
+        if(isMasked()) {return NAN;}
         
         double retval = 0.;
         for(uint i=0; i<nweights.size(); ++i)
@@ -97,7 +114,7 @@ struct minkTensorStack
      */
     double accessElement_noweights(const std::vector<uint_fast8_t>& indices) const
     {
-        if(isnan) {return NAN;}
+        if(isMasked()) {return NAN;}
         
         double retval = 0.;
         for(uint i=0; i<nweights.size(); ++i)
@@ -123,9 +140,11 @@ struct minkTensorStack
      */
     void addTensor(pointing n, double weight)
     {
-        if(std::isnan(weight) || isnan) {
-            isnan = true;
-            nweights.clear();
+        if(std::isnan(weight)) {
+            numnan += 1;
+        }
+        else if (std::abs(weight)<1e-15) {
+            numnull += 1;
         }
         else {
             nweights.push_back(std::make_pair(n,weight));
@@ -137,10 +156,13 @@ struct minkTensorStack
     void addMinkTensorIntegrand(const minkTensorIntegrand& tens, double weight=1)
     {
         assert(rankA==tens.rankA && rankB==tens.rankB && curvIndex==tens.curvIndex && "Trying to addMinkTensorIntegrand to minkTensorStack of different rank!");
-        if(std::isnan(weight) || isnan)
+        if(std::isnan(weight))
         {
-            isnan = true;
-            nweights.clear();
+            numnan += 1;
+        }
+        else if (std::abs(weight)<1e-15) 
+        {
+            numnull += 1;
         }
         else
         {
@@ -155,19 +177,14 @@ struct minkTensorStack
     void appendStack(minkTensorStack other)
     {
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to append minkTensorStacks of different rank!");
-        if(other.isnan || isnan)
-        {
-            isnan = true;
-            nweights.clear();
-        }
-        else
-        {
-            if(arclength(r,other.r)>1e-12)   other.moveTo(r);
-            
-            nweights.reserve(nweights.size()+other.nweights.size());
-            
-            nweights.insert(nweights.end(), other.nweights.begin(), other.nweights.end());
-        }
+        numnan += other.numnan;
+        numnull += other.numnull;
+        
+        if(arclength(r,other.r)>1e-12)   other.moveTo(r);
+        
+        nweights.reserve(nweights.size()+other.nweights.size());
+        nweights.insert(nweights.end(), other.nweights.begin(), other.nweights.end());
+        
     }
     
     explicit operator double() const
@@ -197,9 +214,14 @@ struct minkTensorStack
     
     minkTensorStack& operator*= (double other)
     {
-        if(std::isnan(other) || isnan)
+        if(std::isnan(other))
         {
-            isnan = true;
+            numnan += nweights.size();
+            nweights.clear();
+        }
+        else if(std::abs(other)<1e-15)
+        {
+            numnull += nweights.size();
             nweights.clear();
         }
         else
@@ -256,7 +278,19 @@ minkTensorStack operator* (double lhs, const right& rhs)
     return retStack;
 }
 
+minkTensorStack nanTensor(uint rank1, uint rank2, uint curvInd, const pointing& rNew)
+{
+    minkTensorStack thistensor(rank1,rank2,curvInd,rNew);
+    thistensor.numnan=1;
+    return thistensor;
+}
 
+minkTensorStack nullTensor(uint rank1, uint rank2, uint curvInd, const pointing& rNew)
+{
+    minkTensorStack thistensor(rank1,rank2,curvInd,rNew);
+    thistensor.numnull=1;
+    return thistensor;
+}
 
 
 /***** Functions that work on tensors ****/
@@ -264,7 +298,7 @@ minkTensorStack operator* (double lhs, const right& rhs)
 template<typename tens>
 double trace(const tens& input) //sum of eigenvalues
 {
-    if(input.isnan) {return NAN;}
+    if(input.isMasked()) {return NAN;}
     
     double sinT = sin(input.r.theta);
     if(input.rankA+input.rankB == 0) return input.accessElement({});
@@ -282,7 +316,7 @@ double trace(const tens& input) //sum of eigenvalues
 template<typename tens>
 double eigenValueQuotient(const tens& input)
 {
-    if(input.isnan) {return NAN;}
+    if(input.isMasked()) {return NAN;}
     
     uint ranksum = input.rankA+input.rankB;
     if (ranksum == 1)
@@ -338,7 +372,7 @@ double eigenValueQuotient(const tens& input)
 //Should return direction of eigenvector with highest eigenvalue. Zero means south, pi/2 means east
 double eigenVecDir(const auto& input)
 {
-    if(input.isnan) {return NAN;}
+    if(input.isMasked()) {return NAN;}
     
     uint ranksum = input.rankA+input.rankB;
     if (ranksum == 0)

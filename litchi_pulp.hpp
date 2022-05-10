@@ -135,7 +135,7 @@ struct minkmapSphere :  minkmapFamily{
         for(uint i=0;i<valuesSize;i++)
         {
             if(std::isnan(values[i])) {
-                return minkTensorStack(rankA,rankB,curvIndex,pointing(1.5701963268,0))*NAN;
+                return nanTensor(rankA,rankB,curvIndex,pointing(1.5701963268,0));
             }
             if(values[i]>=thresh) caseindex += pow(2,i);
             
@@ -217,7 +217,7 @@ struct minkmapSphere :  minkmapFamily{
         pointing oneCorner;
         pointing otherCorner;
         pointing n(1,0);
-        minkTensorStack returntens(rankA, rankB, curvIndex, positions[0]);
+        minkTensorStack returntens = nullTensor(rankA, rankB, curvIndex, positions[0]);
         double newlength{0}, newcurv{0}, mean; //newlength: one-corner cases can't just use *length because of cases 5 and 10 (would multiply return tensor with other segment also)
         //minkTensorTimes<minkTensorIntegrand,double> theTensor(minkTensorIntegrand(rankA, rankB, curvIndex),0); //TODO hier integrieren
         
