@@ -161,12 +161,15 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
     double pixrad = map.max_pixrad(); //distance pixel center-corners in new map
     double smoothrad = 1.5*pixrad; //in smoothed map, consider all input map pixels up to 1.5* that distance
     
+    auto npix = map.Npix();
+    int step = (outputNside <= 16) ? npix/16 : npix/64;
+    
     #pragma omp parallel for
-    for(int pixel=0; pixel<map.Npix(); ++pixel)
+    for(int pixel=0; pixel<npix; ++pixel)
     {
-        if(!(pixel%10000))
+        if(!(pixel%step))
         {
-            std::cout << "Converting pixel " << pixel << "...\n";
+            std::cout << "Converting pixel " << pixel << "/" << npix << "...\n";
         }
         //smooth input
         //pointing thiscenter = map.pix2ang(pixel);
