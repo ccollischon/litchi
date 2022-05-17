@@ -288,7 +288,7 @@ int main ()
         minkmapStack sumOfMapsS(mapsScalar);
         minkmapStack sumOfMapsT(mapsTensor);
         
-        double pix1S = (double)mapsScalar.at(0).at(pixnum);
+        double pix1S = double(mapsScalar.at(0).at(pixnum));
         minkTensorStack pix1T = mapsTensor.at(0).at(pixnum);
         cout << "Scalar   " << "tr(tensor) " << "relative difference, pixnum: " << pixnum << endl;
         cout << pix1S << " " << trace(pix1T) << " " << abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) ) << endl;

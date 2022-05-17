@@ -86,6 +86,11 @@ struct minkTensorIntegrand {
         
     }
     
+    double accessElement_rescaled(const std::vector<uint_fast8_t>& inputindices) const //Compatibility with minkTensorStack
+    {
+        return accessElement(inputindices);
+    }
+    
     /// Parallel transport normal vector to newR along geodesic
     void moveTo(const pointing& newR)
     {

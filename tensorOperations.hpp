@@ -82,7 +82,7 @@ struct minkTensorStack
     
     /**
      * Checks whether the amont of masked/NAN contributionsto this stack is too high.
-     * Allows for about 10% masked pixels
+     * Allows for 1/16 masked pixels
      */
     bool isMasked() const
     {
@@ -108,21 +108,22 @@ struct minkTensorStack
     }
     
     /**
-     * Access element of linear combination of tensors without multiplying by weights
+     * Access element of linear combination of tensors and rescales with total/masked # pixels
      * \param indices Indices of desired element
      * \return Value of desired element
      */
-    double accessElement_noweights(const std::vector<uint_fast8_t>& indices) const
+    double accessElement_rescaled(const std::vector<uint_fast8_t>& indices) const
     {
-        if(isMasked()) {return NAN;}
+        //if(isMasked()) {return NAN;}
+        double factor = 1.*(nweights.size()+numnull+numnan)/(1.*(nweights.size()+numnull));
         
         double retval = 0.;
         for(uint i=0; i<nweights.size(); ++i)
         {
             minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, std::get<0>(nweights[i]));
-            retval+= tensorHere.accessElement(indices);
+            retval+= tensorHere.accessElement(indices)*std::get<1>(nweights[i]);
         }
-        return retval;
+        return retval*factor;
     }
     
     /** Parallel transport all normal vectors in stack to newR along geodesic
@@ -298,17 +299,16 @@ minkTensorStack nullTensor(uint rank1, uint rank2, uint curvInd, const pointing&
 template<typename tens>
 double trace(const tens& input) //sum of eigenvalues
 {
-    if(input.isMasked()) {return NAN;}
+    //if(input.isMasked()) {return NAN;} //setting pixels to nan is not necessary here
     
     double sinT = sin(input.r.theta);
-    if(input.rankA+input.rankB == 0) return input.accessElement({});
+    if(input.rankA+input.rankB == 0) return input.accessElement_rescaled({});
     
     std::vector<uint_fast8_t> indices(input.rankA+input.rankB,0);
-    double summand = input.accessElement(indices); //zeroes
+    double summand = input.accessElement_rescaled(indices); //zeroes
     
     for(uint i=0; i<indices.size(); i++) { indices.at(i) = 1; }
-    //summand += input.accessElement(indices); //EDIT
-    summand += input.accessElement(indices)*pow(sinT, input.rankA+input.rankB); //ones with metric contribution
+    summand += input.accessElement_rescaled(indices)*pow(sinT, input.rankA+input.rankB); //ones with metric contribution
     
     return summand;
 }
