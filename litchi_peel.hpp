@@ -167,6 +167,11 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
     #pragma omp parallel for
     for(int pixel=0; pixel<npix; ++pixel)
     {
+        #ifdef THISISPYTHON
+            if (PyErr_CheckSignals() != 0)
+                throw pybind11::error_already_set();
+        #endif
+        
         if(!(pixel%step))
         {
             std::cout << "Converting pixel " << pixel << "/" << npix << "...\n";
