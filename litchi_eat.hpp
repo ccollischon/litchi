@@ -138,7 +138,7 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
     fitshandle handle;
     std::filesystem::path f{outname};
 
-        
+    
     if(!std::filesystem::exists(f.parent_path()) && f.parent_path()!="")
     {
         std::cout << "Path does not exist: " << f.parent_path() << ", creating..." << std::endl;
