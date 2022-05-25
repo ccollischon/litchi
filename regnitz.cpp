@@ -14,7 +14,6 @@
 
 
 #include "healpix_cxx/healpix_map.h"
-//#include "healpix_cxx/healpix_data_io.h"
 #include "healpix_cxx/healpix_map_fitsio.h"
 
 #include "tensorOperations.hpp"

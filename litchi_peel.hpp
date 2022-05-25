@@ -62,11 +62,10 @@ void maskMap(Healpix_Map<double>& map, const Healpix_Map<double>& mask, double t
 }
 
 ///Struct only for giving minkmaps normal pixel numbering
-template <typename maptype>//, typename std::enable_if_t<std::is_base_of<minkmapFamily,maptype>::value>* = nullptr >
+template <typename maptype>
 struct normalHealpixInterface 
 {
     maptype& baseminkmap;
-    //normalHealpixInterface(Healpix_Map<double>& map, uint rank1 = 0, uint rank2 = 0, uint curvind = 0) : minkmapFamily(map, rank1, rank2, curvind) {}
     
     explicit normalHealpixInterface(maptype& othermap) : baseminkmap(othermap) {}
     
@@ -105,6 +104,11 @@ struct normalHealpixInterface
 template <typename maptype>
 minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
 {
+    #ifdef THISISPYTHON
+        if (PyErr_CheckSignals() != 0)
+            throw pybind11::error_already_set();
+    #endif
+    
     fix_arr<int, 8> neighbors; //neighbors of this pixel
     baseminkmap.originalMap.neighbors(pixnum,neighbors);
     std::vector<int> westernNeighborship{pixnum, neighbors[0],neighbors[1],neighbors[2]}; // non-polar: {E, SW, W, NW} corners, N-polar: {E, S, notacorner, W} corners, S-polar: {E, W, notacorner, N} in minkmap, replace notacorner
@@ -167,18 +171,13 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
     #pragma omp parallel for
     for(int pixel=0; pixel<npix; ++pixel)
     {
-        #ifdef THISISPYTHON
-            if (PyErr_CheckSignals() != 0)
-                throw pybind11::error_already_set();
-        #endif
         
         if(!(pixel%step))
         {
             std::cout << "Converting pixel " << pixel << "/" << npix << "...\n";
         }
-        //smooth input
+        
         //pointing thiscenter = map.pix2ang(pixel);
-        //double radius = 1.; //TODO properly based on smooth, smoothing radius evtl larger than outputpixel
         if(smooth>1)
         {
             /*std::vector<vec3> corners;

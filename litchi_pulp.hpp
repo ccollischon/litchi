@@ -131,7 +131,7 @@ struct minkmapSphere :  minkmapFamily{
         const uint valuesSize = values.size();
         
         uint caseindex = 0; //caseindex: every corner gets a position in a 4 bit number, bit set to 1 if corner>thresh 0 else. Gives number of each case. If diagonal above/below, check overall average to see whether connected
-        //If one of the pixels is masked, i.e. equal to nan, set caseindex to zero and treat the area as empty
+        //If one of the pixels is masked, i.e. equal to nan, treat the whole area as masked
         for(uint i=0;i<valuesSize;i++)
         {
             if(std::isnan(values[i])) {
@@ -219,7 +219,6 @@ struct minkmapSphere :  minkmapFamily{
         pointing n(1,0);
         minkTensorStack returntens = nullTensor(rankA, rankB, curvIndex, positions[0]);
         double newlength{0}, newcurv{0}, mean; //newlength: one-corner cases can't just use *length because of cases 5 and 10 (would multiply return tensor with other segment also)
-        //minkTensorTimes<minkTensorIntegrand,double> theTensor(minkTensorIntegrand(rankA, rankB, curvIndex),0); //TODO hier integrieren
         
         /* Corner numeration: 
          * 

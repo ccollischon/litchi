@@ -151,7 +151,7 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
     }
     
     handle.create(outname);
-    handle.add_comment("Minkowski map created using Litchi with the following parameters: ");
+    handle.add_comment("Minkowski map created using litchi with the following parameters: ");
     handle.set_key("rankA", (int)params.rankA, "First rank of Minkowski tensor (r)");
     handle.set_key("rankB", (int)params.rankB, "Second rank of Minkowski tensor (n)");
     handle.set_key("curvIndex ", (int)params.curvIndex, "Curvature (bottom) index of Minkowski tensor");

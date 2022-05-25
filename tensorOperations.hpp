@@ -24,8 +24,7 @@ struct minkTensorStack
     pointing r{1.5701963268,0};
     uint numnan{0}; ///< tracking how many contributions from a masked pixel this tensor contains (in addition to content in nweights)
     uint numnull{0}; ///< tracking how many contributions from empty windows this tensor contains (in addition to content in nweights)
-    //std::vector<pointing> ns{}; ///< list of normal Vectors from which minkTensorIntegrands should be generated
-    //std::vector<double> weights{}; ///< list of weights for minkTensorIntegrands
+    
     std::vector<std::pair<pointing,double>> nweights{}; ///< list normal Vectors from which minkTensorIntegrands should be generated and their respective weights
     
     minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(left.nweights)
