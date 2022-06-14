@@ -211,11 +211,6 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
         map = degradedMap;
     }
     
-    if(params.maskname!="")
-    {
-        Healpix_Map<double> mask = read_Healpix_map_from_fits<double>(params.maskname, 1, 2);
-        maskMap(map, mask, params.maskThresh);
-    }
     
     const std::vector<double> thresholds = params.linThresh ? makeIntervals_lin(params.mint, params.maxt, params.numt) : makeIntervals_log(params.mint, params.maxt, params.numt);
     std::vector<minkmapSphere> maps;
@@ -262,6 +257,13 @@ void makeSingleMinkmap(std::string inname, paramStruct params, std::string outna
 {
     params.sequence = false; //should already be false when calling function, can mess up outname otherwise
     Healpix_Map<double> map = read_Healpix_map_from_fits<double>(inname, 1, 2);
+    
+    if(params.maskname!="")
+    {
+        Healpix_Map<double> mask = read_Healpix_map_from_fits<double>(params.maskname, 1, 2);
+        maskMap(map, mask, params.maskThresh);
+    }
+    
     makeHealpixMinkmap(map, params, outname);
 }
 
@@ -275,6 +277,12 @@ void makeSequence(std::string inname, paramStruct params, std::string outname)
 {
     Healpix_Map<double> map = read_Healpix_map_from_fits<double>(inname, 1, 2);
     params.sequence = true; //should already be true when calling this function, but just to be sure. Can mess up outname otherwise
+    
+    if(params.maskname!="")
+    {
+        Healpix_Map<double> mask = read_Healpix_map_from_fits<double>(params.maskname, 1, 2);
+        maskMap(map, mask, params.maskThresh);
+    }
     
     const std::vector<double> thresholds = params.linThresh ? makeIntervals_lin(params.mint, params.maxt, params.numt) : makeIntervals_log(params.mint, params.maxt, params.numt);
     for(uint i=0; i<params.numt; ++i)
