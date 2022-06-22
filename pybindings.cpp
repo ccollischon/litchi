@@ -24,7 +24,13 @@ PYBIND11_MODULE(litchieat, m) {
         .def_readwrite("forceOutname", &paramStruct::forceOutname)
         .def_readwrite("sequence", &paramStruct::sequence)
         .def_readwrite("maskname", &paramStruct::maskname)
-        .def_readwrite("maskThresh", &paramStruct::maskThresh);
+        .def_readwrite("maskThresh", &paramStruct::maskThresh)
+        .def("__copy__",[](const paramStruct& self){
+            return paramStruct(self);
+        })
+        .def("__deepcopy__",[](const paramStruct& self, py::dict){
+            return paramStruct(self);
+        });
     m.def("makeSingleMinkmap", &makeSingleMinkmap, "Reads file given by inname, creates Minkmap according to params, writes to outname", py::arg("inname"), py::arg("params"), py::arg("outname"));
     m.def("makeSequence", &makeSequence, "Reads file given by inname, creates threshold sequence of Minkmaps according to params, writes to outname", py::arg("inname"), py::arg("params"), py::arg("outname"));
 }
