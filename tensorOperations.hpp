@@ -89,6 +89,14 @@ struct minkTensorStack
     }
     
     /**
+     * Checks whether tensor contains contours
+     */
+    bool isEmpty() const
+    {
+        return nweights.size() == 0;
+    }
+    
+    /**
      * Access element of linear combination of tensors determined by weights
      * \param indices Indices of desired element
      * \return Value of desired element
@@ -316,6 +324,7 @@ template<typename tens>
 double eigenValueQuotient(const tens& input)
 {
     if(input.isMasked()) {return NAN;}
+    if(input.isEmpty()) {return NAN;}
     
     uint ranksum = input.rankA+input.rankB;
     if (ranksum == 1)
