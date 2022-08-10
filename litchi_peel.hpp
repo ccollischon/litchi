@@ -39,7 +39,12 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
     return thresholds;
 }
 
-
+/** Apply mask to imput image using threshold. All masked pixels are set to NAN
+ * \param map Input image (passed by reference)
+ * \param mask Mask image, should be of same size and numbering scheme as map. May contain any double values; threshold will be applied. Convention: 1 = pixel not masked, 0 = pixel masked
+ * \param thresh Threshold to be applied to mask. Any pixel that is below this value in the mask will be set to NAN in the input image
+ * 
+ */
 void maskMap(Healpix_Map<double>& map, const Healpix_Map<double>& mask, double thresh = 0.9)
 {
     auto nside = map.Nside();

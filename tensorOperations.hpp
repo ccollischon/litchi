@@ -80,16 +80,16 @@ struct minkTensorStack
     }
     
     /**
-     * Checks whether the amont of masked/NAN contributionsto this stack is too high.
-     * Allows for 1/16 masked pixels
+     * Checks whether the amont of masked/NAN contributions to this stack is too high.
+     * Allows for a relative amount of masked pixels up to 1/16
      */
     bool isMasked() const
     {
-        return 15*numnan > nweights.size()+numnull; //Allow for up to 10% contribution from masked pixels
+        return 15*numnan > nweights.size()+numnull;
     }
     
     /**
-     * Checks whether tensor contains contours
+     * Checks whether tensor contains contours/anything non-empty. Empty spots are usually set to NAN ind output map
      */
     bool isEmpty() const
     {
