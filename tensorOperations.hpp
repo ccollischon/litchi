@@ -337,6 +337,17 @@ double eigenValueQuotient(const tens& input)
     } else if(ranksum == 2)
     { //eigenvalues of matrix (a b, c d)
         double sin2T = sin(input.r.theta)*sin(input.r.theta); //pull down one index = sin^2 (theta) factor wherever left index = 1 (arbitrary choice)
+        
+        Eigen::Matrix2d zahlenfriedhof{
+            {input.accessElement({0,0}),input.accessElement({0,1})*sin2T},
+            {input.accessElement({0,1}),input.accessElement({1,1})*sin2T}
+        };
+        Eigen::EigenSolver<Eigen::Matrix2d> solver(zahlenfriedhof,false);
+        auto EVvec = solver.eigenvalues().real();
+        double ratio = std::abs(EVvec.maxCoeff()/EVvec.minCoeff());
+        
+        // Check if the above calculation does the same thing as manual calculation
+#ifdef THISRUNSINATEST
         double dplusa = input.accessElement({1,1})*sin2T+input.accessElement({0,0});
         double adminusbc = input.accessElement({0,0})*input.accessElement({1,1})*sin2T - pow(input.accessElement({0,1}),2)*sin2T; //tensors are symmetric here, one of them needs factor
         double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
@@ -344,7 +355,10 @@ double eigenValueQuotient(const tens& input)
         double retval;
         if(twolambda1>twolambda2) retval = twolambda1/twolambda2;
         else retval = twolambda2/twolambda1;
-        return std::isnan(retval) ? 0 : retval; //return 0 instead of nan in case of division by zero
+        //return std::isnan(retval) ? 0 : retval; //return 0 instead of nan in case of division by zero
+        std::cout << "selfmade evq "<< retval << " eigen evq " << ratio <<"\n";
+#endif
+        return ratio;
         
     } else if(ranksum == 4)
     {
@@ -428,10 +442,18 @@ double eigenVecDir(const auto& input)
             {W1100,2.*sin2T*W1101,sin2T*sin2T*W1111}
         };
         Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,true);
-        auto EVvec = solver.eigenvalues();
-        Eigen::Vector3d reduced(std::abs(EVvec(0))-0., std::abs(EVvec(1))-0.,std::abs(EVvec(2))-0.);
-        double retval = std::abs(reduced.norm());
-        return retval;
+        auto EVvec = solver.eigenvalues().real();
+        auto EVec = solver.eigenvectors().real();
+        
+        //TODO select largest/smallest eigenvalue
+        
+        //Create Tensor belonging to one of the EVecs, pull one index down which adds factor of sin2T
+        Eigen::Matrix2d matrixtoEVec{
+            {EVec(0,0),sin2T*EVec(0,1)},
+            {EVec(0,1),sin2T*EVec(0,2)}
+        };
+        
+        return 0;
         
         //double ratio = std::abs(realVec.maxCoeff()/realVec.minCoeff());
         
