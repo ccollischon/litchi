@@ -294,21 +294,18 @@ int main ()
         cout << pix1S << " " << trace(pix1T) << " " << abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) ) << endl;
         if(max(double(pix1S), trace(pix1T)) ) assert( abs(pix1S-trace(pix1T))/max(double(pix1S), trace(pix1T) )<1e-12 && "Trace of (0,2,1) and boundary different at thresh 0" );
         else assert( abs(pix1S-trace(pix1T))<1e-12 && "Trace of (0,2,1) and boundary different at thresh 0" );
-        auto test = eigenValueQuotient(pix1T);
         
         double pix2S = (double) mapsScalar.at(1).at(pixnum);
         minkTensorStack pix2T = mapsTensor.at(1).at(pixnum);
         cout << pix2S << " " << trace(pix2T) << " " << abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) ) << endl;
         if(max(double(pix2S), trace(pix2T)) ) assert( abs(pix2S-trace(pix2T))/max(double(pix2S), trace(pix2T) )<1e-12 && "Trace of (0,2,1) and boundary different at thresh > 0" );
         else assert( abs(pix2S-trace(pix2T))<1e-12 && "Trace of (0,2,1) and boundary different at thresh > 0" );
-        test = eigenValueQuotient(pix2T);
         
         double pix3S = (double) sumOfMapsS.at(pixnum);
         minkTensorStack pix3T = sumOfMapsT.at(pixnum);
         cout << pix3S << " " << trace(pix3T) << " " << abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) ) << endl;
         if(max(double(pix3S), trace(pix3T)) ) assert( abs(pix3S-trace(pix3T))/max(double(pix3S), trace(pix3T) )<1e-12 && "Trace of (0,2,1) and boundary different in sum of maps" );
         else assert( abs(pix3S-trace(pix3T))<1e-12 && "Trace of (0,2,1) and boundary different in sum of maps" );
-        test = eigenValueQuotient(pix3T);
         
         
         const normalHealpixInterface interfaceS(sumOfMapsS);
@@ -320,7 +317,19 @@ int main ()
         cout << pix4S << " " << trace(pix4T) << " " << abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) ) << endl;
         if(max(double(pix4S), trace(pix4T)) ) assert( abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) )<1e-12 && "Trace of (0,2,1) and boundary different in Interface" );
         else assert( abs(pix4S-trace(pix4T))<1e-12 && "Trace of (0,2,1) and boundary different in interface" );
+        
+        cout << "Testing EVQ \n";
+        auto test = eigenValueQuotient(pix1T);
+        test = eigenValueQuotient(pix2T);
+        test = eigenValueQuotient(pix3T);
         test = eigenValueQuotient(pix4T);
+        
+        
+        cout << "Testing EVD \n";
+        test = eigenVecDir(pix1T);
+        test = eigenVecDir(pix2T);
+        test = eigenVecDir(pix3T);
+        test = eigenVecDir(pix4T);
     }
     
     return 0;

@@ -395,6 +395,7 @@ double eigenValueQuotient(const tens& input)
 double eigenVecDir(const auto& input)
 {
     if(input.isMasked()) {return NAN;}
+    if(input.isEmpty()) {return NAN;}
     
     uint ranksum = input.rankA+input.rankB;
     if (ranksum == 0)
@@ -409,23 +410,56 @@ double eigenVecDir(const auto& input)
     else if (ranksum==2)
     {  //eigenvalues of matrix (a b, c d)
         double sin2T = sin(input.r.theta)*sin(input.r.theta); //pull down one index = sin^2 (theta) factor wherever left index = 1 (arbitrary choice)
+
+        pointing relevantVec(0,1); //to be filled
+        
+        Eigen::Matrix2d zahlenfriedhof{
+            {input.accessElement({0,0}),input.accessElement({0,1})*sin2T},
+            {input.accessElement({0,1}),input.accessElement({1,1})*sin2T}
+        };
+        Eigen::EigenSolver<Eigen::Matrix2d> solver(zahlenfriedhof,true);
+        auto EVvec = solver.eigenvalues().real();
+        auto EVec = solver.eigenvectors().real();
+        if (solver.info() != Eigen::Success)
+        {
+            std::cerr << "Error: Could not find eigenvalues/vectors of the following matrix:\n";
+            std::cerr << zahlenfriedhof << std::endl;
+        }
+        
+        if(EVvec[0]>EVvec[1]) // grab eigenvector with largest eigenvalue
+        {
+            relevantVec.theta = EVec.col(0)[0];
+            relevantVec.phi = EVec.col(0)[1];
+        }
+        else
+        {
+            relevantVec.theta = EVec.col(1)[0];
+            relevantVec.phi = EVec.col(1)[1];
+        }
+        double retangle = giveAngle(relevantVec,input.r);
+        
+#ifdef THISRUNSINATEST
         double dplusa = input.accessElement({1,1})*sin2T+input.accessElement({0,0});
         double adminusbc = input.accessElement({0,0})*input.accessElement({1,1})*sin2T - pow(input.accessElement({0,1}),2)*sin2T; //tensors are symmetric here, one of them needs factor
         double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
         double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
         
-        pointing relevantVec(0,1); //set phi=1 as free parameter here
-        if(twolambda1>twolambda2)
+        pointing oldVec(0,1);
+        if(twolambda1>twolambda2) // grab eigenvector with largest eigenvalue
         {
             double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
-            relevantVec.theta = (aminusd + sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
+            oldVec.theta = (aminusd + sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
         }
         else
         {
             double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
-            relevantVec.theta = (aminusd - sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
+            oldVec.theta = (aminusd - sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
         }
-        return giveAngle(relevantVec,input.r);
+        double oldangle = giveAngle(oldVec,input.r);
+        std::cout << "selfmade evd "<< oldangle << " eigen evd " << (retangle<0 ? retangle+3.14159 : retangle ) <<"\n";
+#endif
+        return retangle<0 ? retangle+3.14159 : retangle; //add pi to get consistent values between 0 and pi, only interested in direction
+        
     } else if(ranksum == 4 && false)
     {
         double sin2T = sin(input.r.theta)*sin(input.r.theta);
