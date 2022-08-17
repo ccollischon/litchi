@@ -390,6 +390,31 @@ double eigenValueQuotient(const tens& input)
         throw std::invalid_argument("eigenValueQuotient not implemented for higher ranks");
     }
 }
+//Returns normal vector pointing along largest EV of 2x2 Matrix
+pointing angleOf2x2Mat(Eigen::Matrix2d zahlenfriedhof)
+{
+    pointing returnVec(0,1);
+    Eigen::EigenSolver<Eigen::Matrix2d> solver(zahlenfriedhof,true);
+    auto EVvec = solver.eigenvalues().real();
+    auto EVec = solver.eigenvectors().real();
+    if (solver.info() != Eigen::Success)
+    {
+        std::cerr << "Error: Could not find eigenvalues/vectors of the following matrix:\n";
+        std::cerr << zahlenfriedhof << std::endl;
+    }
+    
+    if(EVvec[0]>EVvec[1]) // grab eigenvector with largest eigenvalue
+    {
+        returnVec.theta = EVec.col(0)[0];
+        returnVec.phi = EVec.col(0)[1];
+    }
+    else
+    {
+        returnVec.theta = EVec.col(1)[0];
+        returnVec.phi = EVec.col(1)[1];
+    }
+    return returnVec;
+}
 
 //Should return direction of eigenvector with highest eigenvalue. Zero means south, pi/2 means east
 double eigenVecDir(const auto& input)
@@ -411,31 +436,11 @@ double eigenVecDir(const auto& input)
     {  //eigenvalues of matrix (a b, c d)
         double sin2T = sin(input.r.theta)*sin(input.r.theta); //pull down one index = sin^2 (theta) factor wherever left index = 1 (arbitrary choice)
 
-        pointing relevantVec(0,1); //to be filled
-        
         Eigen::Matrix2d zahlenfriedhof{
             {input.accessElement({0,0}),input.accessElement({0,1})*sin2T},
             {input.accessElement({0,1}),input.accessElement({1,1})*sin2T}
         };
-        Eigen::EigenSolver<Eigen::Matrix2d> solver(zahlenfriedhof,true);
-        auto EVvec = solver.eigenvalues().real();
-        auto EVec = solver.eigenvectors().real();
-        if (solver.info() != Eigen::Success)
-        {
-            std::cerr << "Error: Could not find eigenvalues/vectors of the following matrix:\n";
-            std::cerr << zahlenfriedhof << std::endl;
-        }
-        
-        if(EVvec[0]>EVvec[1]) // grab eigenvector with largest eigenvalue
-        {
-            relevantVec.theta = EVec.col(0)[0];
-            relevantVec.phi = EVec.col(0)[1];
-        }
-        else
-        {
-            relevantVec.theta = EVec.col(1)[0];
-            relevantVec.phi = EVec.col(1)[1];
-        }
+        pointing relevantVec = angleOf2x2Mat(zahlenfriedhof);
         double retangle = giveAngle(relevantVec,input.r);
         
 #ifdef THISRUNSINATEST
@@ -460,7 +465,7 @@ double eigenVecDir(const auto& input)
 #endif
         return retangle<0 ? retangle+3.14159 : retangle; //add pi to get consistent values between 0 and pi, only interested in direction
         
-    } else if(ranksum == 4 && false)
+    } else if(ranksum == 4)
     {
         double sin2T = sin(input.r.theta)*sin(input.r.theta);
         //Only need these 5 because of total symmetry:
@@ -479,20 +484,21 @@ double eigenVecDir(const auto& input)
         auto EVvec = solver.eigenvalues().real();
         auto EVec = solver.eigenvectors().real();
         
-        //TODO select largest/smallest eigenvalue
+        //select largest eigenvalue
+        auto largestIndex = std::max_element(EVvec.begin(),EVvec.end()) - EVvec.begin();
         
-        //Create Tensor belonging to one of the EVecs, pull one index down which adds factor of sin2T
+        //Create Tensor belonging EVec, pull one index down which adds factor of sin2T
         Eigen::Matrix2d matrixtoEVec{
-            {EVec(0,0),sin2T*EVec(0,1)},
-            {EVec(0,1),sin2T*EVec(0,2)}
+            {EVec.col(largestIndex)[0],sin2T*EVec.col(largestIndex)[1]},
+            {EVec.col(largestIndex)[1],sin2T*EVec.col(largestIndex)[2]}
         };
         
-        return 0;
+        pointing relevantVec = angleOf2x2Mat(matrixtoEVec);
+        double retangle = giveAngle(relevantVec,input.r);
         
-        //double ratio = std::abs(realVec.maxCoeff()/realVec.minCoeff());
-        
-        //return std::isnan(ratio) ? 0 : ratio;
-    } else
+        return retangle;
+    } 
+    else
     {
         std::cerr << "Error: requesting eigenvector direction for ill-defined ranks: rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
         throw std::invalid_argument("eigenVecDir not defined for this rank");
