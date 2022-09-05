@@ -28,6 +28,7 @@ target_link_libraries(litchi -lhealpix_cxx)
 target_link_libraries(tests PUBLIC -lhealpix_cxx)
 
 #find_package(pybind11 REQUIRED)
-pybind11_add_module(litchieat pybindings.cpp)
+pybind11_add_module(litchieat NO_EXTRAS pybindings.cpp)
+target_compile_definitions(litchieat PUBLIC NDEBUG)
 target_compile_definitions(litchieat PUBLIC THISISPYTHON)
 target_link_libraries(litchieat PUBLIC -lhealpix_cxx)

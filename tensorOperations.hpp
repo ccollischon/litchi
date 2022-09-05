@@ -403,6 +403,7 @@ pointing angleOf2x2Mat(Eigen::Matrix2d zahlenfriedhof)
         std::cerr << zahlenfriedhof << std::endl;
     }
     
+    
     if(EVvec[0]>EVvec[1]) // grab eigenvector with largest eigenvalue
     {
         returnVec.theta = EVec.col(0)[0];
