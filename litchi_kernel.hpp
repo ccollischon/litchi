@@ -2,11 +2,8 @@
 #define litchi_kernel
 
 #include <vector>
-//#include <memory>
 #include "healpix_cxx/healpix_map.h"
 
-//#include "tensor2D.hpp"
-//#include "tensorFamily.hpp"
 #include "tensorOperations.hpp"
 
 /** \file litchi_kernel.hpp

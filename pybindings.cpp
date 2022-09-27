@@ -1,6 +1,3 @@
-//c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes) pybindings.cpp -o ../../example(python3-config --extension-suffix)
-//g++-10 -O3 -Wall -shared -std=c++20 -fPIC $(python3 -m pybind11 --includes) pybindings.cpp -o ../../litchieat(python3-config --extension-suffix) -fopenmp -lhealpix_cxx
-//#include <iostream>
 #include <pybind11/pybind11.h>
 #include "litchi_eat.hpp"
 

@@ -172,7 +172,7 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
     if(params.maskname!="")
     {
         handle.set_key("mask", params.maskname, "mask used before generating map");
-        handle.set_key("maskThresh", params.maskThresh, "All mask pixels above this threshold were treated as not masked");
+        handle.set_key("maskThresh", params.maskThresh, "mask pixels above this treated as not masked");
     }
     
     std::vector<std::string> funStrings; //Description of function used to generate scalar from tensor
@@ -183,7 +183,7 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
         funStrings = {"EV quotient", "Eigenvalue quotient of tensor"};
     }
     else if (params.function=="EVDir"){
-        funStrings = {"EV direction", "Direction of eigenvector with largest eigenvalue"};
+        funStrings = {"EV direction", "Direction of eigenvec with largest eigenval"};
     }
     else funStrings = {params.function,"unknown function"};
     
@@ -220,7 +220,6 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
     }
     const minkmapStack sumOfMaps(maps);
     
-    //Probably should smooth before adding, so can parallel transport n only
     
     const auto minkmapAverage = sumOfMaps*(1./params.numt);
     const normalHealpixInterface interface(minkmapAverage);
