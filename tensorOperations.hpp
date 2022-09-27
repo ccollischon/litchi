@@ -253,22 +253,17 @@ minkTensorStack operator+ (const minkTensorIntegrand& lhs, const minkTensorStack
     return returnval;
 }
 
-minkTensorStack operator+ (const minkTensorStack& lhs, const minkTensorIntegrand& rhs)
-{
-    minkTensorStack returnval (lhs);
-    returnval.addMinkTensorIntegrand(rhs);
-    return returnval;
-}
-
-minkTensorStack operator+ (const minkTensorIntegrand& lhs, const minkTensorIntegrand& rhs)
-{
-    minkTensorStack returnval (lhs);
-    returnval.addMinkTensorIntegrand(rhs);
-    return returnval;
-}
 
 template<typename T>
 concept minkTensor = std::is_base_of<minkTensorStack,T>::value || std::is_base_of<minkTensorIntegrand,T>::value;
+
+template<minkTensor left>
+minkTensorStack operator+ (const left& lhs, const minkTensorIntegrand& rhs)
+{
+    minkTensorStack returnval (lhs);
+    returnval.addMinkTensorIntegrand(rhs);
+    return returnval;
+}
 
 template<minkTensor left>
 minkTensorStack operator* (const left& lhs, double rhs)
