@@ -41,12 +41,12 @@ void checkParams(const auto &obj) {
     
     if(obj.curvIndex==0 && obj.rankB)
     {
-        std::cerr << "Error: rankB > 0 not possible when curvIndex=0. rankB = " << obj.rankB << std::endl;
+        std::cerr << "Error: rankB > 0 not possible when curvIndex = 0. rankB = " << obj.rankB << std::endl;
         throw std::invalid_argument("rankB && curvIndex!=0");
     }
     if(obj.curvIndex==0 && obj.rankA)
     {
-        std::cerr << "Error: rankA > 0 not implemented when curvIndex=0. rankA = " << obj.rankA << std::endl;
+        std::cerr << "Error: rankA > 0 not implemented when curvIndex = 0. rankA = " << obj.rankA << std::endl;
         throw std::invalid_argument("rankA && curvIndex!=0");
     }
     if(obj.rankA)
@@ -85,7 +85,7 @@ void checkParams(const auto &obj) {
     }
     if(obj.smoothRad == 0. && (obj.NsideOut<obj.Nside) )
     {
-        std::cerr << "If smoothRad==0 (no smoothing), but NsideOut < Nside, you're gonna have a bad time. smoothRad: " << obj.smoothRad << " , NsideOut = " << obj.NsideOut << ", Nside = " << obj.Nside << "\n";
+        std::cerr << "If smoothRad==0 (no smoothing), but NsideOut < Nside, you're gonna have a bad time. smoothRad = " << obj.smoothRad << " , NsideOut = " << obj.NsideOut << ", Nside = " << obj.Nside << "\n";
         throw std::invalid_argument("no smoothing but smoothing");
     }
     if(obj.mint==0. && !obj.linThresh)
@@ -100,18 +100,20 @@ void checkParams(const auto &obj) {
     }
 }
 
+///If params.smooth is set, overwrite params.NsideOut and params.smoothRad to corresponding values
 void backwardsCompatibilitySmooth(paramStruct& params)
 {
     if(params.smooth > 0) //User has used deprecated feature
     {
-        std::cout << "Warning: using params.smooth instead of setting smoothRad and NsideOut. If you have also set NsideOut and smoothRad, they are overwritten. \n";
+        std::cerr << "Warning: using params.smooth instead of setting smoothRad and NsideOut. If you have also set NsideOut and smoothRad, they are overwritten. \n";
         
         //Set NsideOut
         if(params.smooth>params.Nside)
         {
             std::cerr<< "Error: smooth > Nside of input, this is not possible! smooth=" << params.smooth << ", Nside="<< params.Nside << std::endl;
-            throw std::invalid_argument( "HealpixFromMinkmap: Invalid smooth" );
+            throw std::invalid_argument( "smooth larger than Nside" );
         }
+
         params.NsideOut = params.Nside/params.smooth;
         
         //Set smoothRad
@@ -124,7 +126,7 @@ void backwardsCompatibilitySmooth(paramStruct& params)
 /**
  * Formats given outname to contain all relevant parameters if params.forceOutname is false
  * \param outname Path and desired file prefix with or without .fits ending. Parameters are added accordingly
- * \param params Struct containing Minkowski map generation parameters to write into header: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, function, forceOutname, sequence
+ * \param params Struct containing Minkowski map generation parameters to write into header: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
  */
 void formatOutname(std::string& outname, const paramStruct& params, const int counter=0)
 {
@@ -172,7 +174,7 @@ void formatOutname(std::string& outname, const paramStruct& params, const int co
  * Write given map to file specified by outname caontaining params in header
  * Function checks if given path for outputfile exists and creates it if not. Files with same name are overwritten.
  * \param outputmap Healpix map to be saved to file
- * \param params Struct containing Minkowski map generation parameters to write into header: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, function, useTrace, forceOutname, sequence
+ * \param params Struct containing Minkowski map generation parameters to write into header: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
  * \param outname Name of output file
  */
 void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params, std::string outname)
@@ -240,7 +242,7 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
 /*!
  * "Wrapper"  function that creates actual minkmap from given inputmap, params. Warning: degrades input map if Nside parameter set
  * \param map Input Healpix map
- * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, function, forceOutname, sequence
+ * \param params Struct containing Minkowski map generation parameters: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
  * \param outname Path to and file prefix of outputfile
  */
 void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::string outname, const int counter=0)
@@ -295,7 +297,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
 /*!
  * "Wrapper"  function that creates actual minkmap from given input filename, params
  * \param inname Filename of input Healpix map
- * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname, sequence
+ * \param params Struct containing Minkowski map generation parameters: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
  * \param outname Path to and file prefix of outputfile
  */
 void makeSingleMinkmap(std::string inname, paramStruct params, std::string outname)
@@ -315,7 +317,7 @@ void makeSingleMinkmap(std::string inname, paramStruct params, std::string outna
 /*!
  * "Wrapper"  function that creates sequence of minkmaps from given input filename, params using numt as the number of minkmaps at thresholds between mint and maxt instead of averaging one map over several thresholds
  * \param inname Filename of input Healpix map
- * \param params Struct containing Minkowski map generation parameters: Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, linThresh, useTrace, forceOutname, sequence
+ * \param params Struct containing Minkowski map generation parameters: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
  * \param outname Path to and file prefix of outputfile
  */
 void makeSequence(std::string inname, paramStruct params, std::string outname)

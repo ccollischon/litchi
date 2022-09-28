@@ -148,7 +148,8 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
 /** Generates scalar Healpix-type map from baseminkmap via specified function
  * \param input normalHealpixInterface containing desired Minkmap
  * \param func Function accepting tensor and returning scalar, e.g. trace or eigenValueQuotient
- * \param smooth Smoothing (downscaling) factor before calculating func at each pixel
+ * \param smoothRad Window radius [rad] for input pixels included in each output pixel
+ * \param outputNside Nside of output map
  * \return Healpix_Map of desired Minkmap ready for saving to file
  */
 template <typename maptype>
