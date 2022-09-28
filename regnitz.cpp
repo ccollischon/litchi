@@ -76,7 +76,7 @@ int main(int argc,char **argv)
                 return 1;
             }
         }
-        else if (thisArg=="--smooth" || thisArg=="-s")
+        else if (thisArg=="--smooth")
         {
             int number = stoi(arguments.at(++i));
             if((number&(number-1))==0) params.smooth = uint(number);
@@ -86,10 +86,15 @@ int main(int argc,char **argv)
                 return 1;
             }
         }
+        else if (thisArg=="--smoothRad" || thisArg=="-s")
+        {
+            double number = stod(arguments.at(++i));
+            params.smoothRad = number;
+        }
         else if (thisArg=="--nside_out" || thisArg=="--NsideOut" || thisArg=="--Nside_out" || thisArg=="--no")
         {
             int number = stoi(arguments.at(++i));
-            if((number&(number-1))==0) params.smooth = uint(number);
+            if((number&(number-1))==0) params.NsideOut = uint(number);
             else
             {
                 std::cerr << "Illegal value after NsideOut: " << number << " , must be power of two or zero \n";

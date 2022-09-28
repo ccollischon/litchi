@@ -83,7 +83,7 @@ struct normalHealpixInterface
     minkTensorStack at(int pixnum) const;
     
     template <typename tensortype>
-    Healpix_Map<double> toHealpix(double func(tensortype), uint smooth) const;
+    Healpix_Map<double> toHealpix(double func(tensortype), double smoothRad, int outputNside) const;
     
     ///return 0 if pixnum not polar, 1 if north, 2 if south
     uint ispolar(int pixnum) const 
@@ -153,22 +153,11 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
  */
 template <typename maptype>
 template <typename tensortype>
-Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tensortype), uint smooth) const
+Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tensortype), double smoothRad, int outputNside) const
 {
-    int outputNside = baseminkmap.originalMap.Nside();
-    //if smoothing: reduce resolution of outputmap
-    if(smooth>1)
-    {
-        if((int)smooth>outputNside)
-        {
-            std::cerr<< "Error: smooth > Nside of input, this is not possible! smooth=" << smooth << ", Nside="<< outputNside << std::endl;
-            throw std::invalid_argument( "HealpixFromMinkmap: Invalid smooth" );
-        }
-        outputNside /= smooth;
-    }
     Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
-    double pixrad = map.max_pixrad(); //distance pixel center-corners in new map
-    double smoothrad = 1.5*pixrad; //in smoothed map, consider all input map pixels up to 1.5* that distance
+    
+    double smoothFactor = (baseminkmap.originalMap.Nside()/outputNside)*(baseminkmap.originalMap.Nside()/outputNside); //Amount of input pixels covered by one output pixel
     
     auto npix = map.Npix();
     int step = (outputNside <= 16) ? npix/16 : npix/64;
@@ -182,10 +171,9 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
             std::cout << "Converting pixel " << pixel << "/" << npix << "...\n";
         }
         
-        //pointing thiscenter = map.pix2ang(pixel);
-        if(smooth>1)
+        if(smoothRad>0)
         {
-            auto pixelsNearbyRange = baseminkmap.originalMap.query_disc(map.pix2ang(pixel), smoothrad);
+            auto pixelsNearbyRange = baseminkmap.originalMap.query_disc(map.pix2ang(pixel), smoothRad);
             std::vector<int> pixelsNearby = pixelsNearbyRange.toVector();
         
             minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
@@ -193,8 +181,8 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
             {
                 tensorHere += at(pixelToAdd); //parallel transport, not just add, DONE in minkTensorStack +=
             }
-            double norm = double(smooth*smooth)/(pixelsNearby.size());//normalize such that sum over all pixels remains same
-            tensorHere *= 1./norm;
+            double norm = smoothFactor/(pixelsNearby.size());//normalize such that sum over all pixels remains same
+            tensorHere *= 1./norm; //TODO check if this makes sense
             map[pixel] = func( tensorHere );
         }
         else

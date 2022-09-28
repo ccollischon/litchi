@@ -80,8 +80,13 @@ void checkParams(const auto &obj) {
     }
     if(obj.smoothRad < 0)
     {
-        std::cerr << "Illegal value for smoothRad: " << obj.smoothRad << " , must be larger than or or zero \n";
+        std::cerr << "Illegal value for smoothRad: " << obj.smoothRad << " , must be non-negative \n";
         throw std::invalid_argument("smoothRad negative");
+    }
+    if(obj.smoothRad == 0. && (obj.NsideOut<obj.Nside) )
+    {
+        std::cerr << "If smoothRad==0 (no smoothing), but NsideOut < Nside, you're gonna have a bad time. smoothRad: " << obj.smoothRad << " , NsideOut = " << obj.NsideOut << ", Nside = " << obj.Nside << "\n";
+        throw std::invalid_argument("no smoothing but smoothing");
     }
     if(obj.mint==0. && !obj.linThresh)
     {
@@ -94,6 +99,28 @@ void checkParams(const auto &obj) {
         throw std::invalid_argument("function invalid");
     }
 }
+
+void backwardsCompatibilitySmooth(paramStruct& params)
+{
+    if(params.smooth > 0) //User has used deprecated feature
+    {
+        std::cout << "Warning: using params.smooth instead of setting smoothRad and NsideOut. If you have also set NsideOut and smoothRad, they are overwritten. \n";
+        
+        //Set NsideOut
+        if(params.smooth>params.Nside)
+        {
+            std::cerr<< "Error: smooth > Nside of input, this is not possible! smooth=" << params.smooth << ", Nside="<< params.Nside << std::endl;
+            throw std::invalid_argument( "HealpixFromMinkmap: Invalid smooth" );
+        }
+        params.NsideOut = params.Nside/params.smooth;
+        
+        //Set smoothRad
+        Healpix_Map<int> tempmap(params.NsideOut, RING, SET_NSIDE);
+        params.smoothRad = 1.5*tempmap.max_pixrad(); //Take distance pixel center-corners in new map. In smoothed map, consider all input map pixels up to 1.5* that distance
+    }
+}
+
+
 /**
  * Formats given outname to contain all relevant parameters if params.forceOutname is false
  * \param outname Path and desired file prefix with or without .fits ending. Parameters are added accordingly
@@ -108,19 +135,19 @@ void formatOutname(std::string& outname, const paramStruct& params, const int co
         {
             outname = outname.substr(0,fitspos); //remove given .fit(s) ending, will be added later again
         }
-        char mintmaxtnumt[44];
-        if(params.numt==1) //if just one threshold write that, else write mint_maxt_numt
+        char mintmaxtnumt[59];
+        if(params.numt==1) //if just one threshold write that, else write mint_maxt_numt. Always add smoothRad
         {
-            sprintf(mintmaxtnumt,"%.3e", params.mint); //printf %g for nicer formatting
+            sprintf(mintmaxtnumt,"%.3e_rad=%.3e", params.mint,params.smoothRad); //printf %g for nicer formatting
         }
         else
         {
-            sprintf(mintmaxtnumt,"%.3e_%.3e_%d_%s", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log"); //printf %g for nicer formatting
+            sprintf(mintmaxtnumt,"%.3e_%.3e_%d_%s_rad=%.3e", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log", params.smoothRad); //printf %g for nicer formatting
         }
         std::string funString = (params.function=="trace") ? "_tr" : (params.function=="EVQuo") ? "_evq" : (params.function=="EVDir") ? "_evd" : "_error";
         char maskString[20];
         (params.maskname!="") ? sprintf(maskString,"_mask_%4.2f", params.maskThresh) : sprintf(maskString,"_nomask");
-        outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + funString + "_Nside="+std::to_string(params.Nside) + "_smooth="+std::to_string(params.smooth) + "_thresh="+mintmaxtnumt + maskString + ".fits";
+        outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + funString + "_Nside="+std::to_string(params.Nside) + "_NsideOut="+std::to_string(params.NsideOut) + "_thresh="+mintmaxtnumt + maskString + ".fits";
     }
     else if(params.sequence) //for sequence cannot leave the outname unchanged, or else will overwrite one file over and over
     {
@@ -171,7 +198,9 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
     handle.set_key("rankB", (int)params.rankB, "Second rank of Minkowski tensor (n)");
     handle.set_key("curvIndex ", (int)params.curvIndex, "Curvature (bottom) index of Minkowski tensor");
     handle.set_key("Nside ", (int)params.Nside, "Nside of input map");
-    handle.set_key("smooth ", (int)params.smooth, "Factor by which output was smoothed");
+    handle.set_key("NsideOut ", (int)params.NsideOut, "Nside of output map");
+    handle.set_key("smooth ", (int)params.smooth, "Factor by which output was smoothed (optional)");
+    handle.set_key("smoothRad ", params.smoothRad, "Smoothing window radius in rad");
     handle.set_key("mint ", params.mint, "Min threshold");
     handle.set_key("maxt ", params.maxt, "Max threshold");
     handle.set_key("numt ", (int)params.numt, "Number of thresholds (mint used if 1)");
@@ -216,7 +245,9 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
  */
 void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::string outname, const int counter=0)
 {
-    if(!(int)params.Nside) params.Nside = (uint)map.Nside();
+    if(!(int)params.Nside)       params.Nside = (uint)map.Nside();
+    if(!(int)params.NsideOut) params.NsideOut = params.Nside;
+    backwardsCompatibilitySmooth(params);
     checkParams(params);
     
     if((int)params.Nside != map.Nside())
@@ -241,15 +272,15 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
     Healpix_Map<double> outputmap;
     if(params.function=="trace")
     {
-        outputmap = interface.toHealpix(trace<minkTensorStack>,params.smooth);
+        outputmap = interface.toHealpix(trace<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
     }
     else if(params.function=="EVQuo")
     {
-        outputmap = interface.toHealpix(eigenValueQuotient<minkTensorStack>,params.smooth);
+        outputmap = interface.toHealpix(eigenValueQuotient<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
     }
     else if(params.function=="EVDir")
     {
-        outputmap = interface.toHealpix(eigenVecDir<minkTensorStack>,params.smooth);
+        outputmap = interface.toHealpix(eigenVecDir<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
     }
     
     /*  Map is generated, now create outname  */
