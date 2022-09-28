@@ -86,6 +86,16 @@ int main(int argc,char **argv)
                 return 1;
             }
         }
+        else if (thisArg=="--nside_out" || thisArg=="--NsideOut" || thisArg=="--Nside_out" || thisArg=="--no")
+        {
+            int number = stoi(arguments.at(++i));
+            if((number&(number-1))==0) params.smooth = uint(number);
+            else
+            {
+                std::cerr << "Illegal value after NsideOut: " << number << " , must be power of two or zero \n";
+                return 1;
+            }
+        }
         else if (thisArg=="--mint")
         {
             params.mint = stod(arguments.at(++i));

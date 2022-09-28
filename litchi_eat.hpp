@@ -31,8 +31,8 @@ bool has_x(const auto &obj) {
 
 ///Helper struct containing all necessary Minkmap generation parameters
 struct paramStruct{
-        uint rankA{0}, rankB{0}, curvIndex{0}, numt{1}, Nside{0}, smooth{0};
-        double mint{0}, maxt{1}, maskThresh{0.9};
+        uint rankA{0}, rankB{0}, curvIndex{0}, numt{1}, Nside{0}, smooth{0}, NsideOut{0};
+        double mint{0}, maxt{1}, maskThresh{0.9}, smoothRad{0};
         bool linThresh{true}, forceOutname{false}, sequence{false};
         std::string function{"trace"}, maskname{""};
 };
@@ -67,6 +67,21 @@ void checkParams(const auto &obj) {
     {
         std::cerr << "Illegal value for Nside: " << obj.Nside << " , must be power of two or zero \n";
         throw std::invalid_argument("Nside not power of two or zero");
+    }
+    if((obj.NsideOut&(obj.NsideOut-1)) != 0)
+    {
+        std::cerr << "Illegal value for NsideOut: " << obj.NsideOut << " , must be power of two or zero \n";
+        throw std::invalid_argument("NsideOut not power of two or zero");
+    }
+    if(obj.NsideOut > obj.Nside)
+    {
+        std::cerr << "NsideOut larger than Nside; NsideOut = " << obj.NsideOut << ", Nside = " << obj.Nside << " , this makes no sense! \n";
+        throw std::invalid_argument("NsideOut larger than Nside");
+    }
+    if(obj.smoothRad < 0)
+    {
+        std::cerr << "Illegal value for smoothRad: " << obj.smoothRad << " , must be larger than or or zero \n";
+        throw std::invalid_argument("smoothRad negative");
     }
     if(obj.mint==0. && !obj.linThresh)
     {
@@ -201,8 +216,8 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
  */
 void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::string outname, const int counter=0)
 {
-    checkParams(params);
     if(!(int)params.Nside) params.Nside = (uint)map.Nside();
+    checkParams(params);
     
     if((int)params.Nside != map.Nside())
     {
