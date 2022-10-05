@@ -298,7 +298,7 @@ minkTensorStack nullTensor(uint rank1, uint rank2, uint curvInd, const pointing&
 
 /***** Functions that work on tensors ****/
 
-template<typename tens>
+template<minkTensor tens>
 double trace(const tens& input) //sum of eigenvalues
 {
     //if(input.isMasked()) {return NAN;} //setting pixels to nan is not necessary here
@@ -315,7 +315,7 @@ double trace(const tens& input) //sum of eigenvalues
     return summand;
 }
 
-template<typename tens>
+template<minkTensor tens>
 double eigenValueQuotient(const tens& input)
 {
     if(input.isMasked()) {return NAN;}
@@ -386,7 +386,7 @@ double eigenValueQuotient(const tens& input)
     }
 }
 //Returns normal vector pointing along largest EV of 2x2 Matrix
-pointing angleOf2x2Mat(Eigen::Matrix2d zahlenfriedhof)
+pointing angleOf2x2Mat(const Eigen::Matrix2d& zahlenfriedhof)
 {
     pointing returnVec(0,1);
     Eigen::EigenSolver<Eigen::Matrix2d> solver(zahlenfriedhof,true);
@@ -413,7 +413,8 @@ pointing angleOf2x2Mat(Eigen::Matrix2d zahlenfriedhof)
 }
 
 //Should return direction of eigenvector with highest eigenvalue. Zero means south, pi/2 means east
-double eigenVecDir(const auto& input)
+template<minkTensor tens>
+double eigenVecDir(const tens& input)
 {
     if(input.isMasked()) {return NAN;}
     if(input.isEmpty()) {return NAN;}
