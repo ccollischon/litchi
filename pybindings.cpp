@@ -30,6 +30,7 @@ PYBIND11_MODULE(litchieat, m) {
         .def("__deepcopy__",[](const paramStruct& self, py::dict){
             return paramStruct(self);
         });
-    m.def("makeSingleMinkmap", &makeSingleMinkmap, "Reads file given by inname, creates Minkmap according to params, writes to outname", py::arg("inname"), py::arg("params"), py::arg("outname"));
-    m.def("makeSequence", &makeSequence, "Reads file given by inname, creates threshold sequence of Minkmaps according to params, writes to outname", py::arg("inname"), py::arg("params"), py::arg("outname"));
+    m.def("makeSingleMinkmap", &makeSingleMinkmap, "Can be replaced with makeMinkmap. Reads file given by inname, creates single Minkmap according to params, writes to outname", py::arg("inname"), py::arg("params"), py::arg("outname"));
+    m.def("makeSequence", &makeSequence, "Can be replaced with makeMinkmap. Reads file given by inname, creates threshold sequence of Minkmaps according to params, writes to outname", py::arg("inname"), py::arg("params"), py::arg("outname"));
+    m.def("makeMinkmap", &makeMinkmap, "Reads file given by inname, creates Minkmap or sequence of Minkmap according to params, writes to outname", py::arg("inname"), py::arg("params"), py::arg("outname"));
 }

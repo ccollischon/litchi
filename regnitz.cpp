@@ -174,10 +174,8 @@ int main(int argc,char **argv)
     
     
     auto start = chrono::high_resolution_clock::now();
-    if(!params.sequence)
-        makeSingleMinkmap(inname, params, outname);
-    else 
-        makeSequence(inname, params, outname);
+    
+    makeMinkmap(inname, params, outname);
     
     auto stop = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);

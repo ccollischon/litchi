@@ -171,7 +171,7 @@ void formatOutname(std::string& outname, const paramStruct& params, const int co
 }
 
 /**
- * Write given map to file specified by outname caontaining params in header
+ * Write given map to file specified by outname containing params in header
  * Function checks if given path for outputfile exists and creates it if not. Files with same name are overwritten.
  * \param outputmap Healpix map to be saved to file
  * \param params Struct containing Minkowski map generation parameters to write into header: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
@@ -240,7 +240,7 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
 }
 
 /*!
- * "Wrapper"  function that creates actual minkmap from given inputmap, params. Warning: degrades input map if Nside parameter set
+ * Function that creates actual minkmap from given inputmap, params. Warning: degrades input map if Nside parameter set
  * \param map Input Healpix map
  * \param params Struct containing Minkowski map generation parameters: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
  * \param outname Path to and file prefix of outputfile
@@ -295,7 +295,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
 
 
 /*!
- * "Wrapper"  function that creates actual minkmap from given input filename, params
+ * Wrapper function that calls creation of actual minkmap from given input filename, params, applying mask
  * \param inname Filename of input Healpix map
  * \param params Struct containing Minkowski map generation parameters: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
  * \param outname Path to and file prefix of outputfile
@@ -315,7 +315,7 @@ void makeSingleMinkmap(std::string inname, paramStruct params, std::string outna
 }
 
 /*!
- * "Wrapper"  function that creates sequence of minkmaps from given input filename, params using numt as the number of minkmaps at thresholds between mint and maxt instead of averaging one map over several thresholds
+ * Wrapper function that calls creation of sequence of minkmaps from given input filename, params, applying mask; using numt as the number of minkmaps at thresholds between mint and maxt instead of averaging one map over several thresholds
  * \param inname Filename of input Healpix map
  * \param params Struct containing Minkowski map generation parameters: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
  * \param outname Path to and file prefix of outputfile
@@ -339,6 +339,18 @@ void makeSequence(std::string inname, paramStruct params, std::string outname)
         paramsHere.mint = thresholds.at(i);
         makeHealpixMinkmap(map, paramsHere, outname, i);
     }
+}
+
+/*!
+ * Wrapper function that calls makeSequence or makeSingleMinkmap for given input filename, params
+ * \param inname Filename of input Healpix map
+ * \param params Struct containing Minkowski map generation parameters: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
+ * \param outname Path to and file prefix of outputfile
+ */
+void makeMinkmap(std::string inname, paramStruct params, std::string outname)
+{
+    if(params.sequence) makeSequence(inname, params, outname);
+    else makeSingleMinkmap(inname, params, outname);
 }
 
 
