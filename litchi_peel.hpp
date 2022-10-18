@@ -183,7 +183,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
                 tensorHere += at(pixelToAdd); //parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = smoothFactor/(pixelsNearby.size());//normalize such that sum over all pixels remains same
-            tensorHere *= 1./norm; //TODO check if this makes sense
+            tensorHere *= norm; //TODO check if this makes sense
             map[pixel] = func( tensorHere );
         }
         else
