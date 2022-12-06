@@ -38,6 +38,7 @@ double arclength(pointing A, pointing B) //Distance between A and B on Sphere
     if( (std::abs(A.theta-B.theta)<1e-14) && (std::abs(A.phi-B.phi)<1e-14) )  return 0.;
     const double pi = 3.14159265359;
     double sigma = acos( sin(pi/2-A.theta)*sin(pi/2-B.theta) + cos(pi/2-A.theta)*cos(pi/2-B.theta)*cos(A.phi-B.phi));
+    //double sigma = acos( dotprod(A.to_vec3(), B.to_vec3()) );
     return sigma;
 }
 

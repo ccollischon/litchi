@@ -22,10 +22,15 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(litchi regnitz.cpp)
 target_compile_definitions(litchi PUBLIC NDEBUG)
+
 add_executable(tests tests.cpp)
 target_compile_definitions(tests PUBLIC THISRUNSINATEST)
+
+add_executable(testGeometry testGeometry.cpp)
+
 target_link_libraries(litchi -lhealpix_cxx)
 target_link_libraries(tests PUBLIC -lhealpix_cxx)
+target_link_libraries(testGeometry PUBLIC -lhealpix_cxx)
 
 #find_package(pybind11 REQUIRED)
 pybind11_add_module(litchieat NO_EXTRAS pybindings.cpp)
