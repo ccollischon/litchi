@@ -520,7 +520,7 @@ struct minkmapSphere :  minkmapFamily{
         pointing oneCorner;
         pointing otherCorner;
         //pointing n;
-        minkTensorStack returntens(rankA, rankB, curvIndex, positions[0]);
+        minkTensorStack returntens = nullTensor(rankA, rankB, curvIndex, positions[0]);
         double newlength{0}, newcurv{0};
         
         //double& factor{ curvIndex==0 ? area : curvIndex==1 ? newlength : newcurv };

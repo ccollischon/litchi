@@ -1,8 +1,9 @@
-
 #include <cmath>
 #include <cassert>
 #include <vector>
 #include <iostream>
+#include <limits>
+typedef std::numeric_limits< double > dbl;
 
 #include "geometryHelpers.hpp"
 
@@ -25,9 +26,15 @@ int main ()
     
     assert( abs(arclength(A,B)-pi/4)<1e-13 && abs(arclength(A,C)-pi/4)<1e-13 && "arclength broken!" );
     
-    cout << arclength(pointing(pi/2,0),pointing(pi/2+1e-5,0)) -1e-5 << endl;
-    assert( abs(arclength(pointing(pi/2,0),pointing(pi/2+1e-5,0)) - 1e-5)<1e-12 && "arclength broken! (small distance theta equator)" );
-    assert( abs(arclength(pointing(pi/2,0),pointing(pi/2,1e-5)) - 1e-5)<1e-12 && "arclength broken! (small distance theta equator)" );
+    
+    double theta = pi/2, phi = 0, epsilon = 1e-5;
+    assert( abs(arclength(pointing(theta,phi),pointing(theta+epsilon,phi)) - epsilon)<1e-12 && "arclength broken! (small distance theta equator)" );
+    assert( abs(arclength(pointing(theta,phi),pointing(theta,phi+epsilon)) - epsilon)<1e-12 && "arclength broken! (small distance phi equator)" );
+    
+    theta = pi/6, phi = 0.2*pi/180;
+    cout.precision(dbl::max_digits10);
+    assert( abs(arclength(pointing(theta,phi),pointing(theta,phi+epsilon))/ sin(theta) - epsilon )<1e-12 && "arclength broken! (small distance phi pi/8)" );
+    assert( abs(arclength(pointing(theta,phi),pointing(theta+epsilon,phi)) - epsilon)<1e-12 && "arclength broken! (small distance theta pi/8)" );
     
     
     
@@ -59,6 +66,13 @@ int main ()
     assert(abs(interpolation.phi)<1e-12 && "interpPointing() meridian 2pi broken!");
     interpolation = interpPointing( pointing(pi/2, 0), 0.5, pointing(pi/2-1,0), 2, 1 );
     assert( abs(interpolation.theta-(pi/2-(1./3)) )<1e-12 && "interpPointing() 1/3 broken" );
+    
+    theta = pi/6, phi = 0.1*pi/180;
+    interpolation = interpPointing( pointing(theta,phi), 1.5, pointing(theta+2*epsilon,phi), 0.5, 1 );
+    assert( abs(interpolation.theta - (theta+epsilon))<1e-12 && "interpPointing() pi/6 small distance theta");
+    interpolation = interpPointing( pointing(theta,phi), 1.5, pointing(theta,phi+2*epsilon), 0.5, 1 );
+    cout << (interpolation.phi - (phi+epsilon)) << endl;
+    assert( abs(interpolation.phi - (phi+epsilon))<1e-12 && "interpPointing() pi/6 small distance phi");
     
     
     pointing eq1(pi/2,0);
