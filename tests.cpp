@@ -242,6 +242,12 @@ int main ()
         if(max(double(pix4S), trace(pix4T)) ) assert( abs(pix4S-trace(pix4T))/max(double(pix4S), trace(pix4T) )<1e-12 && "Trace of (0,2,1) and boundary different in Interface" );
         else assert( abs(pix4S-trace(pix4T))<1e-12 && "Trace of (0,2,1) and boundary different in interface" );
         
+        auto neighbors = mapsScalar.at(0).minkmapPixelNeighbors(pixnum);
+        double maxdist = 2*map.max_pixrad();
+        assert(arclength(map.pix2ang(neighbors.at(0)),map.pix2ang(neighbors.at(1))) < maxdist && "Distance between neighbors too large!" );
+        assert(arclength(map.pix2ang(neighbors.at(0)),map.pix2ang(neighbors.at(2))) < maxdist && "Distance between neighbors too large!" );
+        assert(arclength(map.pix2ang(neighbors.at(0)),map.pix2ang(neighbors.at(3))) < maxdist && "Distance between neighbors too large!" );
+        
         cout << "Testing EVQ \n";
         auto test = eigenValueQuotient(pix1T);
         test = eigenValueQuotient(pix2T);
