@@ -37,6 +37,7 @@ struct paramStruct{
         std::string function{"trace"}, maskname{""};
 };
 
+///Sanity check for all parameters. Throws std::invlid_argument if something goes wrong
 void checkParams(const auto &obj) {
     
     if(obj.curvIndex==0 && obj.rankB)
@@ -100,7 +101,7 @@ void checkParams(const auto &obj) {
     }
 }
 
-///If params.smooth is set, overwrite params.NsideOut and params.smoothRad to corresponding values
+///If params.smooth is set, overwrite params.NsideOut and params.smoothRad to corresponding values. Through this, user can use either smooth or smoothRad
 void backwardsCompatibilitySmooth(paramStruct& params)
 {
     if(params.smooth > 0) //User has used deprecated feature
@@ -124,9 +125,10 @@ void backwardsCompatibilitySmooth(paramStruct& params)
 
 
 /**
- * Formats given outname to contain all relevant parameters if params.forceOutname is false
+ * Formats given outname to contain all relevant parameters if params.forceOutname is false; adds a counter if params.forceOutname is true and params.sequence is true
  * \param outname Path and desired file prefix with or without .fits ending. Parameters are added accordingly
- * \param params Struct containing Minkowski map generation parameters to write into header: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
+ * \param params Struct containing Minkowski map generation parameters
+ * \param counter Number of image in sequence if sequence of images is generated
  */
 void formatOutname(std::string& outname, const paramStruct& params, const int counter=0)
 {
@@ -171,10 +173,10 @@ void formatOutname(std::string& outname, const paramStruct& params, const int co
 }
 
 /**
- * Write given map to file specified by outname containing params in header
- * Function checks if given path for outputfile exists and creates it if not. Files with same name are overwritten.
+ * Write given map to file specified by outname containing params in header.
+ * Checks if given path for outputfile exists and creates it if not. Files with same name are overwritten. Used PLANCK_FLOAT32 as output data type
  * \param outputmap Healpix map to be saved to file
- * \param params Struct containing Minkowski map generation parameters to write into header: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
+ * \param params Struct containing Minkowski map generation parameters to write into header
  * \param outname Name of output file
  */
 void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params, std::string outname)
@@ -242,8 +244,9 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
 /*!
  * Function that creates actual minkmap from given inputmap, params. Warning: degrades input map if Nside parameter set
  * \param map Input Healpix map
- * \param params Struct containing Minkowski map generation parameters: Nside, NsideOut, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, linThresh, function, forceOutname, sequence
+ * \param params Struct containing Minkowski map generation parameters
  * \param outname Path to and file prefix of outputfile
+ * \param counter Number of image in sequence if sequence of images is generated. Used for output name generation
  */
 void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::string outname, const int counter=0)
 {

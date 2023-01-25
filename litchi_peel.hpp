@@ -10,7 +10,7 @@
 #include "litchi_pulp.hpp"
 
 /** \file litchi_peel.hpp
- * \brief Everything between minkmap and Healpix map, as well as helper functions for creating vectors with numbers at constant intervals
+ * \brief Everything between minkmap and Healpix map, as well as helper functions for creating vectors with numbers at constant intervals and masking
  */
 
 /// Create a vector of numt equally, linearly spaced doubles between mint and maxt, including mint and maxt
@@ -41,7 +41,7 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
     return thresholds;
 }
 
-/** Apply mask to imput image using threshold. All masked pixels are set to NAN
+/** Apply mask to input image using threshold. All masked pixels are set to NAN
  * \param map Input image (passed by reference)
  * \param mask Mask image, should be of same size and numbering scheme as map. May contain any double values; threshold will be applied. Convention: 1 = pixel not masked, 0 = pixel masked
  * \param thresh Threshold to be applied to mask. Any pixel that is below this value in the mask will be set to NAN in the input image
@@ -68,7 +68,7 @@ void maskMap(Healpix_Map<double>& map, const Healpix_Map<double>& mask, double t
     
 }
 
-///Struct only for giving minkmaps normal pixel numbering
+///Struct for giving minkmaps normal pixel numbering
 template <typename maptype>
 struct normalHealpixInterface 
 {
@@ -80,14 +80,19 @@ struct normalHealpixInterface
      * Pixelvalue as a linear combination of tensors at given Healpix pixel, interpolated from surrounding Minkmap pixels
      * \brief Tensor value at given Healpix pixel
      * \param pixnum Pixel number
+     * \param numt If baseminkmap is a minkmapStack, use this to give the size of the stack (Used for reserving enough vector space, optional)
      * \return minkTensorStack with linear combination of Minkmap pixels
      */
     minkTensorStack at(int pixnum,uint numt=1) const;
     
+    
+    /**
+     * Actual conversion of whole minkmap into Healpix map
+     */
     template <typename tensortype>
     Healpix_Map<double> toHealpix(double func(tensortype), double smoothRad, int outputNside, uint numt=1) const;
     
-    ///return 0 if pixnum not polar, 1 if north, 2 if south
+    ///Return 0 if pixnum not polar, 1 if north, 2 if south
     uint ispolar(int pixnum) const 
     {
         int nside = baseminkmap.originalMap.Nside();
@@ -149,9 +154,10 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum, uint numt) const
 
 /** Generates scalar Healpix-type map from baseminkmap via specified function
  * \param input normalHealpixInterface containing desired Minkmap
- * \param func Function accepting tensor and returning scalar, e.g. trace or eigenValueQuotient
+ * \param func Function accepting tensor and returning scalar, e.g. trace, eigenValueQuotient, or eigenVecDir
  * \param smoothRad Window radius [rad] for input pixels included in each output pixel
  * \param outputNside Nside of output map
+ * \param numt If baseminkmap is a minkmapStack, use this to give the size of the stack (Used for reserving enough vector space, optional)
  * \return Healpix_Map of desired Minkmap ready for saving to file
  */
 template <typename maptype>

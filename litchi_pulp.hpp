@@ -14,7 +14,7 @@
 #include "geometryHelpers.hpp"
 
 /** \file litchi_pulp.hpp
- * \brief minkmapSphere class, which does the heavy lifting when creating a minkmap
+ * \brief Contains minkmapSphere class which does the heavy lifting when creating a minkmap
  */
 
 extern const double pi;
@@ -34,6 +34,7 @@ struct minkmapSphere :  minkmapFamily{
         }
     }
     
+    ///Returns center of minmmap pixel
     pointing pix2ang(int pixnum) const
     {
         if(pixnum>=originalMap.Npix())
@@ -55,7 +56,7 @@ struct minkmapSphere :  minkmapFamily{
         return pointing(corners.at(3)); //position east of pixel is center of vertex
     }
     
-    ///returns Healpix-pixel numbers of pixels surrounding given minkmap pixel, -11 = north pole, -5 = south pole
+    ///Returns Healpix-pixel numbers of pixels surrounding given minkmap pixel, -11 = north pole, -5 = south pole
     std::vector<int> minkmapPixelNeighbors(int pixnum) const
     {
         if(pixnum>=originalMap.Npix())
@@ -105,7 +106,7 @@ struct minkmapSphere :  minkmapFamily{
         return easternNeighborship;
     }
     
-    ///Returns linear combination Minkowski tensors at given Minkmap-pixel (vertex east of Healpix pixel with same number) 
+    ///Returns linear combination Minkowski tensors at given Minkmap-pixel (vertex east of Healpix pixel with same number)
     minkTensorStack at(int pixnum) const override
     {
         auto neighbors = minkmapPixelNeighbors(pixnum);
@@ -114,7 +115,7 @@ struct minkmapSphere :  minkmapFamily{
     }
     
     
-    ///Returns MT at marching square defined by surrounding Healpix pixels given by neighborship
+    ///Returns MT at marching square defined by surrounding Healpix pixels given by neighborship. Calls three/fourCornerCases
     minkTensorStack integrateMinktensor(std::vector<int>& neighborship) const
     {
         //marching square (which above, below thresh)
@@ -161,6 +162,7 @@ struct minkmapSphere :  minkmapFamily{
         return integralNumbers;
     }
     
+    ///Internal function treating case where one pixel in moving window is above threshold. Used internally by three/fourCornerCases
     //corners: two interpolated corners such that corners[0] cross corners[1] points away from body, corners[2] is within triangle, corners[3] and corners[4] needed for giveCurv and should be given in appropriate order (outBodyA, outBodyB)
     minkTensorStack oneCornerOver(double& newlength, double& area, double& newcurv, const std::vector<pointing>& corners, bool ranksum) const
     {
@@ -185,6 +187,7 @@ struct minkmapSphere :  minkmapFamily{
         return minkTensorIntegrand(rankA, rankB, curvIndex, corners[0], pointing(1,0))*factor; //return one for scalar case
     }
     
+    ///Internal function treating case where one pixel in moving window is above threshold. Used internally by three/fourCornerCases
     //corners: two interpolated corners such that corners[0] cross corners[1] points away from body, corners[2] and [4] are within polytope, corners[3] and corners[5] needed for giveCurv and should be given in appropriate order (outBodyA, outBodyB)
     minkTensorStack twoCornersOver(double& newlength, double& area, double& newcurv, const std::vector<pointing>& corners, bool ranksum) const
     {
@@ -209,6 +212,7 @@ struct minkmapSphere :  minkmapFamily{
         return minkTensorIntegrand(rankA, rankB, curvIndex, corners[0], pointing(1,0))*factor; //return one for scalar case
     }
     
+    ///Marching square for case of 4 pixels meeting in one corner
     minkTensorStack fourCornerCases(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
@@ -509,6 +513,7 @@ struct minkmapSphere :  minkmapFamily{
         return returntens;
     }
     
+    ///Marching square for case of 3 pixels meeting in one corner
     minkTensorStack threeCornerCases(std::vector<int>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
@@ -604,9 +609,10 @@ struct minkmapSphere :  minkmapFamily{
         return returntens;
     }
     
-    /*
-     * Gives total exterior angle for one cell. Angle is calculated to hypothetical contour continuing perpendicular to cell wall
-     * pointings should be given such that inBodyA (cross) outBodyA and outBodyB (cross) inBodyB points into cell ("right side first")
+    /**
+     * Gives total exterior angle for one window. Angle is calculated to hypothetical contour continuing perpendicular to window border
+     * All pointings refer to pixel centers, dirAwayfromBody represents the direction normal to the contour inside the window
+     * Pointings should be given such that inBodyA (cross) outBodyA and outBodyB (cross) inBodyB points into cell ("right side first"). Used for curvature/Euler index calculation
      */
     double giveCurv(vec3 dirAwayFromBody, const pointing& inBodyA, const pointing& outBodyA, const pointing& inBodyB, const pointing& outBodyB) const
     {

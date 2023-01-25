@@ -41,7 +41,7 @@ struct minkTensorStack
     
     explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), nweights{}
     {
-        if(std::isnan(weight)) 
+        if(std::isnan(weight))
         {
             numnan = 1;
         }
@@ -60,7 +60,7 @@ struct minkTensorStack
     minkTensorStack(const minkTensorStack& other) = default;
     ~minkTensorStack() = default;
     
-    //Move/copy assignments leave rank untouched
+    ///Move/copy assignments leave rank untouched (checked with assert)
     minkTensorStack& operator= (const minkTensorStack& other)
     {
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to copy assign minkTensorStacks of different rank!");
@@ -71,6 +71,7 @@ struct minkTensorStack
         return *this;
     }
     
+    ///Move/copy assignments leave rank untouched (checked with assert)
     minkTensorStack& operator= (minkTensorStack&& other)
     {
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to move assign minkTensorStacks of different rank!");
@@ -91,7 +92,7 @@ struct minkTensorStack
     }
     
     /**
-     * Checks whether tensor contains contours/anything non-empty. Empty spots are usually set to NAN ind output map
+     * Checks whether tensor contains contours/anything non-empty. Empty spots are usually set to NAN in output map
      */
     bool isEmpty() const
     {
@@ -263,7 +264,7 @@ minkTensorStack operator+ (const minkTensorIntegrand& lhs, const minkTensorStack
     return returnval;
 }
 
-
+///minkTensor concept for either minkTensorStack or minkTensoIntgerand
 template<typename T>
 concept minkTensor = std::is_base_of<minkTensorStack,T>::value || std::is_base_of<minkTensorIntegrand,T>::value;
 
@@ -291,6 +292,8 @@ minkTensorStack operator* (double lhs, const right& rhs)
     return retStack;
 }
 
+
+///Empty minkTensorStack that represents a spot set to NAN
 minkTensorStack nanTensor(uint rank1, uint rank2, uint curvInd, const pointing& rNew)
 {
     minkTensorStack thistensor(rank1,rank2,curvInd,rNew);
@@ -298,6 +301,7 @@ minkTensorStack nanTensor(uint rank1, uint rank2, uint curvInd, const pointing& 
     return thistensor;
 }
 
+///Empty minkTensorStack that represents a spot without structure
 minkTensorStack nullTensor(uint rank1, uint rank2, uint curvInd, const pointing& rNew)
 {
     minkTensorStack thistensor(rank1,rank2,curvInd,rNew);
@@ -308,6 +312,7 @@ minkTensorStack nullTensor(uint rank1, uint rank2, uint curvInd, const pointing&
 
 /***** Functions that work on tensors ****/
 
+///Calculates trace of a tensor (adding elemets with all indices zero and all one)
 template<minkTensor tens>
 double trace(const tens& input) //sum of eigenvalues
 {
@@ -319,12 +324,13 @@ double trace(const tens& input) //sum of eigenvalues
     std::vector<uint_fast8_t> indices(input.rankA+input.rankB,0);
     double summand = input.accessElement_rescaled(indices); //zeroes
     
-    for(uint i=0; i<indices.size(); i++) { indices.at(i) = 1; }
+    for(uint i=0; i<indices.size(); i++) { indices[i] = 1; }
     summand += input.accessElement_rescaled(indices)*pow(sinT, input.rankA+input.rankB); //ones with metric contribution
     
     return summand;
 }
 
+///Calculates ratio of eigenvalues of tensor (rank 2) / norm of vector of eigenvalues when rank 4 tensor is reduced to 3x3-matrix
 template<minkTensor tens>
 double eigenValueQuotient(const tens& input)
 {
@@ -395,7 +401,7 @@ double eigenValueQuotient(const tens& input)
         throw std::invalid_argument("eigenValueQuotient not implemented for higher ranks");
     }
 }
-//Returns normal vector pointing along largest EV of 2x2 Matrix
+///Returns normal vector pointing along largest EV of 2x2 Matrix
 pointing angleOf2x2Mat(const Eigen::Matrix2d& zahlenfriedhof)
 {
     pointing returnVec(0,1);
@@ -422,7 +428,7 @@ pointing angleOf2x2Mat(const Eigen::Matrix2d& zahlenfriedhof)
     return returnVec;
 }
 
-//Should return direction of eigenvector with highest eigenvalue. Zero means south, pi/2 means east
+///Should return direction of eigenvector with highest eigenvalue. Zero means south, pi/2 means east
 template<minkTensor tens>
 double eigenVecDir(const tens& input)
 {
