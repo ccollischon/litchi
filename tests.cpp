@@ -39,6 +39,7 @@ int main ()
     auto EVvec = solver.eigenvalues();
     cout << EVvec << endl;
     
+    cout << "Is minktensorStack nothrow move constructible? " << (std::is_nothrow_move_constructible<minkTensorStack>::value ? "yes" : "no") << endl;
     
     pointing A(pi/2,0);
     pointing B(pi/4,0);
@@ -261,6 +262,13 @@ int main ()
         test = eigenVecDir(pix3T);
         test = eigenVecDir(pix4T);
     }
+    
+    paramStruct testParams;
+    testParams.forceOutname = true;
+    testParams.mint = -1e-4, testParams.maxt = 1e-4, testParams.numt = 13;
+    testParams.rankA = 0, testParams.rankB = 2, testParams.curvIndex = 1;
+    testParams.Nside = 128, testParams.smooth = 8;
+    makeMinkmap("../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits",testParams,"testmap.fits");
     
     return 0;
 }

@@ -34,8 +34,10 @@ struct minkTensorStack
         appendStack(right);
     }
     
-    minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
-    {}
+    minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew, uint capacity=4) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
+    {
+        if(capacity) nweights.reserve(capacity);
+    }
     
     explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), nweights{}
     {
@@ -190,7 +192,15 @@ struct minkTensorStack
         
         if(arclength(r,other.r)>1e-12)   other.moveTo(r);
         
+        #ifdef THISRUNSINATEST
+            auto vecsize = nweights.capacity();
+        #endif
+        
         nweights.reserve(nweights.size()+other.nweights.size());
+        
+        #ifdef THISRUNSINATEST
+            if(vecsize != nweights.capacity()) std::cout << "Vector grown, was " << vecsize << " , is now " << nweights.capacity() << std::endl;
+        #endif
         nweights.insert(nweights.end(), other.nweights.begin(), other.nweights.end());
         
     }

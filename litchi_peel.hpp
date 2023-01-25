@@ -13,6 +13,7 @@
  * \brief Everything between minkmap and Healpix map, as well as helper functions for creating vectors with numbers at constant intervals
  */
 
+/// Create a vector of numt equally, linearly spaced doubles between mint and maxt, including mint and maxt
 std::vector<double> makeIntervals_lin(double mint, double maxt, uint numt)
 {
     std::vector<double> thresholds;
@@ -26,6 +27,7 @@ std::vector<double> makeIntervals_lin(double mint, double maxt, uint numt)
     return thresholds;
 }
 
+/// Create a vector of numt equally, logarithmically spaced doubles between mint and maxt, including mint and maxt
 std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
 {
     std::vector<double> thresholds;
@@ -80,10 +82,10 @@ struct normalHealpixInterface
      * \param pixnum Pixel number
      * \return minkTensorStack with linear combination of Minkmap pixels
      */
-    minkTensorStack at(int pixnum) const;
+    minkTensorStack at(int pixnum,uint numt=1) const;
     
     template <typename tensortype>
-    Healpix_Map<double> toHealpix(double func(tensortype), double smoothRad, int outputNside) const;
+    Healpix_Map<double> toHealpix(double func(tensortype), double smoothRad, int outputNside, uint numt=1) const;
     
     ///return 0 if pixnum not polar, 1 if north, 2 if south
     uint ispolar(int pixnum) const 
@@ -107,7 +109,7 @@ struct normalHealpixInterface
 };
 
 template <typename maptype>
-minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
+minkTensorStack normalHealpixInterface<maptype>::at(int pixnum, uint numt) const
 {
     #ifdef THISISPYTHON
         if (PyErr_CheckSignals() != 0)
@@ -134,7 +136,7 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
         westernNeighborship.at(2) = neighbors[3];
     }
             
-    minkTensorStack output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex, baseminkmap.originalMap.pix2ang(pixnum));
+    minkTensorStack output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex, baseminkmap.originalMap.pix2ang(pixnum),4*numt*2);
     for(int minkpix : westernNeighborship)
     {
         if(minkpix != -1)
@@ -154,7 +156,7 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
  */
 template <typename maptype>
 template <typename tensortype>
-Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tensortype), double smoothRad, int outputNside) const
+Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tensortype), double smoothRad, int outputNside, uint numt) const
 {
     Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
     
@@ -177,10 +179,10 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
             auto pixelsNearbyRange = baseminkmap.originalMap.query_disc(map.pix2ang(pixel), smoothRad);
             std::vector<int> pixelsNearby = pixelsNearbyRange.toVector();
         
-            minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
+            minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel), pixelsNearby.size()*numt*2);
             for(auto pixelToAdd : pixelsNearby)
             {
-                tensorHere += at(pixelToAdd); //parallel transport, not just add, DONE in minkTensorStack +=
+                tensorHere += at(pixelToAdd,numt); //parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = smoothFactor/(pixelsNearby.size());//normalize such that sum over all pixels remains same
             tensorHere *= norm; //TODO check if this makes sense

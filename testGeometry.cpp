@@ -116,5 +116,7 @@ int main ()
     assert( abs(moved.theta-1) < 1e-12 && abs(moved.phi) < 1e-3 && "parallelTransport thetavector broken (theta direction)!" );
     assert( abs(movedphi.theta) < 1e-4 && abs( movedphi.phi-1/(pow(sin(pi/4),1)) ) < 1e-6 && "parallelTransport phivector broken (theta direction)!" );
     
+    cout << "Is pair of double and pointing nothrow move constructible? " << (std::is_nothrow_move_constructible<std::pair<pointing,double>>::value ? "yes" : "no") << endl;
+    
     return 0;
 }

@@ -274,15 +274,15 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
     Healpix_Map<double> outputmap;
     if(params.function=="trace")
     {
-        outputmap = interface.toHealpix(trace<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
+        outputmap = interface.toHealpix(trace<minkTensorStack>,params.smoothRad, (int)params.NsideOut, params.numt);
     }
     else if(params.function=="EVQuo")
     {
-        outputmap = interface.toHealpix(eigenValueQuotient<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
+        outputmap = interface.toHealpix(eigenValueQuotient<minkTensorStack>,params.smoothRad, (int)params.NsideOut, params.numt);
     }
     else if(params.function=="EVDir")
     {
-        outputmap = interface.toHealpix(eigenVecDir<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
+        outputmap = interface.toHealpix(eigenVecDir<minkTensorStack>,params.smoothRad, (int)params.NsideOut, params.numt);
     }
     
     /*  Map is generated, now create outname  */
