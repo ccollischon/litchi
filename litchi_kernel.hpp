@@ -22,7 +22,7 @@ struct minkmapFamily {
     minkmapFamily(const minkmapFamily& otherMap) : originalMap(otherMap.originalMap), rankA(otherMap.rankA), rankB(otherMap.rankB), curvIndex(otherMap.curvIndex) {}
 };
 
-/// Sum operator template for minkmaps. Map addition operators are available, excluding +=
+/// Sum operator template for minkmaps. Overloaded addition operators using this are available, excluding +=
 template <typename ltype, typename rtype> //For sums of minkmaps
 struct minkmapSum : minkmapFamily
 {
@@ -51,7 +51,7 @@ minkmapSum<left, right> operator +(const left& a,const right& b)
     return minkmapSum<left,right> (&a, &b);
 }
 
-/// Product operator template for minkmaps. Map multiplication operations are available, excluding *=
+/// Product operator template for minkmaps. Overloaded multiplication operators are available, excluding *=
 template <typename maptype, typename scalar>
 struct minkmapTimes : minkmapFamily
 {
@@ -82,7 +82,7 @@ minkmapTimes<right,left> operator* (const left& lhs, const right& rhs)
     return minkmapTimes<right, left> (rhs, lhs);
 }
 
-/// Contains vector of Minkmaps to be treated as sum
+/// Contains vector of minkmaps to be treated as sum. Use this if number of maps to be added is large or unknown at compile time (due to template nature of minkmapSum that can't be resolved otherwise)
 template<typename maptype, typename std::enable_if_t<std::is_base_of<minkmapFamily,maptype>::value>* = nullptr>
 struct minkmapStack : minkmapFamily
 {

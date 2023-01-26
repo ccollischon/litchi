@@ -20,7 +20,7 @@
 extern const double pi;
 
 
-///Contains "raw" (marching-square-level) minkowski tensors, returns on demand and doesn't save them because of space. 
+///Contains "raw" (marching-square-level) Minkowski tensors, returns on demand and doesn't save them because of space. 
 struct minkmapSphere :  minkmapFamily{ 
     const double thresh{};
     
@@ -34,7 +34,7 @@ struct minkmapSphere :  minkmapFamily{
         }
     }
     
-    ///Returns center of minmmap pixel
+    ///Returns center of minkmap pixel (vertex east of Healpix pixel with same number)
     pointing pix2ang(int pixnum) const
     {
         if(pixnum>=originalMap.Npix())
@@ -106,7 +106,7 @@ struct minkmapSphere :  minkmapFamily{
         return easternNeighborship;
     }
     
-    ///Returns linear combination Minkowski tensors at given Minkmap-pixel (vertex east of Healpix pixel with same number)
+    ///Returns linear combination of Minkowski tensors at given minkmap pixel (vertex east of Healpix pixel with same number). Calls integrateMinktensor
     minkTensorStack at(int pixnum) const override
     {
         auto neighbors = minkmapPixelNeighbors(pixnum);
@@ -610,8 +610,8 @@ struct minkmapSphere :  minkmapFamily{
     }
     
     /**
-     * Gives total exterior angle for one window. Angle is calculated to hypothetical contour continuing perpendicular to window border
-     * All pointings refer to pixel centers, dirAwayfromBody represents the direction normal to the contour inside the window
+     * Gives total exterior angle for one window. Angle is calculated to hypothetical contour continuing perpendicular to window border\n
+     * All pointings refer to pixel centers, dirAwayFromBody represents the direction normal to the contour inside the window\n
      * Pointings should be given such that inBodyA (cross) outBodyA and outBodyB (cross) inBodyB points into cell ("right side first"). Used for curvature/Euler index calculation
      */
     double giveCurv(vec3 dirAwayFromBody, const pointing& inBodyA, const pointing& outBodyA, const pointing& inBodyB, const pointing& outBodyB) const

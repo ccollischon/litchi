@@ -56,7 +56,7 @@ pointing midpoint(pointing A, pointing B) //rotate starting from A by half arcle
 }
 
 /**
- * Creates tangential space vector between two positions on sphere, pointing from right to left
+ * Creates tangent space vector between two positions on sphere, pointing from right to left. Positions should be close as this is done linearly
  */
 pointing pointingDiff(const pointing& left, const pointing& right)
 {
@@ -71,7 +71,7 @@ pointing pointingDiff(const pointing& left, const pointing& right)
 }
 
 /**
- * Mantz et al 2008 interpolation between 2 lattice points. If the field value at one point is close to the threshold the interpolated point will be close to it and vice versa
+ * Mantz et al 2008 interpolation of contour between 2 lattice points given a threshold. If the field value at one point is close to the threshold the interpolated point will be close to it and vice versa
  * \param A Position on sphere of one point
  * \param valA Field value at A
  * \param B Position on sphere of other point
@@ -228,7 +228,7 @@ pointing moveAlongVector(const pointing& start, const pointing& direction, doubl
 }
 
 /**
- * Parallel transport tangent vector on Sphere along geodesic from start to stop. Uses Schild's ladder procedure.
+ * Parallel transport tangent vector on sphere along geodesic from start to stop. Uses single step of Schild's ladder procedure.
  * \param start Starting position
  * \param stop Final position
  * \param initialVector Tangent space vector to be transported (the two coordinate components of the pointing class are used as vector components)

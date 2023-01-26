@@ -42,7 +42,7 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
 }
 
 /** Apply mask to input image using threshold. All masked pixels are set to NAN
- * \param map Input image (passed by reference)
+ * \param map Input image
  * \param mask Mask image, should be of same size and numbering scheme as map. May contain any double values; threshold will be applied. Convention: 1 = pixel not masked, 0 = pixel masked
  * \param thresh Threshold to be applied to mask. Any pixel that is below this value in the mask will be set to NAN in the input image
  * 
@@ -77,11 +77,11 @@ struct normalHealpixInterface
     explicit normalHealpixInterface(maptype& othermap) : baseminkmap(othermap) {}
     
     /**
-     * Pixelvalue as a linear combination of tensors at given Healpix pixel, interpolated from surrounding Minkmap pixels
+     * Pixel value as a linear combination of tensors at given Healpix pixel, interpolated from surrounding minkmap pixels
      * \brief Tensor value at given Healpix pixel
      * \param pixnum Pixel number
      * \param numt If baseminkmap is a minkmapStack, use this to give the size of the stack (Used for reserving enough vector space, optional)
-     * \return minkTensorStack with linear combination of Minkmap pixels
+     * \return minkTensorStack with linear combination of minkmap pixels
      */
     minkTensorStack at(int pixnum,uint numt=1) const;
     
@@ -153,12 +153,12 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum, uint numt) const
 }
 
 /** Generates scalar Healpix-type map from baseminkmap via specified function
- * \param input normalHealpixInterface containing desired Minkmap
+ * \param input normalHealpixInterface containing desired minkmap
  * \param func Function accepting tensor and returning scalar, e.g. trace, eigenValueQuotient, or eigenVecDir
  * \param smoothRad Window radius [rad] for input pixels included in each output pixel
  * \param outputNside Nside of output map
  * \param numt If baseminkmap is a minkmapStack, use this to give the size of the stack (Used for reserving enough vector space, optional)
- * \return Healpix_Map of desired Minkmap ready for saving to file
+ * \return Healpix_Map of desired minkmap ready for saving to file
  */
 template <typename maptype>
 template <typename tensortype>

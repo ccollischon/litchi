@@ -16,16 +16,16 @@
  * \brief minkTensorStack, trace, eigenvalue quotient: all operations involving tensors
  */
 
-///Save all linear combinations of minkTensorIntegrands in one class
+///Save linear combinations of minkTensorIntegrands in one class
 struct minkTensorStack
 {
     const uint rankA{0}, rankB{0};
     const uint curvIndex{0};
     pointing r{1.5701963268,0};
-    uint numnan{0}; ///< tracking how many contributions from a masked pixel this tensor contains (in addition to content in nweights)
+    uint numnan{0}; ///< tracking how many contributions from masked pixels this tensor contains (in addition to content in nweights)
     uint numnull{0}; ///< tracking how many contributions from empty windows this tensor contains (in addition to content in nweights)
     
-    std::vector<std::pair<pointing,double>> nweights{}; ///< list normal Vectors from which minkTensorIntegrands should be generated and their respective weights
+    std::vector<std::pair<pointing,double>> nweights{}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
     
     minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(left.nweights)
     {
@@ -147,7 +147,7 @@ struct minkTensorStack
         r = newR;
     }
     
-    /** Add Tensor with given pointing and weight to stack
+    /** Add tensor with given pointing and weight to stack
      */
     void addTensor(pointing n, double weight)
     {
@@ -264,7 +264,7 @@ minkTensorStack operator+ (const minkTensorIntegrand& lhs, const minkTensorStack
     return returnval;
 }
 
-///minkTensor concept for either minkTensorStack or minkTensoIntgerand
+///minkTensor concept for either minkTensorStack or minkTensorIntegrand
 template<typename T>
 concept minkTensor = std::is_base_of<minkTensorStack,T>::value || std::is_base_of<minkTensorIntegrand,T>::value;
 
