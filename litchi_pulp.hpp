@@ -20,7 +20,7 @@
 extern const double pi;
 
 
-///Contains "raw" (marching-square-level) Minkowski tensors, returns on demand and doesn't save them because of space. 
+///Contains "raw" (marching-square-level) Minkowski tensors as pixels, returns them on demand and doesn't save them
 struct minkmapSphere :  minkmapFamily{ 
     const double thresh{};
     

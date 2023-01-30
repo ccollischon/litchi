@@ -264,6 +264,7 @@ minkTensorStack operator+ (const minkTensorIntegrand& lhs, const minkTensorStack
     return returnval;
 }
 
+
 ///minkTensor concept for either minkTensorStack or minkTensorIntegrand
 template<typename T>
 concept minkTensor = std::is_base_of<minkTensorStack,T>::value || std::is_base_of<minkTensorIntegrand,T>::value;
