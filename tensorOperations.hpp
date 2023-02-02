@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <vector>
 #include <stdexcept>
+#include <list>
 
 #include "eigen/Eigen/Eigenvalues"
 #include "eigen/Eigen/Dense"
@@ -25,7 +26,7 @@ struct minkTensorStack
     uint numnan{0}; ///< tracking how many contributions from masked pixels this tensor contains (in addition to content in nweights)
     uint numnull{0}; ///< tracking how many contributions from empty windows this tensor contains (in addition to content in nweights)
     
-    std::vector<std::pair<pointing,double>> nweights{}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
+    std::list<std::pair<pointing,double>> nweights{}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
     
     minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(left.nweights)
     {
@@ -36,7 +37,7 @@ struct minkTensorStack
     
     minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew, uint capacity=4) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
     {
-        if(capacity) nweights.reserve(capacity);
+        //if(capacity) nweights.reserve(capacity);
     }
     
     explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), nweights{}
@@ -109,10 +110,10 @@ struct minkTensorStack
         if(isMasked()) {return NAN;}
         
         double retval = 0.;
-        for(uint i=0; i<nweights.size(); ++i)
+        for(const auto& element : nweights)
         {
-            minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, std::get<0>(nweights[i]));
-            retval+= tensorHere.accessElement(indices)*std::get<1>(nweights[i]);
+            minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, std::get<0>(element));
+            retval+= tensorHere.accessElement(indices)*std::get<1>(element);
         }
         return retval;
     }
@@ -128,10 +129,10 @@ struct minkTensorStack
         double factor = 1.*(nweights.size()+numnull+numnan)/(1.*(nweights.size()+numnull));
         
         double retval = 0.;
-        for(uint i=0; i<nweights.size(); ++i)
+        for(const auto& element : nweights)
         {
-            minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, std::get<0>(nweights[i]));
-            retval+= tensorHere.accessElement(indices)*std::get<1>(nweights[i]);
+            minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, std::get<0>(element));
+            retval+= tensorHere.accessElement(indices)*std::get<1>(element);
         }
         return retval*factor;
     }
@@ -140,9 +141,9 @@ struct minkTensorStack
      */
     void moveTo(const pointing& newR)
     {
-        for(uint i=0; i<nweights.size(); ++i)
+        for(std::pair<pointing,double>& element : nweights)
         {
-            std::get<0>(nweights[i]) = parallelTransport(r, newR, std::get<0>(nweights[i]));
+            std::get<0>(element) = parallelTransport(r, newR, std::get<0>(element));
         }
         r = newR;
     }
@@ -192,7 +193,7 @@ struct minkTensorStack
         numnull += other.numnull;
         
         if(arclength(r,other.r)>1e-12)   other.moveTo(r);
-        
+        /*
         #ifdef THISRUNSINATEST
             auto vecsize = nweights.capacity();
         #endif
@@ -203,6 +204,9 @@ struct minkTensorStack
             if(vecsize != nweights.capacity()) std::cout << "Vector grown, was " << vecsize << " , is now " << nweights.capacity() << std::endl;
         #endif
         nweights.insert(nweights.end(), other.nweights.begin(), other.nweights.end());
+        * */
+        auto itEnd = nweights.end();
+        nweights.splice(itEnd,other.nweights);
         
     }
     
