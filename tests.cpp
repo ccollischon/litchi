@@ -189,8 +189,21 @@ int main ()
     minkTensorIntegrand asdfTensor (0,1,1,pointing(pi/2,0.01) ,pointing(1,1));
     minkTensorIntegrand asdfTensor2(0,1,1,pointing(pi/2,2*pi-0.01),pointing(1,1));
     auto asdfSum = asdfTensor2 + asdfTensor;
-    cout << asdfSum.accessElement({0}) - asdfSum.accessElement({1}) << "\n";
     assert( abs(asdfSum.accessElement({0}) - asdfSum.accessElement({1}))<1e-4 && "sum of two tensors left and right of meridian broken" );
+    
+    //Test vector evq, should be length
+    pointing n1(0.1,0.1), n2(-0.1,-0.1);
+    normalizeVectorOnSphere(n1,pi/3);
+    normalizeVectorOnSphere(n2,pi/3);
+    minkTensorIntegrand integ1(0,1,1,pointing(pi/3,0.1),n1),integ2(0,1,1,pointing(pi/3,0.1),n2);
+    minkTensorStack vectorstack = integ1*0.1;
+    assert( abs(eigenValueQuotient(vectorstack)-0.1) < 1e-12 && "vector evq length calculation broken 1");
+    vectorstack = integ2*0.2;
+    assert( abs(eigenValueQuotient(vectorstack)-0.2) < 1e-12 && "vector evq length calculation broken 2");
+    vectorstack = integ1 + integ2;
+    assert( abs(eigenValueQuotient(vectorstack)) < 1e-12 && "sum of vector evq length calculation broken");
+    
+    
     
     
     //Test actual map, trace of W^(0,2)_1 should be equal to boundary length

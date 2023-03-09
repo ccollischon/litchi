@@ -345,8 +345,9 @@ double eigenValueQuotient(const tens& input)
     uint ranksum = input.rankA+input.rankB;
     if (ranksum == 1)
     {
-        std::cerr << "Error: Eigenvalue quotient not well-defined for rank 1! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
-        throw std::invalid_argument("eigenValueQuotient not defined for rank 1");
+        double retval = sqrt( pow(input.accessElement({0}),2) + pow(sin(input.r.theta)*input.accessElement({1}),2) ); //Take length of sum of normal vectors
+        return retval;
+        
     } else if (ranksum == 0)
     {
         return input.accessElement({});
