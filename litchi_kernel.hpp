@@ -92,7 +92,7 @@ struct minkmapStack : minkmapFamily
     
     minkTensorStack at(int pixel) const override
     {
-        minkTensorStack thistensor(rankA, rankB, curvIndex, mapstack.at(0).at(pixel).r, mapstack.size()*2);
+        minkTensorStack thistensor(rankA, rankB, curvIndex, mapstack.at(0).at(pixel).r);
         for(uint i=0; i<mapstack.size(); ++i)
         {
             thistensor += mapstack[i].at(pixel);

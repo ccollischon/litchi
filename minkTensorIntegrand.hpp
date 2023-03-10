@@ -5,7 +5,6 @@
 #include "geometryHelpers.hpp"
 #include <algorithm>
 #include <stdexcept>
-//#include <iostream>
 #include <numeric>
 #include <cassert>
 #include <vector>

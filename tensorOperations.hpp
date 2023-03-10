@@ -1,7 +1,6 @@
 #ifndef tensorOperations
 #define tensorOperations
 
-//#include "tensorFamily.hpp"
 #include <cmath>
 #include <algorithm>
 #include <iostream>
@@ -35,9 +34,8 @@ struct minkTensorStack
         appendStack(right);
     }
     
-    minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew, uint capacity=4) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
+    minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
     {
-        //if(capacity) nweights.reserve(capacity);
     }
     
     explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), nweights{}
@@ -108,6 +106,7 @@ struct minkTensorStack
     double accessElement(const std::vector<uint_fast8_t>& indices) const
     {
         if(isMasked()) {return NAN;}
+        if(isEmpty()) {return 0.;}
         
         double retval = 0.;
         for(const auto& element : nweights)
@@ -193,18 +192,7 @@ struct minkTensorStack
         numnull += other.numnull;
         
         if(arclength(r,other.r)>1e-12)   other.moveTo(r);
-        /*
-        #ifdef THISRUNSINATEST
-            auto vecsize = nweights.capacity();
-        #endif
         
-        nweights.reserve(nweights.size()+other.nweights.size());
-        
-        #ifdef THISRUNSINATEST
-            if(vecsize != nweights.capacity()) std::cout << "Vector grown, was " << vecsize << " , is now " << nweights.capacity() << std::endl;
-        #endif
-        nweights.insert(nweights.end(), other.nweights.begin(), other.nweights.end());
-        * */
         auto itEnd = nweights.end();
         nweights.splice(itEnd,other.nweights);
         
@@ -321,7 +309,8 @@ minkTensorStack nullTensor(uint rank1, uint rank2, uint curvInd, const pointing&
 template<minkTensor tens>
 double trace(const tens& input) //sum of eigenvalues
 {
-    //if(input.isMasked()) {return NAN;} //setting pixels to nan is not necessary here
+    if(input.isMasked()) {return NAN;}
+    if(input.isEmpty()) {return 0.;}
     
     double sinT = sin(input.r.theta);
     if(input.rankA+input.rankB == 0) return input.accessElement_rescaled({});
@@ -372,7 +361,6 @@ double eigenValueQuotient(const tens& input)
         double retval;
         if(twolambda1>twolambda2) retval = twolambda1/twolambda2;
         else retval = twolambda2/twolambda1;
-        //return std::isnan(retval) ? 0 : retval; //return 0 instead of nan in case of division by zero
         std::cout << "selfmade evq "<< retval << " eigen evq " << ratio <<"\n";
 #endif
         return ratio;
@@ -400,7 +388,6 @@ double eigenValueQuotient(const tens& input)
         
         //double ratio = std::abs(realVec.maxCoeff()/realVec.minCoeff());
         
-        //return std::isnan(ratio) ? 0 : ratio;
     } else
     {
         std::cerr << "Error: Eigenvalue quotient not implemented for rank 3 and higher than 4! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;

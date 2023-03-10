@@ -141,7 +141,7 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum, uint numt) const
         westernNeighborship.at(2) = neighbors[3];
     }
             
-    minkTensorStack output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex, baseminkmap.originalMap.pix2ang(pixnum),4*numt*2);
+    minkTensorStack output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex, baseminkmap.originalMap.pix2ang(pixnum));
     for(int minkpix : westernNeighborship)
     {
         if(minkpix != -1)
@@ -185,7 +185,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
             auto pixelsNearbyRange = baseminkmap.originalMap.query_disc(map.pix2ang(pixel), smoothRad);
             std::vector<int> pixelsNearby = pixelsNearbyRange.toVector();
         
-            minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel), pixelsNearby.size()*numt*2);
+            minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
             for(auto pixelToAdd : pixelsNearby)
             {
                 tensorHere += at(pixelToAdd,numt); //parallel transport, not just add, DONE in minkTensorStack +=
