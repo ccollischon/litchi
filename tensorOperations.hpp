@@ -332,15 +332,17 @@ double eigenValueQuotient(const tens& input)
     if(input.isEmpty()) {return NAN;}
     
     uint ranksum = input.rankA+input.rankB;
-    if (ranksum == 1)
+    
+    if (ranksum == 0)
+    {
+        return input.accessElement({});
+    }
+    else if (ranksum == 1)
     {
         double retval = sqrt( pow(input.accessElement({0}),2) + pow(sin(input.r.theta)*input.accessElement({1}),2) ); //Take length of sum of normal vectors
         return retval;
-        
-    } else if (ranksum == 0)
-    {
-        return input.accessElement({});
-    } else if(ranksum == 2)
+    }
+    else if(ranksum == 2)
     { //eigenvalues of matrix (a b, c d)
         double sin2T = sin(input.r.theta)*sin(input.r.theta); //pull down one index = sin^2 (theta) factor wherever left index = 1 (arbitrary choice)
         
@@ -364,8 +366,8 @@ double eigenValueQuotient(const tens& input)
         std::cout << "selfmade evq "<< retval << " eigen evq " << ratio <<"\n";
 #endif
         return ratio;
-        
-    } else if(ranksum == 4)
+    }
+    else if(ranksum == 4)
     {
         double sin2T = sin(input.r.theta)*sin(input.r.theta);
         //Only need these 5 because of total symmetry:
