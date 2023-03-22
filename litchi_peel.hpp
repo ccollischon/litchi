@@ -80,17 +80,16 @@ struct normalHealpixInterface
      * Pixel value as a linear combination of tensors at given Healpix pixel, interpolated from surrounding minkmap pixels
      * \brief Tensor value at given Healpix pixel
      * \param pixnum Pixel number
-     * \param numt If baseminkmap is a minkmapStack, use this to give the size of the stack (Used for reserving enough vector space, optional)
      * \return minkTensorStack with linear combination of minkmap pixels
      */
-    minkTensorStack at(int pixnum,uint numt=1) const;
+    minkTensorStack at(int pixnum) const;
     
     
     /**
      * Actual conversion of whole minkmap into Healpix map
      */
     template <typename tensortype>
-    Healpix_Map<double> toHealpix(double func(tensortype), double smoothRad, int outputNside, uint numt=1) const;
+    Healpix_Map<double> toHealpix(double func(tensortype), double smoothRad, int outputNside) const;
     
     ///Return 0 if pixnum not polar, 1 if north, 2 if south
     uint ispolar(int pixnum) const 
@@ -114,7 +113,7 @@ struct normalHealpixInterface
 };
 
 template <typename maptype>
-minkTensorStack normalHealpixInterface<maptype>::at(int pixnum, uint numt) const
+minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
 {
     #ifdef THISISPYTHON
         if (PyErr_CheckSignals() != 0)
@@ -157,12 +156,11 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum, uint numt) const
  * \param func Function accepting tensor and returning scalar, e.g. trace, eigenValueQuotient, or eigenVecDir
  * \param smoothRad Window radius [rad] for input pixels included in each output pixel
  * \param outputNside Nside of output map
- * \param numt If baseminkmap is a minkmapStack, use this to give the size of the stack (Used for reserving enough vector space, optional)
  * \return Healpix_Map of desired minkmap ready for saving to file
  */
 template <typename maptype>
 template <typename tensortype>
-Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tensortype), double smoothRad, int outputNside, uint numt) const
+Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tensortype), double smoothRad, int outputNside) const
 {
     Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
     
@@ -188,7 +186,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
             minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
             for(auto pixelToAdd : pixelsNearby)
             {
-                tensorHere += at(pixelToAdd,numt); //parallel transport, not just add, DONE in minkTensorStack +=
+                tensorHere += at(pixelToAdd); //parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = smoothFactor/(pixelsNearby.size());//normalize such that sum over all pixels remains same
             tensorHere *= norm; //TODO check if this makes sense
