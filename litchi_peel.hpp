@@ -89,7 +89,7 @@ struct normalHealpixInterface
      * Actual conversion of whole minkmap into Healpix map
      */
     template <typename tensortype>
-    Healpix_Map<double> toHealpix(double func(tensortype), double smoothRad, int outputNside) const;
+    Healpix_Map<double> toHealpix(double (&func)(tensortype), double smoothRad, int outputNside) const;
     
     ///Return 0 if pixnum not polar, 1 if north, 2 if south
     uint ispolar(int pixnum) const 
@@ -160,7 +160,7 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
  */
 template <typename maptype>
 template <typename tensortype>
-Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tensortype), double smoothRad, int outputNside) const
+Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double (&func)(tensortype), double smoothRad, int outputNside) const
 {
     Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
     
@@ -189,7 +189,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double func(tenso
                 tensorHere += at(pixelToAdd); //parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = smoothFactor/(pixelsNearby.size());//normalize such that sum over all pixels remains same
-            tensorHere *= norm; //TODO check if this makes sense
+            if(func == trace<minkTensorStack>) tensorHere *= norm; //TODO check if this makes sense
             map[pixel] = func( tensorHere );
         }
         else

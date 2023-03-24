@@ -287,6 +287,11 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
     {
         outputmap = interface.toHealpix(eigenVecDir<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
     }
+    else
+    {
+        std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir!, but have "+params.function+"\n This should not happen as it is already checked in checkParams\n";
+        throw std::invalid_argument("function invalid");
+    }
     
     /*  Map is generated, now create outname  */
     formatOutname(outname, params, counter);
