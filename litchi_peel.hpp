@@ -186,7 +186,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double (&func)(co
             minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
             for(auto pixelToAdd : pixelsNearby)
             {
-                tensorHere += at(pixelToAdd); //parallel transport, not just add, DONE in minkTensorStack +=
+                tensorHere += std::move(at(pixelToAdd)); //parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = smoothFactor/(pixelsNearby.size());//normalize such that sum over all pixels remains same
             if(func == trace<minkTensorStack>) tensorHere *= norm; //TODO check if this makes sense

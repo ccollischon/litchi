@@ -158,7 +158,7 @@ struct minkTensorStack
             numnull += 1;
         }
         else {
-            nweights.push_back(std::make_pair(n,weight));
+            nweights.emplace_back(std::make_pair(n,weight));
         }
     }
     
@@ -179,13 +179,13 @@ struct minkTensorStack
         {
             pointing newn = tens.n;
             if(arclength(r,tens.r)>1e-12)   newn = parallelTransport(tens.r,r,newn);
-            nweights.push_back(std::make_pair(newn,weight));
+            nweights.emplace_back(std::make_pair(newn,weight));
         }
     }
     
-    /** Add normal vectors and weights of other stack with same ranks to this stack. Normal vectors are parallel transported to position of this stack if positions differ
+    /** Add normal vectors and weights of other stack with same ranks to this stack. Normal vectors are parallel transported to position of this stack if positions differ. Rvalue reference version.
      */
-    void appendStack(minkTensorStack other)
+    void appendStack_rr(minkTensorStack&& other)
     {
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to append minkTensorStacks of different rank!");
         numnan += other.numnan;
@@ -194,7 +194,15 @@ struct minkTensorStack
         if(arclength(r,other.r)>1e-12)   other.moveTo(r);
         
         auto itEnd = nweights.end();
-        nweights.splice(itEnd,other.nweights);
+        nweights.splice(itEnd,std::move(other.nweights));
+        
+    }
+    
+    /** Add normal vectors and weights of other stack with same ranks to this stack. Normal vectors are parallel transported to position of this stack if positions differ. Copy version.
+     */
+    void appendStack(minkTensorStack other)
+    {
+        appendStack_rr(std::move(other));
         
     }
     
@@ -214,6 +222,12 @@ struct minkTensorStack
     minkTensorStack& operator+= (const minkTensorStack& other)
     {
         appendStack(other);
+        return *this;
+    }
+    
+    minkTensorStack& operator+= (minkTensorStack&& other) //rvalue implementation because it can be used by normalHealpixInterface::toHealpix
+    {
+        appendStack_rr(std::move(other));
         return *this;
     }
     
