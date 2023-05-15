@@ -116,7 +116,7 @@ struct minkmapSphere :  minkmapFamily{
     
     
     ///Returns MT at marching square defined by surrounding Healpix pixels given by neighborship. Calls three/fourCornerCases
-    minkTensorStack integrateMinktensor(std::vector<int>& neighborship) const
+    minkTensorStack integrateMinktensor(const std::vector<int>& neighborship) const
     {
         //marching square (which above, below thresh)
         std::vector<double> values;
@@ -127,7 +127,7 @@ struct minkmapSphere :  minkmapFamily{
         
         for (int pixnum : neighborship)//values-creation-loop
         {
-            if(pixnum!=-1) values.push_back(originalMap[pixnum]);
+            if(pixnum!=-1) values.emplace_back(originalMap[pixnum]);
         }
         const uint valuesSize = values.size();
         
@@ -216,7 +216,7 @@ struct minkmapSphere :  minkmapFamily{
     minkTensorStack fourCornerCases(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
-        for(auto pixnum : neighborship) {positions.push_back(originalMap.pix2ang(pixnum));}
+        for(auto pixnum : neighborship) {positions.emplace_back(originalMap.pix2ang(pixnum));}
         
         pointing oneCorner;
         pointing otherCorner;
@@ -514,13 +514,13 @@ struct minkmapSphere :  minkmapFamily{
     }
     
     ///Marching square for case of 3 pixels meeting in one corner
-    minkTensorStack threeCornerCases(std::vector<int>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
+    minkTensorStack threeCornerCases(const std::vector<int>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
         
         for(auto pixnum : neighborship) 
         {
-            if(pixnum!=-1)  positions.push_back(originalMap.pix2ang(pixnum));
+            if(pixnum!=-1)  positions.emplace_back(originalMap.pix2ang(pixnum));
         }
         pointing oneCorner;
         pointing otherCorner;

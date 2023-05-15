@@ -27,11 +27,12 @@ struct minkTensorStack
     
     std::list<std::pair<pointing,double>> nweights{}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
     
-    minkTensorStack(const minkTensorStack& left, const minkTensorStack& right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(left.nweights)
+    
+    minkTensorStack(minkTensorStack left, minkTensorStack right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(std::move(left.nweights))
     {
         numnan += right.numnan;
         numnull += right.numnull;
-        appendStack(right);
+        appendStack_rr(std::move(right));
     }
     
     minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
@@ -50,7 +51,7 @@ struct minkTensorStack
         }
         else
         {
-            nweights.push_back(std::make_pair(inp.n,weight));
+            nweights.emplace_back(std::make_pair(inp.n,weight));
         }
     }
     
