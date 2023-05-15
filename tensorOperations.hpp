@@ -259,7 +259,7 @@ minkTensorStack operator+ (const minkTensorIntegrand& lhs, const minkTensorStack
 
 ///minkTensor concept for either minkTensorStack or minkTensorIntegrand
 template<typename T>
-concept minkTensor = std::is_base_of<minkTensorStack,T>::value || std::is_base_of<minkTensorIntegrand,T>::value;
+concept minkTensor = std::is_base_of_v<minkTensorStack,std::remove_cv_t<T>> || std::is_base_of_v<minkTensorIntegrand,std::remove_cv_t<T>>;
 
 template<minkTensor left>
 minkTensorStack operator+ (const left& lhs, const minkTensorIntegrand& rhs)
@@ -492,10 +492,10 @@ double eigenVecDir(const tens& input)
         auto EVvec = solver.eigenvalues().real();
         auto EVec = solver.eigenvectors().real();
         
-        //select largest eigenvalue
+        //select index of largest eigenvalue
         auto largestIndex = std::max_element(EVvec.begin(),EVvec.end()) - EVvec.begin();
         
-        //Create Tensor belonging EVec, pull one index down which adds factor of sin2T
+        //Create Tensor belonging to EVec, pull one index down which adds factor of sin2T                    ?  --> above calculation gives Minktensor matrix with both indices on top
         Eigen::Matrix2d matrixtoEVec{
             {EVec.col(largestIndex)[0],sin2T*EVec.col(largestIndex)[1]},
             {EVec.col(largestIndex)[1],sin2T*EVec.col(largestIndex)[2]}

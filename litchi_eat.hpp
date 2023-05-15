@@ -37,7 +37,7 @@ struct paramStruct{
         std::string function{"trace"}, maskname{""};
 };
 
-///Sanity check for all parameters. Throws std::invlid_argument if something goes wrong
+///Sanity check for all parameters. Throws std::invalid_argument if something goes wrong
 void checkParams(const auto &obj) {
     
     if(obj.curvIndex==0 && obj.rankB)

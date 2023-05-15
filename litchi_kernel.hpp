@@ -2,6 +2,7 @@
 #define litchi_kernel
 
 #include <vector>
+#include <concepts>
 #include "healpix_cxx/healpix_map.h"
 
 #include "tensorOperations.hpp"
@@ -22,8 +23,11 @@ struct minkmapFamily {
     minkmapFamily(const minkmapFamily& otherMap) : originalMap(otherMap.originalMap), rankA(otherMap.rankA), rankB(otherMap.rankB), curvIndex(otherMap.curvIndex) {}
 };
 
+template <typename t>
+concept minkmapFamilyType = std::is_base_of_v<minkmapFamily,t>;
+
 /// Sum operator template for minkmaps. Overloaded addition operators using this are available, excluding +=
-template <typename ltype, typename rtype> //For sums of minkmaps
+template <minkmapFamilyType ltype, minkmapFamilyType rtype> //For sums of minkmaps
 struct minkmapSum : minkmapFamily
 {
     const rtype rhs;
@@ -45,14 +49,14 @@ struct minkmapSum : minkmapFamily
     
 };
 
-template <typename left, typename right, std::enable_if_t< std::is_base_of<minkmapFamily,left>::value && std::is_base_of<minkmapFamily,right>::value>* = nullptr   > 
+template <minkmapFamilyType left, minkmapFamilyType right> 
 minkmapSum<left, right> operator +(const left& a,const right& b)
 {
     return minkmapSum<left,right> (&a, &b);
 }
 
 /// Product operator template for minkmaps. Overloaded multiplication operators are available, excluding *=
-template <typename maptype, typename scalar>
+template <minkmapFamilyType maptype, typename scalar>
 struct minkmapTimes : minkmapFamily
 {
     const maptype mymap;
@@ -70,20 +74,20 @@ struct minkmapTimes : minkmapFamily
 };
 
 //Map times scalar, once with scalar on right and once with scalar on left
-template<typename left, typename right , typename std::enable_if_t<std::is_arithmetic<right>::value && std::is_base_of<minkmapFamily,left>::value>* = nullptr>
-minkmapTimes<left,right> operator* (const left& lhs, const right& rhs)
+template<minkmapFamilyType mmap, typename scalar> requires std::is_arithmetic_v<scalar>
+minkmapTimes<mmap,scalar> operator* (const mmap& lhs, const scalar& rhs)
 {
-    return minkmapTimes<left, right> (lhs, rhs);
+    return minkmapTimes<mmap, scalar> (lhs, rhs);
 }
 
-template<typename left, typename right , typename std::enable_if_t<std::is_arithmetic<left>::value && std::is_base_of<minkmapFamily,right>::value>* = nullptr>
-minkmapTimes<right,left> operator* (const left& lhs, const right& rhs)
+template<typename scalar, minkmapFamilyType mmap> requires std::is_arithmetic_v<scalar>
+minkmapTimes<mmap,scalar> operator* (const scalar& lhs, const mmap& rhs)
 {
-    return minkmapTimes<right, left> (rhs, lhs);
+    return minkmapTimes<mmap, scalar> (rhs, lhs);
 }
 
 /// Contains vector of minkmaps to be treated as sum. Use this if number of maps to be added is large or unknown at compile time (due to template nature of minkmapSum that can't be resolved otherwise)
-template<typename maptype, typename std::enable_if_t<std::is_base_of<minkmapFamily,maptype>::value>* = nullptr>
+template<minkmapFamilyType maptype>
 struct minkmapStack : minkmapFamily
 {
     std::vector<maptype> mapstack;

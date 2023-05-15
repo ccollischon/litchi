@@ -69,7 +69,7 @@ void maskMap(Healpix_Map<double>& map, const Healpix_Map<double>& mask, double t
 }
 
 ///Struct for giving minkmaps normal pixel numbering
-template <typename maptype>
+template <minkmapFamilyType maptype>
 struct normalHealpixInterface 
 {
     maptype& baseminkmap;
@@ -88,8 +88,8 @@ struct normalHealpixInterface
     /**
      * Actual conversion of whole minkmap into Healpix map
      */
-    template <typename tensortype>
-    Healpix_Map<double> toHealpix(double (&func)(tensortype), double smoothRad, int outputNside) const;
+    template <minkTensor tensortype>
+    Healpix_Map<double> toHealpix(double (&func)(const tensortype&), double smoothRad, int outputNside) const;
     
     ///Return 0 if pixnum not polar, 1 if north, 2 if south
     uint ispolar(int pixnum) const 
@@ -112,7 +112,7 @@ struct normalHealpixInterface
     }
 };
 
-template <typename maptype>
+template <minkmapFamilyType maptype>
 minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
 {
     #ifdef THISISPYTHON
@@ -158,9 +158,9 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
  * \param outputNside Nside of output map
  * \return Healpix_Map of desired minkmap ready for saving to file
  */
-template <typename maptype>
-template <typename tensortype>
-Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double (&func)(tensortype), double smoothRad, int outputNside) const
+template <minkmapFamilyType maptype>
+template <minkTensor tensortype>
+Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double (&func)(const tensortype&), double smoothRad, int outputNside) const
 {
     Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
     
