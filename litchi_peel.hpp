@@ -41,6 +41,8 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
     return thresholds;
 }
 
+
+
 /** Apply mask to input image using threshold. All masked pixels are set to NAN
  * \param map Input image
  * \param mask Mask image, should be of same size and numbering scheme as map. May contain any double values; threshold will be applied. Convention: 1 = pixel not masked, 0 = pixel masked
@@ -66,6 +68,24 @@ void maskMap(Healpix_Map<double>& map, const Healpix_Map<double>& mask, double t
         if(mask[i]<thresh) map[i] = NAN;
     }
     
+}
+
+
+/// Mask and degrade map if needed. Degrades to Nside if unequal to zero or map.Nside(), masks map if maskname non-empty using maskMap
+void prepareMap(Healpix_Map<double>& map, uint Nside, const std::string& maskname, double maskThresh = 0.9)
+{
+    if(maskname!="")
+    {
+        Healpix_Map<double> mask = read_Healpix_map_from_fits<double>(maskname, 1, 2);
+        maskMap(map, mask, maskThresh);
+    }
+    
+    if( ((int)Nside != map.Nside()) && Nside != 0)
+    {
+        Healpix_Map<double> degradedMap(Nside, map.Scheme(), SET_NSIDE);
+        degradedMap.Import_degrade(map);
+        map = degradedMap;
+    }
 }
 
 ///Struct for giving minkmaps normal pixel numbering
