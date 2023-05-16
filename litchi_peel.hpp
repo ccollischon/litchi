@@ -72,9 +72,9 @@ void maskMap(Healpix_Map<double>& map, const Healpix_Map<double>& mask, double t
 template <minkmapFamilyType maptype>
 struct normalHealpixInterface 
 {
-    maptype& baseminkmap;
+    const maptype& baseminkmap;
     
-    explicit normalHealpixInterface(maptype& othermap) : baseminkmap(othermap) {}
+    explicit normalHealpixInterface(const maptype& othermap) : baseminkmap(othermap) {}
     
     /**
      * Pixel value as a linear combination of tensors at given Healpix pixel, interpolated from surrounding minkmap pixels
@@ -145,7 +145,7 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
     {
         if(minkpix != -1)
         {
-            output += baseminkmap.at(minkpix); //parallel transport, not just add. baseminkmap-pixels are already weighted with 1/nr of times they appear here, DONE in minkTensorStack +=
+            output += std::move(baseminkmap.at(minkpix)); //parallel transport, not just add. baseminkmap-pixels are already weighted with 1/nr of times they appear here, DONE in minkTensorStack +=
         }
     }
     return output;

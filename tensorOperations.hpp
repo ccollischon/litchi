@@ -148,20 +148,6 @@ struct minkTensorStack
         r = newR;
     }
     
-    /** Add tensor with given pointing and weight to stack
-     */
-    void addTensor(pointing n, double weight)
-    {
-        if(std::isnan(weight)) {
-            numnan += 1;
-        }
-        else if (std::abs(weight)<1e-15) {
-            numnull += 1;
-        }
-        else {
-            nweights.emplace_back(std::make_pair(n,weight));
-        }
-    }
     
     /** Add normal vector of minkTensorIntegrand with same ranks to stack. Normal vector is parallel transported to position of stack if positions differ
      */
@@ -207,18 +193,6 @@ struct minkTensorStack
         
     }
     
-    explicit operator double() const
-    {
-        if(rankA+rankB == 0)
-        {
-            return accessElement({});
-        }
-        else
-        {
-            std::cerr << "Error: trying to convert non-rank zero tensor to double. Rank is " << rankA+rankB << std::endl;
-            throw std::invalid_argument( "minkTensorStack: Rank too high for double conversion" );
-        }
-    }
     
     minkTensorStack& operator+= (const minkTensorStack& other)
     {

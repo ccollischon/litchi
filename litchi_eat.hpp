@@ -267,7 +267,7 @@ void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::strin
     std::vector<minkmapSphere> maps;
     for(double thresh : thresholds)
     {
-        maps.push_back(minkmapSphere(map, params.rankA, params.rankB, params.curvIndex, thresh));
+        maps.emplace_back(minkmapSphere(map, params.rankA, params.rankB, params.curvIndex, thresh));
     }
     const minkmapStack sumOfMaps(maps);
     
