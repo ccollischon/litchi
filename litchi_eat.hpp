@@ -248,7 +248,7 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
  * \param outname Path to and file prefix of outputfile
  * \param counter Number of image in sequence if sequence of images is generated. Used for output name generation
  */
-void makeHealpixMinkmap(Healpix_Map<double>& map, paramStruct params, std::string outname, const int counter=0)
+void makeHealpixMinkmap(const Healpix_Map<double>& map, paramStruct params, std::string outname, const int counter=0)
 {
     if(!(int)params.Nside)       params.Nside = (uint)map.Nside();
     if(!(int)params.NsideOut) params.NsideOut = params.Nside;

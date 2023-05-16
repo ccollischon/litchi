@@ -313,6 +313,25 @@ double trace(const tens& input) //sum of eigenvalues
     return summand;
 }
 
+///Turn rank 4 tensor into 3x3 matrix analog to description by Mehrabadi et al. (1990), can be used to find eigentensors and eigenvalues. Give sin^2(theta) of input to avoid calculating it twice
+template<minkTensor tens>
+Eigen::Matrix3d getMehrabadimatrix(const tens& input, double sin2T)
+{
+    //Only need these 5 because of total symmetry:
+    double W0000 = input.accessElement({0,0,0,0});
+    double W1100 = input.accessElement({1,1,0,0});
+    double W1111 = input.accessElement({1,1,1,1});
+    double W0001 = input.accessElement({0,0,0,1});
+    double W1101 = input.accessElement({1,1,0,1});
+    //Create matrix, calculate eigenvalues
+    Eigen::Matrix3d mehrabadimatrix{
+        {W0000,2.*sin2T*W0001,sin2T*sin2T*W1100},
+        {W0001,2.*sin2T*W1100,sin2T*sin2T*W1101},
+        {W1100,2.*sin2T*W1101,sin2T*sin2T*W1111}
+    };
+    return mehrabadimatrix;
+}
+
 ///Calculates ratio of eigenvalues of tensor (rank 2) / norm of vector of eigenvalues when rank 4 tensor is reduced to 3x3-matrix
 template<minkTensor tens>
 double eigenValueQuotient(const tens& input)
@@ -322,68 +341,55 @@ double eigenValueQuotient(const tens& input)
     
     uint ranksum = input.rankA+input.rankB;
     
-    if (ranksum == 0)
-    {
-        return input.accessElement({});
-    }
-    else if (ranksum == 1)
-    {
-        double retval = sqrt( pow(input.accessElement({0}),2) + pow(sin(input.r.theta)*input.accessElement({1}),2) ); //Take length of sum of normal vectors
-        return retval;
-    }
-    else if(ranksum == 2)
-    { //eigenvalues of matrix (a b, c d)
-        double sin2T = sin(input.r.theta)*sin(input.r.theta); //pull down one index = sin^2 (theta) factor wherever left index = 1 (arbitrary choice)
-        
-        Eigen::Matrix2d zahlenfriedhof{
-            {input.accessElement({0,0}),input.accessElement({0,1})*sin2T},
-            {input.accessElement({0,1}),input.accessElement({1,1})*sin2T}
-        };
-        Eigen::EigenSolver<Eigen::Matrix2d> solver(zahlenfriedhof,false);
-        auto EVvec = solver.eigenvalues().real();
-        double ratio = std::abs(EVvec.maxCoeff()/EVvec.minCoeff());
-        
-        // Check if the above calculation does the same thing as manual calculation
-#ifdef THISRUNSINATEST
-        double dplusa = input.accessElement({1,1})*sin2T+input.accessElement({0,0});
-        double adminusbc = input.accessElement({0,0})*input.accessElement({1,1})*sin2T - pow(input.accessElement({0,1}),2)*sin2T; //tensors are symmetric here, one of them needs factor
-        double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
-        double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
-        double retval;
-        if(twolambda1>twolambda2) retval = twolambda1/twolambda2;
-        else retval = twolambda2/twolambda1;
-        std::cout << "selfmade evq "<< retval << " eigen evq " << ratio <<"\n";
-#endif
-        return ratio;
-    }
-    else if(ranksum == 4)
-    {
-        double sin2T = sin(input.r.theta)*sin(input.r.theta);
-        //Only need these 5 because of total symmetry:
-        double W0000 = input.accessElement({0,0,0,0});
-        double W1100 = input.accessElement({1,1,0,0});
-        double W1111 = input.accessElement({1,1,1,1});
-        double W0001 = input.accessElement({0,0,0,1});
-        double W1101 = input.accessElement({1,1,0,1});
-        //Create matrix, calculate eigenvalues
-        Eigen::Matrix3d mehrabadimatrix{
-            {W0000,2.*sin2T*W0001,sin2T*sin2T*W1100},
-            {W0001,2.*sin2T*W1100,sin2T*sin2T*W1101},
-            {W1100,2.*sin2T*W1101,sin2T*sin2T*W1111}
-        };
-        Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,false);
-        auto EVvec = solver.eigenvalues();
-        Eigen::Vector3d reduced(std::abs(EVvec(0))-0., std::abs(EVvec(1))-0.,std::abs(EVvec(2))-0.);
-        double retval = std::abs(reduced.norm());
-        return retval;
-        
-        //double ratio = std::abs(realVec.maxCoeff()/realVec.minCoeff());
-        
-    } else
-    {
-        std::cerr << "Error: Eigenvalue quotient not implemented for rank 3 and higher than 4! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
-        throw std::invalid_argument("eigenValueQuotient not implemented for higher ranks");
-    }
+    switch(ranksum){
+        case 0:
+            return input.accessElement({});
+        case 1:
+        {
+            double retval = sqrt( pow(input.accessElement({0}),2) + pow(sin(input.r.theta)*input.accessElement({1}),2) ); //Take length of sum of normal vectors
+            return retval;
+        }
+        case 2:
+        {
+            double sin2T = sin(input.r.theta)*sin(input.r.theta); //pull down one index = sin^2 (theta) factor wherever left index = 1 (arbitrary choice)
+            
+            Eigen::Matrix2d zahlenfriedhof{
+                {input.accessElement({0,0}),input.accessElement({0,1})*sin2T},
+                {input.accessElement({0,1}),input.accessElement({1,1})*sin2T}
+            };
+            Eigen::EigenSolver<Eigen::Matrix2d> solver(zahlenfriedhof,false);
+            auto EVvec = solver.eigenvalues().real();
+            double ratio = std::abs(EVvec.maxCoeff()/EVvec.minCoeff());
+            
+            // Check if the above calculation does the same thing as manual calculation
+    #ifdef THISRUNSINATEST
+            double dplusa = input.accessElement({1,1})*sin2T+input.accessElement({0,0});
+            double adminusbc = input.accessElement({0,0})*input.accessElement({1,1})*sin2T - pow(input.accessElement({0,1}),2)*sin2T; //tensors are symmetric here, one of them needs factor
+            double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
+            double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
+            double retval;
+            if(twolambda1>twolambda2) retval = twolambda1/twolambda2;
+            else retval = twolambda2/twolambda1;
+            std::cout << "selfmade evq "<< retval << " eigen evq " << ratio <<"\n";
+    #endif
+            return ratio;
+        }
+        case 4:
+        {
+            double sin2T = sin(input.r.theta)*sin(input.r.theta);
+            Eigen::Matrix3d mehrabadimatrix = getMehrabadimatrix(input, sin2T);
+            Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,false);
+            auto EVvec = solver.eigenvalues();
+            Eigen::Vector3d reduced(std::abs(EVvec(0))-0., std::abs(EVvec(1))-0.,std::abs(EVvec(2))-0.);
+            double retval = std::abs(reduced.norm());
+            return retval;
+            
+            //double ratio = std::abs(realVec.maxCoeff()/realVec.minCoeff());
+        }
+        default:
+            std::cerr << "Error: Eigenvalue quotient not implemented for rank 3 and higher than 4! Trying to calculate rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
+            throw std::invalid_argument("eigenValueQuotient not implemented for higher ranks");
+    } //switch ranksum
 }
 ///Returns normal vector pointing along largest EV of 2x2 Matrix
 pointing angleOf2x2Mat(const Eigen::Matrix2d& zahlenfriedhof)
@@ -420,86 +426,76 @@ double eigenVecDir(const tens& input)
     if(input.isEmpty()) {return NAN;}
     
     uint ranksum = input.rankA+input.rankB;
-    if (ranksum == 0)
-    {
-        std::cerr << "Error: Eigenvector direction not defined for rank 0!\n";
-        throw std::invalid_argument("eigenVecDir not defined for rank 0");
-    }
-    else if (ranksum==1)
-    {
-        return giveAngle(pointing(input.accessElement({0}),input.accessElement({1})), input.r);
-    }
-    else if (ranksum==2)
-    {  //eigenvalues of matrix (a b, c d)
-        double sin2T = sin(input.r.theta)*sin(input.r.theta); //pull down one index = sin^2 (theta) factor wherever left index = 1 (arbitrary choice)
-
-        Eigen::Matrix2d zahlenfriedhof{
-            {input.accessElement({0,0}),input.accessElement({0,1})*sin2T},
-            {input.accessElement({0,1}),input.accessElement({1,1})*sin2T}
-        };
-        pointing relevantVec = angleOf2x2Mat(zahlenfriedhof);
-        double retangle = giveAngle(relevantVec,input.r);
-        
-#ifdef THISRUNSINATEST
-        double dplusa = input.accessElement({1,1})*sin2T+input.accessElement({0,0});
-        double adminusbc = input.accessElement({0,0})*input.accessElement({1,1})*sin2T - pow(input.accessElement({0,1}),2)*sin2T; //tensors are symmetric here, one of them needs factor
-        double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
-        double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
-        
-        pointing oldVec(0,1);
-        if(twolambda1>twolambda2) // grab eigenvector with largest eigenvalue
+    switch(ranksum){
+        case 0:
         {
-            double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
-            oldVec.theta = (aminusd + sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
+            std::cerr << "Error: Eigenvector direction not defined for rank 0!\n";
+            throw std::invalid_argument("eigenVecDir not defined for rank 0");
         }
-        else
+        case 1:
         {
-            double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
-            oldVec.theta = (aminusd - sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
+            return giveAngle(pointing(input.accessElement({0}),input.accessElement({1})), input.r);
         }
-        double oldangle = giveAngle(oldVec,input.r);
-        std::cout << "selfmade evd "<< oldangle << " eigen evd " << (retangle<0 ? retangle+3.14159 : retangle ) <<"\n";
-#endif
-        return retangle<0 ? retangle+3.14159 : retangle; //add pi to get consistent values between 0 and pi, only interested in direction
-        
-    } else if(ranksum == 4)
-    {
-        double sin2T = sin(input.r.theta)*sin(input.r.theta);
-        //Only need these 5 because of total symmetry:
-        double W0000 = input.accessElement({0,0,0,0});
-        double W1100 = input.accessElement({1,1,0,0});
-        double W1111 = input.accessElement({1,1,1,1});
-        double W0001 = input.accessElement({0,0,0,1});
-        double W1101 = input.accessElement({1,1,0,1});
-        //Create matrix, calculate eigenvalues
-        Eigen::Matrix3d mehrabadimatrix{
-            {W0000,2.*sin2T*W0001,sin2T*sin2T*W1100},
-            {W0001,2.*sin2T*W1100,sin2T*sin2T*W1101},
-            {W1100,2.*sin2T*W1101,sin2T*sin2T*W1111}
-        };
-        Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,true);
-        auto EVvec = solver.eigenvalues().real();
-        auto EVec = solver.eigenvectors().real();
-        
-        //select index of largest eigenvalue
-        auto largestIndex = std::max_element(EVvec.begin(),EVvec.end()) - EVvec.begin();
-        
-        //Create Tensor belonging to EVec, pull one index down which adds factor of sin2T                    ?  --> above calculation gives Minktensor matrix with both indices on top
-        Eigen::Matrix2d matrixtoEVec{
-            {EVec.col(largestIndex)[0],sin2T*EVec.col(largestIndex)[1]},
-            {EVec.col(largestIndex)[1],sin2T*EVec.col(largestIndex)[2]}
-        };
-        
-        pointing relevantVec = angleOf2x2Mat(matrixtoEVec);
-        double retangle = giveAngle(relevantVec,input.r);
-        
-        return retangle;
-    } 
-    else
-    {
-        std::cerr << "Error: requesting eigenvector direction for ill-defined ranks: rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
-        throw std::invalid_argument("eigenVecDir not defined for this rank");
-    }
+        case 2:
+        {
+            //eigenvalues of matrix (a b, c d)
+            double sin2T = sin(input.r.theta)*sin(input.r.theta); //pull down one index = sin^2 (theta) factor wherever left index = 1 (arbitrary choice)
+    
+            Eigen::Matrix2d zahlenfriedhof{
+                {input.accessElement({0,0}),input.accessElement({0,1})*sin2T},
+                {input.accessElement({0,1}),input.accessElement({1,1})*sin2T}
+            };
+            pointing relevantVec = angleOf2x2Mat(zahlenfriedhof);
+            double retangle = giveAngle(relevantVec,input.r);
+            
+    #ifdef THISRUNSINATEST
+            double dplusa = input.accessElement({1,1})*sin2T+input.accessElement({0,0});
+            double adminusbc = input.accessElement({0,0})*input.accessElement({1,1})*sin2T - pow(input.accessElement({0,1}),2)*sin2T; //tensors are symmetric here, one of them needs factor
+            double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
+            double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
+            
+            pointing oldVec(0,1);
+            if(twolambda1>twolambda2) // grab eigenvector with largest eigenvalue
+            {
+                double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
+                oldVec.theta = (aminusd + sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
+            }
+            else
+            {
+                double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
+                oldVec.theta = (aminusd - sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
+            }
+            double oldangle = giveAngle(oldVec,input.r);
+            std::cout << "selfmade evd "<< oldangle << " eigen evd " << (retangle<0 ? retangle+3.14159 : retangle ) <<"\n";
+    #endif
+            return retangle<0 ? retangle+3.14159 : retangle; //add pi to get consistent values between 0 and pi, only interested in direction
+        }
+        case 4:
+        {
+            double sin2T = sin(input.r.theta)*sin(input.r.theta);
+            Eigen::Matrix3d mehrabadimatrix = getMehrabadimatrix(input,sin2T);
+            Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,true);
+            auto EVvec = solver.eigenvalues().real();
+            auto EVec = solver.eigenvectors().real();
+            
+            //select index of largest eigenvalue
+            auto largestIndex = std::max_element(EVvec.begin(),EVvec.end()) - EVvec.begin();
+            
+            //Create Tensor belonging to EVec, pull one index down which adds factor of sin2T                    ?  --> above calculation gives Minktensor matrix with both indices on top
+            Eigen::Matrix2d matrixtoEVec{
+                {EVec.col(largestIndex)[0],sin2T*EVec.col(largestIndex)[1]},
+                {EVec.col(largestIndex)[1],sin2T*EVec.col(largestIndex)[2]}
+            };
+            
+            pointing relevantVec = angleOf2x2Mat(matrixtoEVec);
+            double retangle = giveAngle(relevantVec,input.r);
+            
+            return retangle;
+        }
+        default:
+            std::cerr << "Error: requesting eigenvector direction for ill-defined ranks: rankA rankB = " << input.rankA <<" "<< input.rankB << std::endl;
+            throw std::invalid_argument("eigenVecDir not defined for this rank");
+    } //switch ranksum
 }
 
 
