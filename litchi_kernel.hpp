@@ -13,14 +13,13 @@
 
 /// Virtual base class for all minkmaps
 struct minkmapFamily {
-    Healpix_Map<double>& originalMap;
+    const Healpix_Map<double>& originalMap;
     const uint rankA{}, rankB{};
     const uint curvIndex{};
     virtual ~minkmapFamily() = default;
     virtual minkTensorStack at(int pixnum) const = 0;
-    explicit minkmapFamily(Healpix_Map<double>& map) : originalMap(map) {}
-    minkmapFamily(Healpix_Map<double>& map, uint rank1, uint rank2, uint curvind) : originalMap(map), rankA(rank1), rankB(rank2), curvIndex(curvind) {}
-    minkmapFamily(const minkmapFamily& otherMap) : originalMap(otherMap.originalMap), rankA(otherMap.rankA), rankB(otherMap.rankB), curvIndex(otherMap.curvIndex) {}
+    
+    minkmapFamily(const Healpix_Map<double>& map, uint rank1, uint rank2, uint curvind) : originalMap(map), rankA(rank1), rankB(rank2), curvIndex(curvind) {}
 };
 
 template <typename t>

@@ -25,9 +25,7 @@ struct minkmapSphere :  minkmapFamily{
     const double thresh{};
     
     
-    explicit minkmapSphere(Healpix_Map<double>& map) : minkmapFamily(map) {}
-    
-    minkmapSphere(Healpix_Map<double>& map, uint rank1, uint rank2, uint curvind, double threshold) : minkmapFamily(map, rank1, rank2, curvind), thresh(threshold) {
+    minkmapSphere(const Healpix_Map<double>& map, uint rank1, uint rank2, uint curvind, double threshold) : minkmapFamily(map, rank1, rank2, curvind), thresh(threshold) {
         if (curvind > 2) {
             std::cerr << "Error: invalid curvIndex: " << curvind << " , this makes no sense. In 2D only up to two!" << std::endl;
             throw std::invalid_argument( "minkmapSphere: Weird curvIndex" );

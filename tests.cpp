@@ -53,7 +53,7 @@ int main ()
     minkTensorIntegrand asdf(0,2,0,A,B);
     Healpix_Map<double> map = read_Healpix_map_from_fits<double>("../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits", 1, 2);
     //Test ispolar
-    minkmapSphere testmink(map);
+    minkmapSphere testmink(map,0,0,1,0.);
     normalHealpixInterface interface(testmink);
     fix_arr<int, 4> neighbors;
     fix_arr<double, 4> weight;
