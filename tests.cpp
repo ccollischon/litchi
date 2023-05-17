@@ -1,20 +1,15 @@
-#include <cmath>
-#include <cassert>
-#include <vector>
-#include <iostream>
+#include "tensorOperations.hpp"
+#include "litchi_eat.hpp"
 
 #include "eigen/Eigen/Dense"
 
 #include "healpix_cxx/healpix_map.h"
 #include "healpix_cxx/healpix_map_fitsio.h"
 
-//#include "tensor2D.hpp"
-#include "tensorOperations.hpp"
-//#include "tensorFamily.hpp"
-#include "minkTensorIntegrand.hpp"
-#include "litchi_pulp.hpp"
-#include "litchi_peel.hpp"
-#include "litchi_eat.hpp"
+#include <cmath>
+#include <cassert>
+#include <vector>
+#include <iostream>
 
 using namespace std;
 using Eigen::MatrixXd;

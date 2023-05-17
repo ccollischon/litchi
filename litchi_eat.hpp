@@ -38,7 +38,7 @@ struct paramStruct{
 };
 
 ///Sanity check for all parameters. Throws std::invalid_argument if something goes wrong
-void checkParams(const auto &obj) {
+void checkParams(const paramStruct &obj) {
     
     if(obj.curvIndex==0 && obj.rankB)
     {
