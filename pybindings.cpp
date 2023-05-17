@@ -1,5 +1,5 @@
 #include <pybind11/pybind11.h>
-#include "litchi_eat.hpp"
+#include "litchi_wrap.hpp"
 
 namespace py = pybind11;
 
