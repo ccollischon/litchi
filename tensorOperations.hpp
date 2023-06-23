@@ -379,10 +379,12 @@ double eigenValueQuotient(const tens& input)
             double sin2T = sin(input.r.theta)*sin(input.r.theta);
             Eigen::Matrix3d mehrabadimatrix = getMehrabadimatrix(input, sin2T);
             Eigen::EigenSolver<Eigen::Matrix3d> solver(mehrabadimatrix,false);
-            auto EVvec = solver.eigenvalues();
-            Eigen::Vector3d reduced(std::abs(EVvec(0))-0., std::abs(EVvec(1))-0.,std::abs(EVvec(2))-0.);
-            double retval = std::abs(reduced.norm());
-            return retval;
+            Eigen::Matrix<double,1,3> EVvec = solver.eigenvalues().real();
+            std::sort(EVvec.begin(),EVvec.end()); //smallest to largest
+            //Eigen::Vector3d reduced(std::abs(EVvec(0))-0., std::abs(EVvec(1))-0.,std::abs(EVvec(2))-0.);
+            //double retval = std::abs(reduced.norm());
+            double minmaxratio = std::abs(EVvec(1)); //0 largest 1 mid 2 smallest eigenvalue
+            return minmaxratio;
             
             //double ratio = std::abs(realVec.maxCoeff()/realVec.minCoeff());
         }
@@ -480,11 +482,14 @@ double eigenVecDir(const tens& input)
             
             //select index of largest eigenvalue
             auto largestIndex = std::max_element(EVvec.begin(),EVvec.end()) - EVvec.begin();
+            auto smallestIndex = std::min_element(EVvec.begin(),EVvec.end()) - EVvec.begin();
+            //                     is one of the others zero ?          is one of the others one?
+            auto midIndex = (largestIndex==0||smallestIndex==0) ? (largestIndex==1||smallestIndex==1 ? 2 : 1) : 0; // dritte zahl von 0,1,2 waehlen
             
             //Create Tensor belonging to EVec, pull one index down which adds factor of sin2T                    ?  --> above calculation gives Minktensor matrix with both indices on top
             Eigen::Matrix2d matrixtoEVec{
-                {EVec.col(largestIndex)[0],sin2T*EVec.col(largestIndex)[1]},
-                {EVec.col(largestIndex)[1],sin2T*EVec.col(largestIndex)[2]}
+                {EVec.col(midIndex)[0],sin2T*EVec.col(midIndex)[1]},
+                {EVec.col(midIndex)[1],sin2T*EVec.col(midIndex)[2]}
             };
             
             pointing relevantVec = angleOf2x2Mat(matrixtoEVec);
