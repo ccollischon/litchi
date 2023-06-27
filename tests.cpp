@@ -1,6 +1,5 @@
 #include "tensorOperations.hpp"
-#include "litchi_peel.hpp"
-#include "litchi_wrap.hpp"
+#include "litchi_eat.hpp"
 
 #include "eigen/Eigen/Dense"
 

@@ -3,9 +3,10 @@
 // g++ -fsanitize=address -g -Wall -o regnitz regnitz.o -L /userdata/data/collischon/Healpix_3.70/lib/ -lhealpix_cxx -std=c++20 -fopenmp -fconcepts
 // cmake -D CMAKE_CXX_COMPILER=/software/Ubuntu-20.04/Programming/gcc/10.2.0/bin/g++ ../repo
 
-#include "litchi_wrap.hpp"
+#include "litchi_eat.hpp"
 
 #include <iostream>
+#include <algorithm>
 #include <numeric>
 #include <vector>
 #include <cmath>

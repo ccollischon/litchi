@@ -7,7 +7,6 @@
 #include <iostream>
 
 #include "healpix_cxx/healpix_map.h"
-#include "healpix_cxx/healpix_map_fitsio.h"
 #include "litchi_pulp.hpp"
 
 /** \file litchi_peel.hpp

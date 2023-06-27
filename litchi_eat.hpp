@@ -13,7 +13,6 @@
 #include "healpix_cxx/healpix_map_fitsio.h"
 #include "healpix_cxx/healpix_map.h"
 
-#include "paramStruct.hpp"
 #include "litchi_peel.hpp"
 
 /** \file litchi_eat.hpp
@@ -30,6 +29,13 @@ bool has_x(const auto &obj) {
 }
 */
 
+///Helper struct containing all necessary minkmap generation parameters
+struct paramStruct{
+        uint rankA{0}, rankB{0}, curvIndex{0}, numt{1}, Nside{0}, smooth{0}, NsideOut{0};
+        double mint{0}, maxt{1}, maskThresh{0.9}, smoothRad{0};
+        bool linThresh{true}, forceOutname{false}, sequence{false};
+        std::string function{"trace"}, maskname{""};
+};
 
 ///Sanity check for all parameters. Throws std::invalid_argument if something goes wrong
 void checkParams(const paramStruct &obj) {
@@ -286,6 +292,58 @@ void makeHealpixMinkmap(const Healpix_Map<double>& map, paramStruct params, std:
     /* create Fitsfile with params in Header */
     writeToFile(outputmap,params,outname);
     
+}
+
+
+/*!
+ * Wrapper function that calls creation of actual minkmap from given input filename, params, applying mask
+ * \param inname Filename of input Healpix map
+ * \param params Struct containing Minkowski map generation parameters
+ * \param outname Path to and file prefix of outputfile
+ */
+void makeSingleMinkmap(std::string inname, paramStruct params, std::string outname)
+{
+    params.sequence = false; //should already be false when calling function, can mess up outname otherwise
+    Healpix_Map<double> map = read_Healpix_map_from_fits<double>(inname, 1, 2);
+    
+    prepareMap(map,params.Nside,params.maskname,params.maskThresh);
+    
+    makeHealpixMinkmap(map, params, outname);
+}
+
+/*!
+ * Wrapper function that calls creation of sequence of minkmaps from given input filename, params, applying mask; using numt as the number of minkmaps at thresholds between mint and maxt instead of averaging one map over several thresholds
+ * \param inname Filename of input Healpix map
+ * \param params Struct containing Minkowski map generation parameters
+ * \param outname Path to and file prefix of outputfile
+ */
+void makeSequence(std::string inname, paramStruct params, std::string outname)
+{
+    Healpix_Map<double> map = read_Healpix_map_from_fits<double>(inname, 1, 2);
+    params.sequence = true; //should already be true when calling this function, but just to be sure. Can mess up outname otherwise
+    
+    prepareMap(map,params.Nside,params.maskname,params.maskThresh);
+    
+    const std::vector<double> thresholds = params.linThresh ? makeIntervals_lin(params.mint, params.maxt, params.numt) : makeIntervals_log(params.mint, params.maxt, params.numt);
+    for(uint i=0; i<params.numt; ++i)
+    {
+        paramStruct paramsHere(params);
+        paramsHere.numt = 1;
+        paramsHere.mint = thresholds.at(i);
+        makeHealpixMinkmap(map, paramsHere, outname, i);
+    }
+}
+
+/*!
+ * Wrapper function that calls makeSequence or makeSingleMinkmap for given input filename, params
+ * \param inname Filename of input Healpix map
+ * \param params Struct containing Minkowski map generation parameters
+ * \param outname Path to and file prefix of outputfile
+ */
+void makeMinkmap(std::string inname, paramStruct params, std::string outname)
+{
+    if(params.sequence) makeSequence(inname, params, outname);
+    else makeSingleMinkmap(inname, params, outname);
 }
 
 
