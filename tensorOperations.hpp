@@ -12,6 +12,7 @@
 #include "eigen/Eigen/Eigenvalues"
 #include "eigen/Eigen/Dense"
 #include "minkTensorIntegrand.hpp"
+#include "irreducibleMinkTens.hpp"
 /** \file tensorOperations.hpp
  * \brief minkTensorStack, trace, eigenvalue quotient: all operations involving tensors
  */
@@ -136,6 +137,11 @@ struct minkTensorStack
         }
         return retval*factor;
     }
+    
+    template<typename tensortype>
+    double anisotropy();
+    template<typename tensortype>
+    double direction();
     
     /** Parallel transport all normal vectors in stack to newR along geodesic
      */
@@ -290,6 +296,8 @@ minkTensorStack nullTensor(uint rank1, uint rank2, uint curvInd, const pointing&
     thistensor.numnull=1;
     return thistensor;
 }
+
+
 
 
 /***** Functions that work on tensors ****/
@@ -503,6 +511,37 @@ double eigenVecDir(const tens& input)
     } //switch ranksum
 }
 
+
+template <typename tensortype>
+double minkTensorStack::anisotropy()
+{
+	double aniso = eigenValueQuotient<minkTensorStack>(*this);
+	return aniso;
+}
+
+template <>
+double minkTensorStack::anisotropy<irreducibleMinkTens>()
+{
+	double retval = 0.;
+	for(int m=-(int)rankA; m<=(int)rankA; m++)
+    {
+		std::complex<double> psilm = 0.;
+	    for(const auto& element : nweights)
+	    {
+			irreducibleMinkTens tensorHere(rankA, m, r, std::get<0>(element));
+			psilm += tensorHere.accessElement()*std::get<1>(element);
+	    }
+	    retval += std::abs(psilm)*std::abs(psilm);
+	}
+    return retval;
+}
+
+template<typename tensortype>
+double minkTensorStack::direction()
+{
+	double aniso = eigenVecDir<minkTensorStack>(*this);
+	return aniso;
+}
 
 
 

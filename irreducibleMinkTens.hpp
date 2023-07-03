@@ -1,12 +1,27 @@
 #ifndef irreducible
 #define irreducible
 
+#include "healpix_cxx/pointing.h"
+
 #include <complex>
+#include <cmath>
 
 struct irreducibleMinkTens {
+    const int l_, m_;
+    pointing r_{0,0};
+    pointing n_{0,0};
     
-    int index;
-    std::complex<double> amp;
+    irreducibleMinkTens(int l, int m, pointing r, pointing n) : l_{l}, m_{m}, r_{std::move(r)}, n_{std::move(n)}
+    {
+	}
+	
+    std::complex<double> accessElement() const // Ylm(n)
+    {
+		double thetapart = std::sph_legendre(l_,m_,n_.theta);
+		return thetapart*std::exp(std::complex<double>(0.0, 1.0) * (double)m_ * n_.phi);
+		
+	}
+    
     
 };
 
