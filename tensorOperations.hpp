@@ -1,6 +1,12 @@
 #ifndef tensorOperations
 #define tensorOperations
 
+#include "minkTensorIntegrand.hpp"
+#include "irreducibleMinkTens.hpp"
+
+#include "eigen/Eigen/Eigenvalues"
+#include "eigen/Eigen/Dense"
+
 #include <cmath>
 #include <algorithm>
 #include <iostream>
@@ -9,10 +15,6 @@
 #include <stdexcept>
 #include <list>
 
-#include "eigen/Eigen/Eigenvalues"
-#include "eigen/Eigen/Dense"
-#include "minkTensorIntegrand.hpp"
-#include "irreducibleMinkTens.hpp"
 /** \file tensorOperations.hpp
  * \brief minkTensorStack, trace, eigenvalue quotient: all operations involving tensors
  */
@@ -126,7 +128,6 @@ struct minkTensorStack
      */
     double accessElement_rescaled(const std::vector<uint_fast8_t>& indices) const
     {
-        //if(isMasked()) {return NAN;}
         double factor = 1.*(nweights.size()+numnull+numnan)/(1.*(nweights.size()+numnull));
         
         double retval = 0.;
@@ -488,14 +489,14 @@ std::complex<double> getPsilm(int m, const minkTensorStack& input)
     return psilm;
 }
 
-///calls eigenValueQuotient(input) to get a cartesian anisotropy measure
+///Calls eigenValueQuotient(input) to get a cartesian anisotropy measure
 double anisotropy_cart(const minkTensorStack& input)
 {
     double aniso = eigenValueQuotient<minkTensorStack>(input);
     return aniso;
 }
 
-///calculates anisotropy by interpreting input as stack of irreducible tensors
+///Calculates anisotropy by interpreting input as stack of irreducible tensors
 double anisotropy_irr(const minkTensorStack& input)
 {
     if(input.isMasked()) {return NAN;}
@@ -510,14 +511,14 @@ double anisotropy_irr(const minkTensorStack& input)
     return std::abs(retval)*std::abs(retval);
 }
 
-///calls eigenVecDir(input) to get a cartesian direction measure
+///Calls eigenVecDir(input) to get a cartesian direction measure
 double direction_cart(const minkTensorStack& input)
 {
     double dir = eigenVecDir<minkTensorStack>(input);
     return dir;
 }
 
-///calculates direction by interpreting input as stack of irreducible tensors
+///Calculates direction by interpreting input as stack of irreducible tensors
 double direction_irr(const minkTensorStack& input)
 {
     if(input.isMasked()) {return NAN;}

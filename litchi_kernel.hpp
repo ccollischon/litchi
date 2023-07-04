@@ -1,11 +1,12 @@
 #ifndef litchi_kernel
 #define litchi_kernel
 
+#include "tensorOperations.hpp"
+
+#include "healpix_cxx/healpix_map.h"
 #include <vector>
 #include <concepts>
-#include "healpix_cxx/healpix_map.h"
 
-#include "tensorOperations.hpp"
 
 /** \file litchi_kernel.hpp
  * \brief minkmapFamily base class and operator templates for minkmaps

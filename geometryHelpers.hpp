@@ -1,6 +1,8 @@
 #ifndef geometryhelpers
 #define geometryhelpers
 
+#include "healpix_cxx/pointing.h"
+#include "healpix_cxx/rotmatrix.h"
 
 #include <vector>
 #include <algorithm>
@@ -8,8 +10,6 @@
 #include <iostream>
 #include <cmath>
 
-#include "healpix_cxx/pointing.h"
-#include "healpix_cxx/rotmatrix.h"
 
 /** \file geometryHelpers.hpp
  * \brief Helpful functions for geometry on the sphere

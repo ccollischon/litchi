@@ -1,13 +1,15 @@
 #ifndef litchi_peel
 #define litchi_peel
 
+#include "litchi_pulp.hpp"
+
+#include "healpix_cxx/healpix_map.h"
+
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
 
-#include "healpix_cxx/healpix_map.h"
-#include "litchi_pulp.hpp"
 
 /** \file litchi_peel.hpp
  * \brief Everything between minkmap and Healpix map, as well as helper functions for creating vectors with numbers at constant intervals and masking

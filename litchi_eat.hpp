@@ -1,6 +1,10 @@
 #ifndef litchi_eat
 #define litchi_eat
 
+#include "litchi_peel.hpp"
+
+#include "healpix_cxx/healpix_map_fitsio.h"
+#include "healpix_cxx/healpix_map.h"
 
 #include <vector>
 #include <algorithm>
@@ -10,10 +14,6 @@
 #include <filesystem>
 #include <cstdlib> // for sprintf
 
-#include "healpix_cxx/healpix_map_fitsio.h"
-#include "healpix_cxx/healpix_map.h"
-
-#include "litchi_peel.hpp"
 
 /** \file litchi_eat.hpp
  * \brief Higher-level functions to create and save Healpix-minkmaps generated from input map
