@@ -65,6 +65,7 @@ int main(int argc,char **argv)
             if(number>=0) {
                 params.rankB = uint(number);
                 params.curvIndex = 1;
+            }
             else
             {
                 std::cerr << "Illegal value after l: " << number << " , must be positive integer or zero \n";

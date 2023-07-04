@@ -13,14 +13,13 @@ struct irreducibleMinkTens {
     
     irreducibleMinkTens(int l, int m, pointing r, pointing n) : l_{l}, m_{m}, r_{std::move(r)}, n_{std::move(n)}
     {
-	}
-	
-    std::complex<double> accessElement() const // Ylm(n)
+    }
+    
+    std::complex<double> accessElement() const // Y*lm(n)
     {
-		double thetapart = std::sph_legendre(l_,m_,n_.theta);
-		return thetapart*std::exp(std::complex<double>(0.0, 1.0) * (double)m_ * n_.phi);
-		
-	}
+        double thetapart = std::sph_legendre(l_,m_,n_.theta);
+        return thetapart*std::exp(std::complex<double>(0.0, -1.0) * (double)m_ * n_.phi);
+    }
     
     
 };
