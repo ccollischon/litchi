@@ -224,14 +224,20 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
     }
     
     std::vector<std::string> funStrings; //Description of function used to generate scalar from tensor
-    if(params.function=="trace"){
+    if(params.function=="tr"){
         funStrings = {"trace", "Trace of Tensor"};
     }
-    else if (params.function=="EVQuo"){
+    else if (params.function=="evq"){
         funStrings = {"EV quotient", "Eigenvalue quotient of tensor"};
     }
-    else if (params.function=="EVDir"){
-        funStrings = {"EV direction", "Direction of eigenvec with largest eigenval"};
+    else if (params.function=="evd"){
+        funStrings = {"EV direction", "Direction of anisotropy"};
+    }
+    else if (params.function=="irrAniso"){
+        funStrings = {"irrAniso", "measure of anisotropy from irreducible picture"};
+    }
+    else if (params.function=="irrDir"){
+        funStrings = {"irrDir", "Direction from irreducible picture"};
     }
     else funStrings = {params.function,"unknown function"};
     
