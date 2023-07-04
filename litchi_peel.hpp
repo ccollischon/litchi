@@ -41,6 +41,7 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
     return thresholds;
 }
 
+///enum containing all allowed function types
 enum functionType 
 {
     TRACE,
@@ -50,7 +51,7 @@ enum functionType
     ANISOTROPY_CART
 };
 
-std::unordered_map<std::string,functionType> const strToFun = { {"trace",functionType::TRACE}, {"EVQuo",functionType::ANISOTROPY_CART}, {"EVDir",functionType::DIRECTION_CART}, 
+std::unordered_map<std::string,functionType> const strToFun = { {"tr",functionType::TRACE}, {"evq",functionType::ANISOTROPY_CART}, {"evd",functionType::DIRECTION_CART}, 
                                                                 {"irrAniso",functionType::ANISOTROPY_IRR}, {"irrDir",functionType::DIRECTION_IRR}   };
 
 

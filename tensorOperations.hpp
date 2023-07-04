@@ -476,24 +476,26 @@ double eigenVecDir(const tens& input)
     } //switch ranksum
 }
 
-std::complex<double> getPsilm(int l, int m, const minkTensorStack& input)
+///Calculates the corresponding irreducible tensor, using input.rankB as l
+std::complex<double> getPsilm(int m, const minkTensorStack& input)
 {
     std::complex<double> psilm = 0.;
     for(const auto& element : input.nweights)
     {
-        irreducibleMinkTens tensorHere(l, m, input.r, std::get<0>(element));
+        irreducibleMinkTens tensorHere((int)input.rankB, m, input.r, std::get<0>(element));
         psilm += tensorHere.accessElement()*std::get<1>(element);
     }
     return psilm;
 }
 
-
+///calls eigenValueQuotient(input) to get a cartesian anisotropy measure
 double anisotropy_cart(const minkTensorStack& input)
 {
     double aniso = eigenValueQuotient<minkTensorStack>(input);
     return aniso;
 }
 
+///calculates anisotropy by interpreting input as stack of irreducible tensors
 double anisotropy_irr(const minkTensorStack& input)
 {
     if(input.isMasked()) {return NAN;}
@@ -502,19 +504,20 @@ double anisotropy_irr(const minkTensorStack& input)
     double retval = 0.;
     for(int m=-(int)input.rankB; m<=(int)input.rankB; m++)
     {
-        std::complex<double> psilm = getPsilm((int)input.rankB, m, input);
+        std::complex<double> psilm = getPsilm(m, input);
         retval += std::abs(psilm)*std::abs(psilm);
     }
     return retval;
 }
 
-
+///calls eigenVecDir(input) to get a cartesian direction measure
 double direction_cart(const minkTensorStack& input)
 {
     double dir = eigenVecDir<minkTensorStack>(input);
     return dir;
 }
 
+///calculates direction by interpreting input as stack of irreducible tensors
 double direction_irr(const minkTensorStack& input)
 {
     if(input.isMasked()) {return NAN;}
@@ -523,7 +526,7 @@ double direction_irr(const minkTensorStack& input)
     double retval = 0.;
     for(int m=-(int)input.rankB; m<=(int)input.rankB; m++)
     {
-        std::complex<double> psilm = getPsilm((int)input.rankB, m, input);
+        std::complex<double> psilm = getPsilm(m, input);
         retval += std::arg(psilm)*std::arg(psilm);
     }
     return retval;

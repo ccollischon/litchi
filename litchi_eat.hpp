@@ -34,7 +34,7 @@ struct paramStruct{
         uint rankA{0}, rankB{0}, curvIndex{0}, numt{1}, Nside{0}, smooth{0}, NsideOut{0};
         double mint{0}, maxt{1}, maskThresh{0.9}, smoothRad{0};
         bool linThresh{true}, forceOutname{false}, sequence{false};
-        std::string function{"trace"}, maskname{""};
+        std::string function{"tr"}, maskname{""};
 };
 
 ///Sanity check for all parameters. Throws std::invalid_argument if something goes wrong
@@ -42,7 +42,7 @@ void checkParams(const paramStruct &obj) {
     
     if(obj.curvIndex==0 && obj.rankB)
     {
-        std::cerr << "Error: rankB > 0 not possible when curvIndex = 0. rankB = " << obj.rankB << std::endl;
+        std::cerr << "Error: l or rankB > 0 not possible when curvIndex = 0. rankB = " << obj.rankB << std::endl;
         throw std::invalid_argument("rankB && curvIndex!=0");
     }
     if(obj.curvIndex==0 && obj.rankA)
@@ -148,7 +148,7 @@ void formatOutname(std::string& outname, const paramStruct& params, const int co
         {
             sprintf(mintmaxtnumt,"%.3e_%.3e_%d_%s_rad=%.3e", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log", params.smoothRad); //printf %g for nicer formatting
         }
-        std::string funString = (params.function=="trace") ? "_tr" : (params.function=="EVQuo") ? "_evq" : (params.function=="EVDir") ? "_evd" : "_error";
+        std::string funString = "_"+params.function;
         char maskString[20];
         (params.maskname!="") ? sprintf(maskString,"_mask_%4.2f", params.maskThresh) : sprintf(maskString,"_nomask");
         outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + funString + "_Nside="+std::to_string(params.Nside) + "_NsideOut="+std::to_string(params.NsideOut) + "_thresh="+mintmaxtnumt + maskString + ".fits";
