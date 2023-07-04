@@ -234,7 +234,7 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
         funStrings = {"EV direction", "Direction of anisotropy"};
     }
     else if (params.function=="irrAniso"){
-        funStrings = {"irrAniso", "measure of anisotropy from irreducible picture"};
+        funStrings = {"irrAniso", "Measure of anisotropy from irreducible picture"};
     }
     else if (params.function=="irrDir"){
         funStrings = {"irrDir", "Direction from irreducible picture"};
