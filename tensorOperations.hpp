@@ -502,13 +502,13 @@ double anisotropy_irr(const minkTensorStack& input)
     if(input.isMasked()) {return NAN;}
     if(input.isEmpty()) {return NAN;}
     
-    std::complex<double> retval = 0.;
+    double retval = 0.;
     for(int m=-(int)input.rankB; m<=(int)input.rankB; m++)
     {
         std::complex<double> psilm = getPsilm(m, input);
-        retval += psilm;
+        retval += std::abs(psilm)*std::abs(psilm);
     }
-    return std::abs(retval)*std::abs(retval);
+    return retval;
 }
 
 ///Calls eigenVecDir(input) to get a cartesian direction measure

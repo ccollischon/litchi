@@ -4,6 +4,7 @@
 #include "litchi_pulp.hpp"
 
 #include "healpix_cxx/healpix_map.h"
+#include "healpix_cxx/healpix_map_fitsio.h"
 
 #include <vector>
 #include <algorithm>
