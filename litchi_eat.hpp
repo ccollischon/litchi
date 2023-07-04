@@ -94,7 +94,7 @@ void checkParams(const paramStruct &obj) {
         std::cerr << "Minimal threshold zero not possible with logThresh!\n";
         throw std::invalid_argument("mint==0 && logThresh");
     }
-    if(obj.function!="trace" && obj.function!="EVQuo" && obj.function!="EVDir")
+    if(strToFun.find(obj.function) == strToFun.end())
     {
         std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir!, but have "+obj.function+"\n";
         throw std::invalid_argument("function invalid");
@@ -268,23 +268,11 @@ void makeHealpixMinkmap(const Healpix_Map<double>& map, paramStruct params, std:
     const auto minkmapAverage = sumOfMaps*(1./params.numt);
     const normalHealpixInterface interface(minkmapAverage);
     Healpix_Map<double> outputmap;
-    if(params.function=="trace")
-    {
-        outputmap = interface.toHealpix(trace<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
-    }
-    else if(params.function=="EVQuo")
-    {
-        outputmap = interface.toHealpix(eigenValueQuotient<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
-    }
-    else if(params.function=="EVDir")
-    {
-        outputmap = interface.toHealpix(eigenVecDir<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
-    }
-    else
-    {
-        std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir!, but have "+params.function+"\n This should not happen as it is already checked in checkParams\n";
-        throw std::invalid_argument("function invalid");
-    }
+    
+    auto it = strToFun.find(params.function); // Exists as of checkParams
+    functionType fun = it -> second;
+    outputmap = interface.toHealpix<minkTensorIntegrand>(fun,params.smoothRad, (int)params.NsideOut);
+    
     
     /*  Map is generated, now create outname  */
     formatOutname(outname, params, counter);

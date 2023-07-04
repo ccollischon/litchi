@@ -515,32 +515,49 @@ double eigenVecDir(const tens& input)
 template <typename tensortype>
 double minkTensorStack::anisotropy()
 {
-	double aniso = eigenValueQuotient<minkTensorStack>(*this);
-	return aniso;
+    double aniso = eigenValueQuotient<minkTensorStack>(*this);
+    return aniso;
 }
 
 template <>
 double minkTensorStack::anisotropy<irreducibleMinkTens>()
 {
-	double retval = 0.;
-	for(int m=-(int)rankA; m<=(int)rankA; m++)
+    double retval = 0.;
+    for(int m=-(int)rankA; m<=(int)rankA; m++)
     {
-		std::complex<double> psilm = 0.;
-	    for(const auto& element : nweights)
-	    {
-			irreducibleMinkTens tensorHere(rankA, m, r, std::get<0>(element));
-			psilm += tensorHere.accessElement()*std::get<1>(element);
-	    }
-	    retval += std::abs(psilm)*std::abs(psilm);
-	}
+        std::complex<double> psilm = 0.;
+        for(const auto& element : nweights)
+        {
+            irreducibleMinkTens tensorHere(rankA, m, r, std::get<0>(element));
+            psilm += tensorHere.accessElement()*std::get<1>(element);
+        }
+        retval += std::abs(psilm)*std::abs(psilm);
+    }
     return retval;
 }
 
-template<typename tensortype>
-double minkTensorStack::direction()
+template<>
+double minkTensorStack::direction<minkTensorIntegrand>()
 {
-	double aniso = eigenVecDir<minkTensorStack>(*this);
-	return aniso;
+    double aniso = eigenVecDir<minkTensorStack>(*this);
+    return aniso;
+}
+
+template <>
+double minkTensorStack::direction<irreducibleMinkTens>()
+{
+    double retval = 0.;
+    for(int m=-(int)rankA; m<=(int)rankA; m++)
+    {
+        std::complex<double> psilm = 0.;
+        for(const auto& element : nweights)
+        {
+            irreducibleMinkTens tensorHere(rankA, m, r, std::get<0>(element));
+            psilm += tensorHere.accessElement()*std::get<1>(element);
+        }
+        retval += std::arg(psilm)*std::arg(psilm);
+    }
+    return retval;
 }
 
 

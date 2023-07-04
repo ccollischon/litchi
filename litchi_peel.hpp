@@ -41,6 +41,14 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
     return thresholds;
 }
 
+enum functionType 
+{
+    TRACE,
+    DIRECTION,
+    ANISOTROPY
+};
+
+std::unordered_map<std::string,functionType> const strToFun = { {"trace",functionType::TRACE}, {"EVQuo",functionType::ANISOTROPY}, {"EVDir",functionType::DIRECTION} };
 
 
 /** Apply mask to input image using threshold. All masked pixels are set to NAN
@@ -109,7 +117,7 @@ struct normalHealpixInterface
      * Actual conversion of whole minkmap into Healpix map
      */
     template <minkTensor tensortype>
-    Healpix_Map<double> toHealpix(double (&func)(const tensortype&), double smoothRad, int outputNside) const;
+    Healpix_Map<double> toHealpix(functionType fun, double smoothRad, int outputNside) const;
     
     ///Return 0 if pixnum not polar, 1 if north, 2 if south
     uint ispolar(int pixnum) const 
@@ -180,7 +188,7 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
  */
 template <minkmapFamilyType maptype>
 template <minkTensor tensortype>
-Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double (&func)(const tensortype&), double smoothRad, int outputNside) const
+Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun, double smoothRad, int outputNside) const
 {
     Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
     
@@ -198,24 +206,37 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(double (&func)(co
             std::cout << "Converting pixel " << pixel << "/" << npix << "...\n";
         }
         
+        minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
         if(smoothRad>0)
         {
             auto pixelsNearbyRange = baseminkmap.originalMap.query_disc(map.pix2ang(pixel), smoothRad);
             std::vector<int> pixelsNearby = pixelsNearbyRange.toVector();
         
-            minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
             for(auto pixelToAdd : pixelsNearby)
             {
                 tensorHere += std::move(at(pixelToAdd)); //parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = smoothFactor/(pixelsNearby.size());//normalize such that sum over all pixels remains same
-            if(func == trace<minkTensorStack>) tensorHere *= norm; //TODO check if this makes sense
-            map[pixel] = func( tensorHere );
+            if(fun == TRACE) tensorHere *= norm; //TODO check if this makes sense
         }
         else
         {
-            minkTensorStack tensorHere = at(pixel);
-            map[pixel] = func( tensorHere );
+            tensorHere = std::move(at(pixel));
+        }
+        
+        switch (fun) {
+            case TRACE:
+                map[pixel] = trace( tensorHere );
+                break;
+            case ANISOTROPY:
+                map[pixel] = tensorHere.anisotropy<tensortype>();
+                break;
+            case DIRECTION:
+                map[pixel] = tensorHere.direction<tensortype>();
+                break;
+            default:
+                std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir!, but have "+std::to_string(fun)+"\n This should not happen as it is already checked in checkParams\n";
+                throw std::invalid_argument("Invalid function type");
         }
     }
     return map;
