@@ -96,7 +96,7 @@ void checkParams(const paramStruct &obj) {
     }
     if(strToFun.find(obj.function) == strToFun.end())
     {
-        std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir!, but have "+obj.function+"\n";
+        std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir, irrAniso, irrDir, but have "+obj.function+"\n";
         throw std::invalid_argument("function invalid");
     }
 }
@@ -271,7 +271,7 @@ void makeHealpixMinkmap(const Healpix_Map<double>& map, paramStruct params, std:
     
     auto it = strToFun.find(params.function); // Exists as of checkParams
     functionType fun = it -> second;
-    outputmap = interface.toHealpix<minkTensorIntegrand>(fun,params.smoothRad, (int)params.NsideOut);
+    outputmap = interface.toHealpix(fun,params.smoothRad, (int)params.NsideOut);
     
     
     /*  Map is generated, now create outname  */

@@ -138,10 +138,6 @@ struct minkTensorStack
         return retval*factor;
     }
     
-    template<typename tensortype>
-    double anisotropy();
-    template<typename tensortype>
-    double direction();
     
     /** Parallel transport all normal vectors in stack to newR along geodesic
      */
@@ -369,17 +365,6 @@ double eigenValueQuotient(const tens& input)
             auto EVvec = solver.eigenvalues().real();
             double ratio = std::abs(EVvec.maxCoeff()/EVvec.minCoeff());
             
-            // Check if the above calculation does the same thing as manual calculation
-    #ifdef THISRUNSINATEST
-            double dplusa = input.accessElement({1,1})*sin2T+input.accessElement({0,0});
-            double adminusbc = input.accessElement({0,0})*input.accessElement({1,1})*sin2T - pow(input.accessElement({0,1}),2)*sin2T; //tensors are symmetric here, one of them needs factor
-            double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
-            double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
-            double retval;
-            if(twolambda1>twolambda2) retval = twolambda1/twolambda2;
-            else retval = twolambda2/twolambda1;
-            std::cout << "selfmade evq "<< retval << " eigen evq " << ratio <<"\n";
-    #endif
             return ratio;
         }
         case 4:
@@ -458,26 +443,6 @@ double eigenVecDir(const tens& input)
             pointing relevantVec = angleOf2x2Mat(zahlenfriedhof);
             double retangle = giveAngle(relevantVec,input.r);
             
-    #ifdef THISRUNSINATEST
-            double dplusa = input.accessElement({1,1})*sin2T+input.accessElement({0,0});
-            double adminusbc = input.accessElement({0,0})*input.accessElement({1,1})*sin2T - pow(input.accessElement({0,1}),2)*sin2T; //tensors are symmetric here, one of them needs factor
-            double twolambda1 = dplusa + sqrt(dplusa*dplusa - 4*adminusbc);
-            double twolambda2 = dplusa - sqrt(dplusa*dplusa - 4*adminusbc);
-            
-            pointing oldVec(0,1);
-            if(twolambda1>twolambda2) // grab eigenvector with largest eigenvalue
-            {
-                double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
-                oldVec.theta = (aminusd + sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
-            }
-            else
-            {
-                double aminusd = input.accessElement({0,0}) - input.accessElement({1,1})*sin2T;
-                oldVec.theta = (aminusd - sqrt(dplusa*dplusa-4*adminusbc)) / (2*input.accessElement({0,1})*sin2T);
-            }
-            double oldangle = giveAngle(oldVec,input.r);
-            std::cout << "selfmade evd "<< oldangle << " eigen evd " << (retangle<0 ? retangle+3.14159 : retangle ) <<"\n";
-    #endif
             return retangle<0 ? retangle+3.14159 : retangle; //add pi to get consistent values between 0 and pi, only interested in direction
         }
         case 4:
@@ -511,50 +476,54 @@ double eigenVecDir(const tens& input)
     } //switch ranksum
 }
 
-
-template <typename tensortype>
-double minkTensorStack::anisotropy()
+std::complex<double> getPsilm(int l, int m, const minkTensorStack& input)
 {
-    double aniso = eigenValueQuotient<minkTensorStack>(*this);
+    std::complex<double> psilm = 0.;
+    for(const auto& element : input.nweights)
+    {
+        irreducibleMinkTens tensorHere(l, m, input.r, std::get<0>(element));
+        psilm += tensorHere.accessElement()*std::get<1>(element);
+    }
+    return psilm;
+}
+
+
+double anisotropy_cart(const minkTensorStack& input)
+{
+    double aniso = eigenValueQuotient<minkTensorStack>(input);
     return aniso;
 }
 
-template <>
-double minkTensorStack::anisotropy<irreducibleMinkTens>()
+double anisotropy_irr(const minkTensorStack& input)
 {
+    if(input.isMasked()) {return NAN;}
+    if(input.isEmpty()) {return NAN;}
+    
     double retval = 0.;
-    for(int m=-(int)rankA; m<=(int)rankA; m++)
+    for(int m=-(int)input.rankB; m<=(int)input.rankB; m++)
     {
-        std::complex<double> psilm = 0.;
-        for(const auto& element : nweights)
-        {
-            irreducibleMinkTens tensorHere(rankA, m, r, std::get<0>(element));
-            psilm += tensorHere.accessElement()*std::get<1>(element);
-        }
+        std::complex<double> psilm = getPsilm((int)input.rankB, m, input);
         retval += std::abs(psilm)*std::abs(psilm);
     }
     return retval;
 }
 
-template<>
-double minkTensorStack::direction<minkTensorIntegrand>()
+
+double direction_cart(const minkTensorStack& input)
 {
-    double aniso = eigenVecDir<minkTensorStack>(*this);
-    return aniso;
+    double dir = eigenVecDir<minkTensorStack>(input);
+    return dir;
 }
 
-template <>
-double minkTensorStack::direction<irreducibleMinkTens>()
+double direction_irr(const minkTensorStack& input)
 {
+    if(input.isMasked()) {return NAN;}
+    if(input.isEmpty()) {return NAN;}
+    
     double retval = 0.;
-    for(int m=-(int)rankA; m<=(int)rankA; m++)
+    for(int m=-(int)input.rankB; m<=(int)input.rankB; m++)
     {
-        std::complex<double> psilm = 0.;
-        for(const auto& element : nweights)
-        {
-            irreducibleMinkTens tensorHere(rankA, m, r, std::get<0>(element));
-            psilm += tensorHere.accessElement()*std::get<1>(element);
-        }
+        std::complex<double> psilm = getPsilm((int)input.rankB, m, input);
         retval += std::arg(psilm)*std::arg(psilm);
     }
     return retval;

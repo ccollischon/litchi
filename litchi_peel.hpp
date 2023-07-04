@@ -44,11 +44,14 @@ std::vector<double> makeIntervals_log(double mint, double maxt, uint numt)
 enum functionType 
 {
     TRACE,
-    DIRECTION,
-    ANISOTROPY
+    DIRECTION_IRR,
+    ANISOTROPY_IRR,
+    DIRECTION_CART,
+    ANISOTROPY_CART
 };
 
-std::unordered_map<std::string,functionType> const strToFun = { {"trace",functionType::TRACE}, {"EVQuo",functionType::ANISOTROPY}, {"EVDir",functionType::DIRECTION} };
+std::unordered_map<std::string,functionType> const strToFun = { {"trace",functionType::TRACE}, {"EVQuo",functionType::ANISOTROPY_CART}, {"EVDir",functionType::DIRECTION_CART}, 
+                                                                {"irrAniso",functionType::ANISOTROPY_IRR}, {"irrDir",functionType::DIRECTION_IRR}   };
 
 
 /** Apply mask to input image using threshold. All masked pixels are set to NAN
@@ -116,7 +119,6 @@ struct normalHealpixInterface
     /**
      * Actual conversion of whole minkmap into Healpix map
      */
-    template <minkTensor tensortype>
     Healpix_Map<double> toHealpix(functionType fun, double smoothRad, int outputNside) const;
     
     ///Return 0 if pixnum not polar, 1 if north, 2 if south
@@ -187,7 +189,6 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
  * \return Healpix_Map of desired minkmap ready for saving to file
  */
 template <minkmapFamilyType maptype>
-template <minkTensor tensortype>
 Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun, double smoothRad, int outputNside) const
 {
     Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
@@ -228,14 +229,20 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
             case TRACE:
                 map[pixel] = trace( tensorHere );
                 break;
-            case ANISOTROPY:
-                map[pixel] = tensorHere.anisotropy<tensortype>();
+            case ANISOTROPY_CART:
+                map[pixel] = anisotropy_cart(tensorHere);
                 break;
-            case DIRECTION:
-                map[pixel] = tensorHere.direction<tensortype>();
+            case DIRECTION_CART:
+                map[pixel] = direction_cart(tensorHere);
+                break;
+            case ANISOTROPY_IRR:
+                map[pixel] = anisotropy_irr(tensorHere);
+                break;
+            case DIRECTION_IRR:
+                map[pixel] = direction_irr(tensorHere);
                 break;
             default:
-                std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir!, but have "+std::to_string(fun)+"\n This should not happen as it is already checked in checkParams\n";
+                std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir, irrAniso, irrDir, but have "+std::to_string(fun)+"\n This should not happen as it is already checked in checkParams\n";
                 throw std::invalid_argument("Invalid function type");
         }
     }
