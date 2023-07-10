@@ -1,7 +1,7 @@
 #ifndef litchi_kernel
 #define litchi_kernel
 
-#include "tensorOperations.hpp"
+#include "minkTensorStack.hpp"
 
 #include "healpix_cxx/healpix_map.h"
 #include <vector>

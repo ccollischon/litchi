@@ -2,6 +2,8 @@
 #define litchi_peel
 
 #include "litchi_pulp.hpp"
+#include "tensorOperations.hpp"
+#include "minkTensorStack.hpp"
 
 #include "healpix_cxx/healpix_map.h"
 #include "healpix_cxx/healpix_map_fitsio.h"

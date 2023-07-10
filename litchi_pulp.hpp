@@ -2,7 +2,7 @@
 #define litchi_pulp
 
 #include "litchi_kernel.hpp"
-#include "tensorOperations.hpp"
+#include "minkTensorStack.hpp"
 #include "minkTensorIntegrand.hpp"
 #include "geometryHelpers.hpp"
 
