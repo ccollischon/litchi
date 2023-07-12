@@ -17,8 +17,11 @@
 #include <vector>
 #include <stdexcept>
 #include <list>
+#include <memory_resource>
 
-///Save linear combinations of minkTensorIntegrands in one class
+
+
+///Save stacks of normal vectors and weights in one class
 struct minkTensorStack
 {
     const uint rankA{0}, rankB{0};
@@ -27,7 +30,11 @@ struct minkTensorStack
     uint numnan{0}; ///< tracking how many contributions from masked pixels this tensor contains (in addition to content in nweights)
     uint numnull{0}; ///< tracking how many contributions from empty windows this tensor contains (in addition to content in nweights)
     
-    std::list<std::pair<pointing,double>> nweights{}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
+    using weightedN = std::pair<pointing,double>;
+    
+    std::pmr::monotonic_buffer_resource buffer{};
+    std::pmr::polymorphic_allocator<weightedN> pa{&buffer};
+    std::pmr::list<weightedN> nweights{pa}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
     
     
     minkTensorStack(minkTensorStack left, minkTensorStack right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(std::move(left.nweights))
@@ -37,11 +44,13 @@ struct minkTensorStack
         appendStack_rr(std::move(right));
     }
     
-    minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew)
+    minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew, uint capacity=4) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew),
+                                                                                                   buffer{std::pmr::monotonic_buffer_resource(8*capacity*sizeof(weightedN))}, 
+                                                                                                   pa{&buffer}, nweights{ pa }
     {
     }
     
-    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), nweights{}
+    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r)
     {
         if(std::isnan(weight))
         {
@@ -58,8 +67,12 @@ struct minkTensorStack
     }
     
     //Move/copy constructors default
+    minkTensorStack(const minkTensorStack& other) : rankA(other.rankA), rankB(other.rankB), curvIndex(other.curvIndex), r(other.r), numnan(other.numnan), numnull(other.numnull), buffer{}, pa{&buffer}, nweights(other.nweights,pa)
+    {
+    }
+    
+    
     minkTensorStack(minkTensorStack&& other) = default;
-    minkTensorStack(const minkTensorStack& other) = default;
     ~minkTensorStack() = default;
     
     ///Move/copy assignments leave rank untouched (checked with assert)
@@ -183,7 +196,7 @@ struct minkTensorStack
         if(arclength(r,other.r)>1e-12)   other.moveTo(r);
         
         auto itEnd = nweights.end();
-        nweights.splice(itEnd,std::move(other.nweights));
+        nweights.insert(itEnd, other.nweights.begin(), other.nweights.end());
         
     }
     
@@ -234,9 +247,10 @@ struct minkTensorStack
     }
 };
 
-minkTensorStack operator+ (const minkTensorStack& lhs, const minkTensorStack& rhs)
+minkTensorStack operator+ (minkTensorStack lhs, const minkTensorStack& rhs)
 {
-    minkTensorStack returnval (lhs, rhs);
+    minkTensorStack returnval (std::move(lhs));
+    returnval += rhs;
     return returnval;
 }
 

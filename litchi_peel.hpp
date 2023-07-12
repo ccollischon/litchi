@@ -119,13 +119,13 @@ struct normalHealpixInterface
      * \param pixnum Pixel number
      * \return minkTensorStack with linear combination of minkmap pixels
      */
-    minkTensorStack at(int pixnum) const;
+    minkTensorStack at(int pixnum, uint numt=1) const;
     
     
     /**
      * Actual conversion of whole minkmap into Healpix map
      */
-    Healpix_Map<double> toHealpix(functionType fun, double smoothRad, int outputNside) const;
+    Healpix_Map<double> toHealpix(functionType fun, double smoothRad, int outputNside, uint numt=1) const;
     
     ///Return 0 if pixnum not polar, 1 if north, 2 if south
     uint ispolar(int pixnum) const 
@@ -149,7 +149,7 @@ struct normalHealpixInterface
 };
 
 template <minkmapFamilyType maptype>
-minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
+minkTensorStack normalHealpixInterface<maptype>::at(int pixnum, uint numt) const
 {
     #ifdef THISISPYTHON
         if (PyErr_CheckSignals() != 0)
@@ -176,7 +176,7 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
         westernNeighborship.at(2) = neighbors[3];
     }
             
-    minkTensorStack output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex, baseminkmap.originalMap.pix2ang(pixnum));
+    minkTensorStack output(baseminkmap.rankA,baseminkmap.rankB,baseminkmap.curvIndex, baseminkmap.originalMap.pix2ang(pixnum), 4*numt*2);
     for(int minkpix : westernNeighborship)
     {
         if(minkpix != -1)
@@ -195,7 +195,7 @@ minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
  * \return Healpix_Map of desired minkmap ready for saving to file
  */
 template <minkmapFamilyType maptype>
-Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun, double smoothRad, int outputNside) const
+Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun, double smoothRad, int outputNside, uint numt) const
 {
     Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
     
@@ -213,39 +213,41 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
             std::cout << "Converting pixel " << pixel << "/" << npix << "...\n";
         }
         
-        minkTensorStack tensorHere(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel));
+        std::unique_ptr<minkTensorStack> tensorHere;;
         if(smoothRad>0)
         {
             auto pixelsNearbyRange = baseminkmap.originalMap.query_disc(map.pix2ang(pixel), smoothRad);
             std::vector<int> pixelsNearby = pixelsNearbyRange.toVector();
-        
+            
+            tensorHere = std::make_unique<minkTensorStack>(minkTensorStack(baseminkmap.rankA, baseminkmap.rankB, baseminkmap.curvIndex, map.pix2ang(pixel), pixelsNearby.size()*numt*2));
+            
             for(auto pixelToAdd : pixelsNearby)
             {
-                tensorHere += std::move(at(pixelToAdd)); //parallel transport, not just add, DONE in minkTensorStack +=
+                *tensorHere += std::move(at(pixelToAdd,numt)); //parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = smoothFactor/(pixelsNearby.size());//normalize such that sum over all pixels remains same
-            if(fun == TRACE) tensorHere *= norm; //TODO check if this makes sense
+            if(fun == TRACE) *tensorHere *= norm; //TODO check if this makes sense
         }
         else
         {
-            tensorHere = std::move(at(pixel));
+            *tensorHere = at(pixel,numt);
         }
         
         switch (fun) {
             case TRACE:
-                map[pixel] = trace( tensorHere );
+                map[pixel] = trace( *tensorHere );
                 break;
             case ANISOTROPY_CART:
-                map[pixel] = anisotropy_cart(tensorHere);
+                map[pixel] = anisotropy_cart(*tensorHere);
                 break;
             case DIRECTION_CART:
-                map[pixel] = direction_cart(tensorHere);
+                map[pixel] = direction_cart(*tensorHere);
                 break;
             case ANISOTROPY_IRR:
-                map[pixel] = anisotropy_irr(tensorHere);
+                map[pixel] = anisotropy_irr(*tensorHere);
                 break;
             case DIRECTION_IRR:
-                map[pixel] = direction_irr(tensorHere);
+                map[pixel] = direction_irr(*tensorHere);
                 break;
             default:
                 std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir, irrAniso, irrDir, but have "+std::to_string(fun)+"\n This should not happen as it is already checked in checkParams\n";

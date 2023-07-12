@@ -25,6 +25,7 @@ target_compile_definitions(litchi PUBLIC NDEBUG)
 
 add_executable(tests tests.cpp)
 target_compile_definitions(tests PUBLIC THISRUNSINATEST)
+target_compile_options(tests PUBLIC "-g")
 
 add_executable(testGeometry testGeometry.cpp)
 

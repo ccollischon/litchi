@@ -140,13 +140,15 @@ int main ()
     assert( abs(zahlenfriedhof.accessElement({0,0})-mytensor.accessElement({0,0})-mytensor2.accessElement({0,0}))<1e-13 && "minkTensorStack sum broken!" );
     zahlenfriedhof = mytensor + 3*mytensor2;
     assert( abs(zahlenfriedhof.accessElement({1,1})-mytensor.accessElement({1,1})-3*mytensor2.accessElement({1,1}))<1e-13 && "minkTensorStack product or sum broken!" );
-    
+    cout << "Simple sums done\n";
     
     int drei = 3;
     minkTensorIntegrand mytensor4(3,4,0,r,n);
     minkTensorIntegrand mytensor5(3,4,0,nr,nr);
     auto newtensor = drei*(3*(mytensor4 + mytensor5));
+    cout << "Tensors added an multiplied twice in one line\n";
     mytensor5.moveTo(r);
+    cout << "minkTensorIntegrand moved\n";
     assert( abs( newtensor.accessElement({1,1,0,1,1,0,0}) -(9*(mytensor4.accessElement({1,1,0,1,1,0,0}) + mytensor5.accessElement({1,1,0,1,1,0,0}))) ) < 1e-13 && "'auto newtensor = drei*(3*(mytensor4 + mytensor5));' does not work! " );
     
     /*
@@ -160,6 +162,7 @@ int main ()
     //assert( abs(trace(zahlenfriedhof) - (trace(mytensor) +trace(mytensor2))) < 1e-13 && "trace not additive!" );
     assert( abs(trace(zahlenfriedhof) - (zahlenfriedhof.accessElement({1,1})*pow(sin(zahlenfriedhof.r.theta),2) + zahlenfriedhof.accessElement({0,0}))) < 1e-13 && "trace not working! (check normalization?)" );
     
+    cout << "Checking eigenVecDir\n";
     minkTensorIntegrand myVectorTheta(0,1,1,pointing(0.5*pi,0),pointing(1,0));
     assert(abs(eigenVecDir(myVectorTheta))<1e-12 && "eigenVecDir not working (theta) for rank 1!");
     minkTensorIntegrand myVectorPhi  (0,1,1,pointing(0.5*pi,0),pointing(0,1));
@@ -170,21 +173,24 @@ int main ()
     assert(abs(eigenVecDir(myVectorMix)-pi/4)<1e-12 && "eigenVecDir not working (mix, equator) for rank 1!");
     myVectorMix.moveTo(pointing(1.25,0));
     assert(abs(eigenVecDir(myVectorMix)-pi/4)<1e-4 && "eigenVecDir not working (mix, lat) for rank 1!");
-    
+    cout << "Checked eigenVecDir, more minkTensorStack\n";
     
     //Test minkTensorStack
     minkTensorStack mystack(mytensor4);
+    cout << mystack.accessElement({1,1,0,1,1,0,0}) << endl;
     auto otherStack = mystack + minkTensorStack(mytensor5);
     assert( abs( otherStack.accessElement({1,1,0,1,1,0,0}) -(mystack.accessElement({1,1,0,1,1,0,0}) + mytensor5.accessElement({1,1,0,1,1,0,0})) ) < 1e-13 && "minkTensorStack addition does not work! " );
+    cout << "Checked addition\n";
     
     auto otherStack2 = drei*(3*(mystack + minkTensorStack(mytensor5)));
     assert( abs( otherStack2.accessElement({1,1,0,1,1,0,0}) -(9*(mystack.accessElement({1,1,0,1,1,0,0}) + mytensor5.accessElement({1,1,0,1,1,0,0}))) ) < 1e-13 && "'auto otherStack2 = drei*(3*(mystack + minkTensorStack(mytensor5)));' does not work! " );
-    
+    cout << "Checked addition/multiplication in one line\n";
     
     minkTensorIntegrand asdfTensor (0,1,1,pointing(pi/2,0.01) ,pointing(1,1));
     minkTensorIntegrand asdfTensor2(0,1,1,pointing(pi/2,2*pi-0.01),pointing(1,1));
     auto asdfSum = asdfTensor2 + asdfTensor;
     assert( abs(asdfSum.accessElement({0}) - asdfSum.accessElement({1}))<1e-4 && "sum of two tensors left and right of meridian broken" );
+    cout << "Checked sum of 2 minkTensorIntegrands";
     
     //Test vector evq, should be length
     pointing n1(0.1,0.1), n2(-0.1,-0.1);

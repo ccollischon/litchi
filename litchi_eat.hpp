@@ -277,7 +277,7 @@ void makeHealpixMinkmap(const Healpix_Map<double>& map, paramStruct params, std:
     
     auto it = strToFun.find(params.function); // Exists as of checkParams
     functionType fun = it -> second;
-    outputmap = interface.toHealpix(fun,params.smoothRad, (int)params.NsideOut);
+    outputmap = interface.toHealpix(fun,params.smoothRad, (int)params.NsideOut, params.numt);
     
     
     /*  Map is generated, now create outname  */
