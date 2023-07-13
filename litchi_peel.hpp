@@ -213,7 +213,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
             std::cout << "Converting pixel " << pixel << "/" << npix << "...\n";
         }
         
-        std::unique_ptr<minkTensorStack> tensorHere;;
+        std::unique_ptr<minkTensorStack> tensorHere;
         if(smoothRad>0)
         {
             auto pixelsNearbyRange = baseminkmap.originalMap.query_disc(map.pix2ang(pixel), smoothRad);
@@ -230,7 +230,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
         }
         else
         {
-            *tensorHere = at(pixel,numt);
+            tensorHere = std::make_unique<minkTensorStack>(at(pixel,numt));
         }
         
         switch (fun) {

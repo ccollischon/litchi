@@ -190,7 +190,7 @@ int main ()
     minkTensorIntegrand asdfTensor2(0,1,1,pointing(pi/2,2*pi-0.01),pointing(1,1));
     auto asdfSum = asdfTensor2 + asdfTensor;
     assert( abs(asdfSum.accessElement({0}) - asdfSum.accessElement({1}))<1e-4 && "sum of two tensors left and right of meridian broken" );
-    cout << "Checked sum of 2 minkTensorIntegrands";
+    cout << "Checked sum of 2 minkTensorIntegrands\n";
     
     //Test vector evq, should be length
     pointing n1(0.1,0.1), n2(-0.1,-0.1);
@@ -277,11 +277,16 @@ int main ()
         test = eigenVecDir(pix4T);
     }
     
+    cout << "Testing unsmoothed map...\n";
     paramStruct testParams;
     testParams.forceOutname = true;
     testParams.mint = -1e-4, testParams.maxt = 1e-4, testParams.numt = 13;
     testParams.rankA = 0, testParams.rankB = 2, testParams.curvIndex = 1;
-    testParams.Nside = 128, testParams.smooth = 8;
+    testParams.Nside = 64;
+    makeMinkmap("../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits",testParams,"testmap.fits");
+    
+    cout << "Testing smoothed map...\n";
+    testParams.smooth = 8;
     makeMinkmap("../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits",testParams,"testmap.fits");
     
     return 0;

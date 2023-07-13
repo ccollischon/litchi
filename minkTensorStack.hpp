@@ -37,7 +37,7 @@ struct minkTensorStack
     std::pmr::list<weightedN> nweights{pa}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
     
     
-    minkTensorStack(minkTensorStack left, minkTensorStack right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(std::move(left.nweights))
+    minkTensorStack(minkTensorStack left, minkTensorStack right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(std::move(left.nweights),left.nweights.get_allocator())
     {
         numnan += right.numnan;
         numnull += right.numnull;
