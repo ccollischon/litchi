@@ -201,7 +201,7 @@ double eigenVecDir(const tens& input)
 std::complex<double> getPsilm(int m, const minkTensorStack& input)
 {
     std::complex<double> psilm = 0.;
-    for(const auto& element : input.nweights)
+    for(const auto& element : *input.nweights.thelist)
     {
         irreducibleMinkTens tensorHere((int)input.rankB, m, input.r, std::get<0>(element));
         psilm += tensorHere.accessElement()*std::get<1>(element);

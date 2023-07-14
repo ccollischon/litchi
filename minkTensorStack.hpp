@@ -19,6 +19,42 @@
 #include <list>
 #include <memory_resource>
 
+template<typename T>
+struct buffered_list
+{
+	size_t capacity_{8*16*sizeof(T)};
+	std::unique_ptr<std::pmr::monotonic_buffer_resource> buffer {std::make_unique<std::pmr::monotonic_buffer_resource>(capacity_)};
+    std::unique_ptr<std::pmr::polymorphic_allocator<T>>  pa     {std::make_unique<std::pmr::polymorphic_allocator<T>>(&(*buffer))};
+    std::unique_ptr<std::pmr::list<T>> thelist                  {std::make_unique<std::pmr::list<T>>(*pa)}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
+	
+	buffered_list() = default;
+	explicit buffered_list(size_t capacity) : capacity_{8*capacity*sizeof(T)}, buffer{std::make_unique<std::pmr::monotonic_buffer_resource>(8*capacity*sizeof(T))}, pa{std::make_unique<std::pmr::polymorphic_allocator<T>>(&(*buffer))}, thelist{std::make_unique<std::pmr::list<T>>(*pa)}
+	{}
+	
+	buffered_list<T>(buffered_list<T>&& other) = default;
+	buffered_list<T>& operator =(buffered_list<T>&& other) = default;
+	
+	buffered_list<T>(const buffered_list<T>& other) : capacity_{other.capacity_}, buffer {std::make_unique<std::pmr::monotonic_buffer_resource>(capacity_)}, pa {std::make_unique<std::pmr::polymorphic_allocator<T>>(&(*buffer))}, thelist     {std::make_unique<std::pmr::list<T>>(*other.thelist,*pa)}
+	{}
+	buffered_list<T>& operator =(const buffered_list<T>& other) 
+	{
+		assert(capacity_>=other.size() && "Trying to assign into buffered_list of lower capacity");
+		capacity_ = other.capacity_;
+		*thelist = *other.thelist;
+	}
+	
+	~buffered_list() = default;
+	
+	size_t size() const
+	{
+		return (*thelist).size();
+	}
+	
+	void emplace_back(T newElement)
+	{
+		(*thelist).emplace_back(std::move(newElement));
+	}
+};
 
 
 ///Save stacks of normal vectors and weights in one class
@@ -32,12 +68,10 @@ struct minkTensorStack
     
     using weightedN = std::pair<pointing,double>;
     
-    std::pmr::monotonic_buffer_resource buffer{};
-    std::pmr::polymorphic_allocator<weightedN> pa{&buffer};
-    std::pmr::list<weightedN> nweights{pa}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
+    buffered_list<weightedN> nweights{}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
     
     
-    minkTensorStack(minkTensorStack left, minkTensorStack right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(std::move(left.nweights),left.nweights.get_allocator())
+    minkTensorStack(minkTensorStack left, minkTensorStack right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(std::move(left.nweights))
     {
         numnan += right.numnan;
         numnull += right.numnull;
@@ -45,8 +79,7 @@ struct minkTensorStack
     }
     
     minkTensorStack(uint rank1, uint rank2, uint curvInd, const pointing& rNew, uint capacity=4) : rankA(rank1), rankB(rank2), curvIndex(curvInd), r(rNew),
-                                                                                                   buffer{std::pmr::monotonic_buffer_resource(8*capacity*sizeof(weightedN))}, 
-                                                                                                   pa{&buffer}, nweights{ pa }
+                                                                                                   nweights{ capacity }
     {
     }
     
@@ -67,11 +100,7 @@ struct minkTensorStack
     }
     
     //Move/copy constructors default
-    minkTensorStack(const minkTensorStack& other) : rankA(other.rankA), rankB(other.rankB), curvIndex(other.curvIndex), r(other.r), numnan(other.numnan), numnull(other.numnull), buffer{}, pa{&buffer}, nweights(other.nweights,pa)
-    {
-    }
-    
-    
+    minkTensorStack(const minkTensorStack& other) = default;
     minkTensorStack(minkTensorStack&& other) = default;
     ~minkTensorStack() = default;
     
@@ -125,7 +154,7 @@ struct minkTensorStack
         if(isEmpty()) {return 0.;}
         
         double retval = 0.;
-        for(const auto& element : nweights)
+        for(const auto& element : *nweights.thelist)
         {
             minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, std::get<0>(element));
             retval+= tensorHere.accessElement(indices)*std::get<1>(element);
@@ -143,7 +172,7 @@ struct minkTensorStack
         double factor = 1.*(nweights.size()+numnull+numnan)/(1.*(nweights.size()+numnull));
         
         double retval = 0.;
-        for(const auto& element : nweights)
+        for(const auto& element : *nweights.thelist)
         {
             minkTensorIntegrand tensorHere(rankA, rankB, curvIndex, r, std::get<0>(element));
             retval+= tensorHere.accessElement(indices)*std::get<1>(element);
@@ -156,7 +185,7 @@ struct minkTensorStack
      */
     void moveTo(const pointing& newR)
     {
-        for(std::pair<pointing,double>& element : nweights)
+        for(std::pair<pointing,double>& element : *nweights.thelist)
         {
             std::get<0>(element) = parallelTransport(r, newR, std::get<0>(element));
         }
@@ -195,8 +224,10 @@ struct minkTensorStack
         
         if(arclength(r,other.r)>1e-12)   other.moveTo(r);
         
-        auto itEnd = nweights.end();
-        nweights.insert(itEnd, other.nweights.begin(), other.nweights.end());
+        for(const auto& element : *other.nweights.thelist)
+        {
+			nweights.emplace_back(element);
+		}
         
     }
     
@@ -232,16 +263,16 @@ struct minkTensorStack
         if(std::isnan(other))
         {
             numnan += nweights.size();
-            nweights.clear();
+            (*nweights.thelist).clear();
         }
         else if(std::abs(other)<1e-15)
         {
             numnull += nweights.size();
-            nweights.clear();
+            (*nweights.thelist).clear();
         }
         else
         {
-            std::for_each(nweights.begin(), nweights.end(), [&other](auto& inp){std::get<1>(inp)*=other;});
+            std::for_each((*nweights.thelist).begin(), (*nweights.thelist).end(), [&other](auto& inp){std::get<1>(inp)*=other;});
         }
         return *this;
     }
