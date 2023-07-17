@@ -32,7 +32,14 @@ struct buffered_list
 	{}
 	
 	buffered_list<T>(buffered_list<T>&& other) = default;
-	buffered_list<T>& operator =(buffered_list<T>&& other) = default;
+	buffered_list<T>& operator =(buffered_list<T>&& other) 
+	{
+		capacity_ = other.capacity_;
+		thelist = std::move(other.thelist);
+		buffer = std::move(other.buffer);
+		pa = std::move(other.pa);
+		return *this;
+	}
 	
 	buffered_list<T>(const buffered_list<T>& other) : capacity_{other.capacity_}, buffer {std::make_unique<std::pmr::monotonic_buffer_resource>(capacity_)}, pa {std::make_unique<std::pmr::polymorphic_allocator<T>>(&(*buffer))}, thelist     {std::make_unique<std::pmr::list<T>>(*other.thelist,*pa)}
 	{}
@@ -41,6 +48,7 @@ struct buffered_list
 		assert(capacity_>=other.size() && "Trying to assign into buffered_list of lower capacity");
 		capacity_ = other.capacity_;
 		*thelist = *other.thelist;
+		return *this;
 	}
 	
 	~buffered_list() = default;
@@ -53,6 +61,13 @@ struct buffered_list
 	void emplace_back(T newElement)
 	{
 		(*thelist).emplace_back(std::move(newElement));
+	}
+	
+	void clear()
+	{
+		buffer = std::make_unique<std::pmr::monotonic_buffer_resource>(capacity_);
+		pa = std::make_unique<std::pmr::polymorphic_allocator<T>>(&(*buffer));
+		thelist = std::make_unique<std::pmr::list<T>>(*pa);
 	}
 };
 
@@ -263,12 +278,12 @@ struct minkTensorStack
         if(std::isnan(other))
         {
             numnan += nweights.size();
-            (*nweights.thelist).clear();
+            nweights.clear();
         }
         else if(std::abs(other)<1e-15)
         {
             numnull += nweights.size();
-            (*nweights.thelist).clear();
+            nweights.clear();
         }
         else
         {
