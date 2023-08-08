@@ -15,10 +15,16 @@ struct irreducibleMinkTens {
     {
     }
     
-    std::complex<double> accessElement() const // Y*lm(n)
+    //~ std::complex<double> accessElement() const // Y*lm(n)
+    //~ {
+        //~ double thetapart = std::sph_legendre(l_,m_,n_.theta);
+        //~ return thetapart*std::exp(std::complex<double>(0.0, -1.0) * (double)m_ * n_.phi);
+    //~ }
+    
+    std::complex<double> accessElement() const // exp(i l phi(n))
     {
-        double thetapart = std::sph_legendre(l_,m_,n_.theta);
-        return thetapart*std::exp(std::complex<double>(0.0, -1.0) * (double)m_ * n_.phi);
+        double phi = giveAngle(n_,r_);
+        return std::exp(std::complex<double>(0.0, +1.0) * (double)l_ * phi);
     }
     
     
