@@ -3,13 +3,15 @@
 
 //#include "tensorFamily.hpp"
 #include "geometryHelpers.hpp"
+
+#include "healpix_cxx/healpix_map.h"
+
 #include <algorithm>
 #include <stdexcept>
 #include <numeric>
 #include <cassert>
 #include <vector>
 #include <cmath>
-#include "healpix_cxx/healpix_map.h"
 /** \file minkTensorIntegrand.hpp
  * \brief minkTensorIntegrand struct contains symmetric tensor product part of Minkowski tensors
  */

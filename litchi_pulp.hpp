@@ -1,18 +1,17 @@
 #ifndef litchi_pulp
 #define litchi_pulp
 
+#include "litchi_kernel.hpp"
+#include "minkTensorStack.hpp"
+#include "minkTensorIntegrand.hpp"
+#include "geometryHelpers.hpp"
+
+#include "healpix_cxx/healpix_map.h"
+
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
-
-#include "healpix_cxx/healpix_map.h"
-#include "litchi_kernel.hpp"
-
-#include "tensorOperations.hpp"
-#include "minkTensorIntegrand.hpp"
-#include "geometryHelpers.hpp"
-
 /** \file litchi_pulp.hpp
  * \brief Contains minkmapSphere class which does the heavy lifting when creating a minkmap
  */

@@ -19,15 +19,14 @@ cd ..
 
 Create a build directory and create the Makefile if your standard compiler can handle C++20 (e.g. g++-10 and above, can be checked with `g++ -v`):
 ```
-mkdir litchi-build; cd litchi-build;
-cmake ../litchi ./
+cmake -S litchi/ -B litchi-build/
 ```
 
 Some setups may enable you to load a module that changes your compiler version beforehand, (e.g. `module load gcc/10` on Remeis). Ask your administrator about this.
 
 If you need to specify a different compiler (such as g++-10), name it before calling cmake:
 ```
-CC=gcc-10 CXX=g++-10 cmake ../litchi ./
+CC=gcc-10 CXX=g++-10 cmake -S litchi/ -B litchi-build/
 ```
 Compile:
 ```

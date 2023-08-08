@@ -1,6 +1,10 @@
 #ifndef litchi_eat
 #define litchi_eat
 
+#include "litchi_peel.hpp"
+
+#include "healpix_cxx/healpix_map_fitsio.h"
+#include "healpix_cxx/healpix_map.h"
 
 #include <vector>
 #include <algorithm>
@@ -10,10 +14,6 @@
 #include <filesystem>
 #include <cstdlib> // for sprintf
 
-#include "healpix_cxx/healpix_map_fitsio.h"
-#include "healpix_cxx/healpix_map.h"
-
-#include "litchi_peel.hpp"
 
 /** \file litchi_eat.hpp
  * \brief Higher-level functions to create and save Healpix-minkmaps generated from input map
@@ -34,7 +34,7 @@ struct paramStruct{
         uint rankA{0}, rankB{0}, curvIndex{0}, numt{1}, Nside{0}, smooth{0}, NsideOut{0};
         double mint{0}, maxt{1}, maskThresh{0.9}, smoothRad{0};
         bool linThresh{true}, forceOutname{false}, sequence{false};
-        std::string function{"trace"}, maskname{""};
+        std::string function{"tr"}, maskname{""};
 };
 
 ///Sanity check for all parameters. Throws std::invalid_argument if something goes wrong
@@ -42,7 +42,7 @@ void checkParams(const paramStruct &obj) {
     
     if(obj.curvIndex==0 && obj.rankB)
     {
-        std::cerr << "Error: rankB > 0 not possible when curvIndex = 0. rankB = " << obj.rankB << std::endl;
+        std::cerr << "Error: l or rankB > 0 not possible when curvIndex = 0. rankB = " << obj.rankB << std::endl;
         throw std::invalid_argument("rankB && curvIndex!=0");
     }
     if(obj.curvIndex==0 && obj.rankA)
@@ -94,9 +94,9 @@ void checkParams(const paramStruct &obj) {
         std::cerr << "Minimal threshold zero not possible with logThresh!\n";
         throw std::invalid_argument("mint==0 && logThresh");
     }
-    if(obj.function!="trace" && obj.function!="EVQuo" && obj.function!="EVDir")
+    if(strToFun.find(obj.function) == strToFun.end())
     {
-        std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir!, but have "+obj.function+"\n";
+        std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir, irrAniso, irrDir, but have "+obj.function+"\n";
         throw std::invalid_argument("function invalid");
     }
 }
@@ -148,7 +148,7 @@ void formatOutname(std::string& outname, const paramStruct& params, const int co
         {
             sprintf(mintmaxtnumt,"%.3e_%.3e_%d_%s_rad=%.3e", params.mint,params.maxt,params.numt, params.linThresh ? "lin" : "log", params.smoothRad); //printf %g for nicer formatting
         }
-        std::string funString = (params.function=="trace") ? "_tr" : (params.function=="EVQuo") ? "_evq" : (params.function=="EVDir") ? "_evd" : "_error";
+        std::string funString = "_"+params.function;
         char maskString[20];
         (params.maskname!="") ? sprintf(maskString,"_mask_%4.2f", params.maskThresh) : sprintf(maskString,"_nomask");
         outname = outname +"_"+ std::to_string(params.rankA) +"-"+ std::to_string(params.rankB) +"-"+ std::to_string(params.curvIndex) + funString + "_Nside="+std::to_string(params.Nside) + "_NsideOut="+std::to_string(params.NsideOut) + "_thresh="+mintmaxtnumt + maskString + ".fits";
@@ -224,14 +224,20 @@ void writeToFile(const Healpix_Map<double>& outputmap, const paramStruct& params
     }
     
     std::vector<std::string> funStrings; //Description of function used to generate scalar from tensor
-    if(params.function=="trace"){
+    if(params.function=="tr"){
         funStrings = {"trace", "Trace of Tensor"};
     }
-    else if (params.function=="EVQuo"){
+    else if (params.function=="evq"){
         funStrings = {"EV quotient", "Eigenvalue quotient of tensor"};
     }
-    else if (params.function=="EVDir"){
-        funStrings = {"EV direction", "Direction of eigenvec with largest eigenval"};
+    else if (params.function=="evd"){
+        funStrings = {"EV direction", "Direction of anisotropy"};
+    }
+    else if (params.function=="irrAniso"){
+        funStrings = {"irrAniso", "Measure of anisotropy from irreducible picture"};
+    }
+    else if (params.function=="irrDir"){
+        funStrings = {"irrDir", "Direction from irreducible picture"};
     }
     else funStrings = {params.function,"unknown function"};
     
@@ -268,23 +274,11 @@ void makeHealpixMinkmap(const Healpix_Map<double>& map, paramStruct params, std:
     const auto minkmapAverage = sumOfMaps*(1./params.numt);
     const normalHealpixInterface interface(minkmapAverage);
     Healpix_Map<double> outputmap;
-    if(params.function=="trace")
-    {
-        outputmap = interface.toHealpix(trace<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
-    }
-    else if(params.function=="EVQuo")
-    {
-        outputmap = interface.toHealpix(eigenValueQuotient<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
-    }
-    else if(params.function=="EVDir")
-    {
-        outputmap = interface.toHealpix(eigenVecDir<minkTensorStack>,params.smoothRad, (int)params.NsideOut);
-    }
-    else
-    {
-        std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir!, but have "+params.function+"\n This should not happen as it is already checked in checkParams\n";
-        throw std::invalid_argument("function invalid");
-    }
+    
+    auto it = strToFun.find(params.function); // Exists as of checkParams
+    functionType fun = it -> second;
+    outputmap = interface.toHealpix(fun,params.smoothRad, (int)params.NsideOut);
+    
     
     /*  Map is generated, now create outname  */
     formatOutname(outname, params, counter);

@@ -1,8 +1,3 @@
-// module load gcc/10
-// g++ -fsanitize=address -g -Wall  -c regnitz.cpp -I /userdata/data/collischon/Healpix_3.70/include/  -std=c++20 -fopenmp -fconcepts
-// g++ -fsanitize=address -g -Wall -o regnitz regnitz.o -L /userdata/data/collischon/Healpix_3.70/lib/ -lhealpix_cxx -std=c++20 -fopenmp -fconcepts
-// cmake -D CMAKE_CXX_COMPILER=/software/Ubuntu-20.04/Programming/gcc/10.2.0/bin/g++ ../repo
-
 #include "litchi_eat.hpp"
 
 #include <iostream>
@@ -56,6 +51,19 @@ int main(int argc,char **argv)
             else
             {
                 std::cerr << "Illegal value after rankB: " << number << " , must be positive integer or zero \n";
+                return 1;
+            }
+        }
+        else if (thisArg=="-l") //treat l as rankB for use in irreducible case
+        {
+            int number = stoi(arguments.at(++i));
+            if(number>=0) {
+                params.rankB = uint(number);
+                params.curvIndex = 1;
+            }
+            else
+            {
+                std::cerr << "Illegal value after l: " << number << " , must be positive integer or zero \n";
                 return 1;
             }
         }
@@ -136,15 +144,23 @@ int main(int argc,char **argv)
         }
         else if (thisArg=="--trace")
         {
-            params.function = "trace";
+            params.function = "tr";
         }
         else if (thisArg=="--EVDir" || thisArg=="--evdir" || thisArg=="--evd")
         {
-            params.function = "EVDir";
+            params.function = "evd";
         }
         else if (thisArg=="--EVquotient" || thisArg=="--evquotient" || thisArg=="--evq" || thisArg=="--EVQuo")
         {
-            params.function = "EVQuo";
+            params.function = "evq";
+        }
+        else if (thisArg=="--irrAniso" || thisArg=="--anisoIrr" || thisArg=="--ia")
+        {
+            params.function = "irrAniso";
+        }
+        else if (thisArg=="--irrDir" || thisArg=="--dirIrr" || thisArg=="--id")
+        {
+            params.function = "irrDir";
         }
         else if (thisArg=="--sequence")
         {
