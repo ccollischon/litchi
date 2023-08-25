@@ -23,10 +23,10 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(litchi regnitz.cpp)
 target_compile_definitions(litchi PUBLIC NDEBUG)
 
-add_executable(tests tests.cpp)
+add_executable(tests EXCLUDE_FROM_ALL tests.cpp)
 target_compile_definitions(tests PUBLIC THISRUNSINATEST)
 
-add_executable(testGeometry testGeometry.cpp)
+add_executable(testGeometry EXCLUDE_FROM_ALL testGeometry.cpp)
 
 target_link_libraries(litchi -lhealpix_cxx)
 target_link_libraries(tests PUBLIC -lhealpix_cxx)
