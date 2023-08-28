@@ -222,12 +222,9 @@ double anisotropy_irr(const minkTensorStack& input)
     if(input.isMasked()) {return NAN;}
     if(input.isEmpty()) {return NAN;}
     
-    double retval = 0.;
-    for(int m=-(int)input.rankB; m<=(int)input.rankB; m++)
-    {
-        std::complex<double> psilm = getPsilm(m, input);
-        retval += std::abs(psilm)*std::abs(psilm);
-    }
+    std::complex<double> psilm = getPsilm(0, input);
+    double retval = std::abs(psilm)*std::abs(psilm);
+    
     return retval;
 }
 
@@ -244,12 +241,9 @@ double direction_irr(const minkTensorStack& input)
     if(input.isMasked()) {return NAN;}
     if(input.isEmpty()) {return NAN;}
     
-    double retval = 0.;
-    for(int m=-(int)input.rankB; m<=(int)input.rankB; m++)
-    {
-        std::complex<double> psilm = getPsilm(m, input);
-        retval += std::arg(psilm)*std::arg(psilm);
-    }
+    std::complex<double> psilm = getPsilm(0, input);
+    double retval = std::arg(psilm)*std::arg(psilm);
+    
     return retval;
 }
 
