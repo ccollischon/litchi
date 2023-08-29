@@ -146,11 +146,11 @@ int main(int argc,char **argv)
         {
             params.function = "tr";
         }
-        else if (thisArg=="--EVDir" || thisArg=="--evdir" || thisArg=="--evd")
+        else if (thisArg=="--EVDir" || thisArg=="--evdir" || thisArg=="--evd" || thisArg=="--cartDir" || thisArg=="--cd")
         {
             params.function = "evd";
         }
-        else if (thisArg=="--EVquotient" || thisArg=="--evquotient" || thisArg=="--evq" || thisArg=="--EVQuo")
+        else if (thisArg=="--EVquotient" || thisArg=="--evquotient" || thisArg=="--evq" || thisArg=="--EVQuo" || thisArg=="--cartAniso" || thisArg=="--ca")
         {
             params.function = "evq";
         }
