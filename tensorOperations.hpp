@@ -1,3 +1,15 @@
+/*
+ * This file is part of litchi, a lightweight C++ library
+ * for Minkowski analysis
+ * 
+ * Copyright (C) 2021-2023 Caroline Collischon <caroline.collischon@fau.de>
+ * 
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
 #ifndef tensorOperations
 #define tensorOperations
 
@@ -231,7 +243,7 @@ double anisotropy_irr(const minkTensorStack& input)
 ///Calls eigenVecDir(input) to get a cartesian direction measure
 double direction_cart(const minkTensorStack& input)
 {
-    double dir = eigenVecDir<minkTensorStack>(input);
+    double dir = std::remainder( eigenVecDir<minkTensorStack>(input) , (2.*3.14159265358979/input.rankB) );
     return dir;
 }
 
@@ -242,7 +254,7 @@ double direction_irr(const minkTensorStack& input)
     if(input.isEmpty()) {return NAN;}
     
     std::complex<double> psilm = getPsilm(0, input);
-    double retval = std::arg(psilm)*std::arg(psilm);
+    double retval = std::remainder( ( std::arg(psilm)/input.rankB ) , (2.*3.14159265358979/input.rankB) );
     
     return retval;
 }
