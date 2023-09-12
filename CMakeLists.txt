@@ -16,21 +16,36 @@ include_directories(${healpix_parent_dir}/include/)
 link_directories(${healpix_parent_dir}/lib/)
 
 # add the executable
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -std=c++20 -fopenmp -fconcepts -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++20 -fopenmp -fconcepts")
 set(CMAKE_CXX_STANDARD 20)
 
 
 add_executable(litchi regnitz.cpp)
+target_compile_options(litchi PUBLIC "-O3")
 target_compile_definitions(litchi PUBLIC NDEBUG)
+target_link_libraries(litchi -lhealpix_cxx)
+
+
+add_executable(litchi_debug EXCLUDE_FROM_ALL regnitz.cpp)
+target_compile_options(litchi_debug PUBLIC "-pg")
+target_compile_options(litchi_debug PUBLIC "-g")
+target_compile_options(litchi_debug PUBLIC "-O2")
+target_link_libraries(litchi_debug -lhealpix_cxx)
+target_link_options(litchi_debug PUBLIC "-pg")
+target_link_options(litchi_debug PUBLIC "-g")
 
 add_executable(tests EXCLUDE_FROM_ALL tests.cpp)
+target_compile_options(tests PUBLIC "-pg")
+target_compile_options(tests PUBLIC "-g")
+target_compile_options(tests PUBLIC "-O2")
 target_compile_definitions(tests PUBLIC THISRUNSINATEST)
+target_link_libraries(tests PUBLIC -lhealpix_cxx)
+target_link_options(tests PUBLIC "-pg")
+target_link_options(tests PUBLIC "-g")
 
 add_executable(testGeometry EXCLUDE_FROM_ALL testGeometry.cpp)
-
-target_link_libraries(litchi -lhealpix_cxx)
-target_link_libraries(tests PUBLIC -lhealpix_cxx)
 target_link_libraries(testGeometry PUBLIC -lhealpix_cxx)
+
 
 #find_package(pybind11 REQUIRED)
 pybind11_add_module(litchieat NO_EXTRAS pybindings.cpp)

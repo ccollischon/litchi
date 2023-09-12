@@ -167,8 +167,13 @@ struct minkmapSphere :  minkmapFamily{
         
         
         newlength = arclength(corners[0],corners[1]);
-        double newarea = sphereArea(corners[2],corners[0],corners[1]);
-        area += newarea;
+        double newarea{0};
+        if(curvIndex==0)
+        {
+            newarea = sphereArea(corners[2],corners[0],corners[1]);
+            area += newarea;
+        }
+        
         double& factor{ curvIndex==0 ? newarea : curvIndex==1 ? newlength : newcurv };
         if(curvIndex>1)
         { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
@@ -193,8 +198,11 @@ struct minkmapSphere :  minkmapFamily{
         double& factor{ curvIndex==0 ? area : curvIndex==1 ? newlength : newcurv };
         
         newlength = arclength(corners[0],corners[1]);
-        area += sphereArea(corners[4],corners[2],corners[0]);
-        area += sphereArea(corners[2],corners[1],corners[0]);
+        if(curvIndex==0)
+        {
+            area += sphereArea(corners[4],corners[2],corners[0]);
+            area += sphereArea(corners[2],corners[1],corners[0]);
+        }
         if(curvIndex>1)
         { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
             vec3 dirN = crossprod(corners[0].to_vec3(), corners[1].to_vec3());
@@ -283,10 +291,7 @@ struct minkmapSphere :  minkmapFamily{
                     pointing fourthCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
                     
                     
-                    area += sphereArea(positions.at(0),otherCorner,oneCorner);
-                    area += sphereArea(positions.at(2),thirdCorner,fourthCorner);
-                    area += sphereArea(thirdCorner,oneCorner,fourthCorner);
-                    area += sphereArea(otherCorner,fourthCorner,oneCorner);
+                    
                     double length1 = arclength(oneCorner,thirdCorner);
                     double length2 = arclength(fourthCorner,otherCorner); //getN, integrieren
                     length += length1+length2;
@@ -317,6 +322,10 @@ struct minkmapSphere :  minkmapFamily{
                     }
                     else
                     {
+                        area += sphereArea(positions.at(0),otherCorner,oneCorner);
+                        area += sphereArea(positions.at(2),thirdCorner,fourthCorner);
+                        area += sphereArea(thirdCorner,oneCorner,fourthCorner);
+                        area += sphereArea(otherCorner,fourthCorner,oneCorner);
                         return minkTensorStack(minkTensorIntegrand(rankA, rankB, curvIndex, oneCorner, n1),area); //only one section with area
                     }
                     
@@ -340,9 +349,12 @@ struct minkmapSphere :  minkmapFamily{
                 otherCorner = interpPointing(positions.at(3),values.at(3),positions.at(0),values.at(0),thresh);
                 newlength = arclength(oneCorner,otherCorner);
                 length += newlength;
-                area += sphereArea(positions.at(0),otherCorner,positions.at(1));
-                area += sphereArea(positions.at(1),otherCorner,oneCorner);
-                area += sphereArea(positions.at(2),positions.at(1),oneCorner);
+                if(curvIndex==0)
+                { //Only calculate area if needed
+                    area += sphereArea(positions.at(0),otherCorner,positions.at(1));
+                    area += sphereArea(positions.at(1),otherCorner,oneCorner);
+                    area += sphereArea(positions.at(2),positions.at(1),oneCorner);
+                }
                 if(curvIndex>1)
                 { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(oneCorner.to_vec3(), otherCorner.to_vec3());
@@ -382,10 +394,6 @@ struct minkmapSphere :  minkmapFamily{
                     otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
                     pointing thirdCorner = interpPointing(positions.at(2),values.at(2),positions.at(1),values.at(1),thresh);
                     pointing fourthCorner = interpPointing(positions.at(2),values.at(2),positions.at(3),values.at(3),thresh);
-                    area += sphereArea(positions.at(1),oneCorner,thirdCorner);
-                    area += sphereArea(positions.at(3),fourthCorner,otherCorner);
-                    area += sphereArea(thirdCorner,oneCorner,fourthCorner);
-                    area += sphereArea(otherCorner,fourthCorner,oneCorner);
                     double length1 = arclength(otherCorner,oneCorner);
                     double length2 = arclength(thirdCorner,fourthCorner); //getN, integrieren
                     length += length1+length2;
@@ -414,6 +422,10 @@ struct minkmapSphere :  minkmapFamily{
                     }
                     else
                     {
+                        area += sphereArea(positions.at(1),oneCorner,thirdCorner);
+                        area += sphereArea(positions.at(3),fourthCorner,otherCorner);
+                        area += sphereArea(thirdCorner,oneCorner,fourthCorner);
+                        area += sphereArea(otherCorner,fourthCorner,oneCorner);
                         return minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n1)*area; //only one section with area
                     }
                 }
@@ -427,9 +439,12 @@ struct minkmapSphere :  minkmapFamily{
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(2),values.at(2),thresh);
                 newlength = arclength(oneCorner,otherCorner);
                 length += newlength;
-                area += sphereArea(positions.at(3),oneCorner,positions.at(0));
-                area += sphereArea(positions.at(0),oneCorner,otherCorner);
-                area += sphereArea(positions.at(1),positions.at(0),otherCorner);
+                if(curvIndex==0)
+                {
+                    area += sphereArea(positions.at(3),oneCorner,positions.at(0));
+                    area += sphereArea(positions.at(0),oneCorner,otherCorner);
+                    area += sphereArea(positions.at(1),positions.at(0),otherCorner);
+                }
                 if(curvIndex>1)
                 { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
@@ -457,9 +472,12 @@ struct minkmapSphere :  minkmapFamily{
                 otherCorner = interpPointing(positions.at(1),values.at(1),positions.at(0),values.at(0),thresh);
                 newlength = arclength(oneCorner,otherCorner);
                 length += newlength;
-                area += sphereArea(positions.at(3),positions.at(2),oneCorner);
-                area += sphereArea(positions.at(3),oneCorner,otherCorner);
-                area += sphereArea(positions.at(3),otherCorner,positions.at(0));
+                if(curvIndex==0)
+                {
+                    area += sphereArea(positions.at(3),positions.at(2),oneCorner);
+                    area += sphereArea(positions.at(3),oneCorner,otherCorner);
+                    area += sphereArea(positions.at(3),otherCorner,positions.at(0));
+                }
                 if(curvIndex>1)
                 { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
@@ -478,9 +496,12 @@ struct minkmapSphere :  minkmapFamily{
                 otherCorner = interpPointing(positions.at(0),values.at(0),positions.at(3),values.at(3),thresh);
                 newlength = arclength(oneCorner,otherCorner);
                 length += newlength;
-                area += sphereArea(positions.at(2),positions.at(1),oneCorner);
-                area += sphereArea(positions.at(2),oneCorner,otherCorner);
-                area += sphereArea(positions.at(2),otherCorner,positions.at(3));
+                if(curvIndex==0)
+                {
+                    area += sphereArea(positions.at(2),positions.at(1),oneCorner);
+                    area += sphereArea(positions.at(2),oneCorner,otherCorner);
+                    area += sphereArea(positions.at(2),otherCorner,positions.at(3));
+                }
                 if(curvIndex>1)
                 { //Find exterior angle between normal vector and hypothetical curve perpendicular to edge of cell, should be positive if convex
                     vec3 dirN = crossprod(otherCorner.to_vec3(), oneCorner.to_vec3());
@@ -495,10 +516,10 @@ struct minkmapSphere :  minkmapFamily{
                 return (minkTensorIntegrand(rankA, rankB, curvIndex, otherCorner, n)* factor);
                 break;
             case 15: //alles
-                area += sphereArea(positions.at(0),positions.at(2),positions.at(1));
-                area += sphereArea(positions.at(0),positions.at(3),positions.at(2));
                 if(curvIndex==0)
                 {
+                    area += sphereArea(positions.at(0),positions.at(2),positions.at(1));
+                    area += sphereArea(positions.at(0),positions.at(3),positions.at(2));
                     return minkTensorIntegrand(rankA, rankB, curvIndex, positions.at(0),n)*area;
                 }
                 break;
@@ -593,9 +614,9 @@ struct minkmapSphere :  minkmapFamily{
                 
                 break;
             case 7: //alles
-                area += sphereArea(positions.at(0),positions.at(2),positions.at(1));
                 if(curvIndex==0)
                 {
+                    area += sphereArea(positions.at(0),positions.at(2),positions.at(1));
                     return minkTensorIntegrand(rankA, rankB, curvIndex, positions.at(0),pointing(1,0))*area;
                 }
                 break;
