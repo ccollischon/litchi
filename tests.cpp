@@ -276,7 +276,7 @@ int main ()
     testParams.mint = -1e-4, testParams.maxt = 1e-4, testParams.numt = 13;
     testParams.rankA = 0, testParams.rankB = 2, testParams.curvIndex = 1;
     testParams.Nside = 128, testParams.smooth = 8;
-    makeMinkmap("../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits",testParams,"testmap.fits");
+    makeMinkmap("./COM_CMB_IQU-smica_2048_R3.00_hm1.fits",testParams,"testmap.fits");
     
     return 0;
 }

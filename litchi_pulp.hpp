@@ -54,7 +54,7 @@ struct minkmapSphere :  minkmapFamily{
     }
     
     ///Returns Healpix-pixel numbers of pixels surrounding given minkmap pixel, -11 = north pole, -5 = south pole
-    std::vector<int> minkmapPixelNeighbors(int pixnum) const
+    std::array<int,4> minkmapPixelNeighbors(int pixnum) const
     {
         if(pixnum>=originalMap.Npix())
         {
@@ -69,7 +69,7 @@ struct minkmapSphere :  minkmapFamily{
         
         if(pixnum==-5) //5OUTH pole
         {
-            std::vector<int> southPolarCap;
+            std::array<int,4> southPolarCap;
             if(originalMap.Scheme()==RING)
             {
                 int npix = originalMap.Npix();
@@ -84,7 +84,7 @@ struct minkmapSphere :  minkmapFamily{
         }
         else if(pixnum==-11) //11ORTH pole
         {
-            std::vector<int> northPolarCap;
+            std::array<int,4> northPolarCap;
             if(originalMap.Scheme()==RING)
             {
                 northPolarCap = {0,1,2,3};
@@ -99,7 +99,7 @@ struct minkmapSphere :  minkmapFamily{
         
         fix_arr<int, 8> neighbors; //neighbors of this pixel
         originalMap.neighbors(pixnum,neighbors);
-        std::vector<int> easternNeighborship{pixnum, neighbors[4],neighbors[5],neighbors[6]}; //neighbors east of this pixel and this pixel
+        std::array<int,4> easternNeighborship{pixnum, neighbors[4],neighbors[5],neighbors[6]}; //neighbors east of this pixel and this pixel
         return easternNeighborship;
     }
     
@@ -113,10 +113,11 @@ struct minkmapSphere :  minkmapFamily{
     
     
     ///Returns MT at marching square defined by surrounding Healpix pixels given by neighborship. Calls three/fourCornerCases
-    minkTensorStack integrateMinktensor(const std::vector<int>& neighborship) const
+    minkTensorStack integrateMinktensor(const std::array<int,4>& neighborship) const
     {
         //marching square (which above, below thresh)
         std::vector<double> values;
+        values.reserve(4);
         double area=0;              //Use these for adding everything up, need to think about curvature TODO
         double length=0;
         double curvature=0;
@@ -161,7 +162,7 @@ struct minkmapSphere :  minkmapFamily{
     
     ///Internal function treating case where one pixel in moving window is above threshold. Used internally by three/fourCornerCases
     //corners: two interpolated corners such that corners[0] cross corners[1] points away from body, corners[2] is within triangle, corners[3] and corners[4] needed for giveCurv and should be given in appropriate order (outBodyA, outBodyB)
-    minkTensorStack oneCornerOver(double& newlength, double& area, double& newcurv, const std::vector<pointing>& corners, bool ranksum) const
+    minkTensorStack oneCornerOver(double& newlength, double& area, double& newcurv, const std::array<pointing,5>& corners, bool ranksum) const
     {
         assert(corners.size()==5 && "minkmapSphere::oneCornerOver: corners-vector has wrong size!");
         
@@ -191,7 +192,7 @@ struct minkmapSphere :  minkmapFamily{
     
     ///Internal function treating case where one pixel in moving window is above threshold. Used internally by three/fourCornerCases
     //corners: two interpolated corners such that corners[0] cross corners[1] points away from body, corners[2] and [4] are within polytope, corners[3] and corners[5] needed for giveCurv and should be given in appropriate order (outBodyA, outBodyB)
-    minkTensorStack twoCornersOver(double& newlength, double& area, double& newcurv, const std::vector<pointing>& corners, bool ranksum) const
+    minkTensorStack twoCornersOver(double& newlength, double& area, double& newcurv, const std::array<pointing,6>& corners, bool ranksum) const
     {
         assert(corners.size()==6 && "minkmapSphere::twoCornersOver: corners-vector has wrong size!");
         
@@ -218,9 +219,10 @@ struct minkmapSphere :  minkmapFamily{
     }
     
     ///Marching square for case of 4 pixels meeting in one corner
-    minkTensorStack fourCornerCases(const std::vector<int>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
+    minkTensorStack fourCornerCases(const std::array<int,4>& neighborship,const std::vector<double>& values,const uint& caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
+        positions.reserve(4);
         for(auto pixnum : neighborship) {positions.emplace_back(originalMap.pix2ang(pixnum));}
         
         pointing oneCorner;
@@ -532,9 +534,10 @@ struct minkmapSphere :  minkmapFamily{
     }
     
     ///Marching square for case of 3 pixels meeting in one corner
-    minkTensorStack threeCornerCases(const std::vector<int>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
+    minkTensorStack threeCornerCases(const std::array<int,4>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
+        positions.reserve(3);
         
         for(auto pixnum : neighborship) 
         {
