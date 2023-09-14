@@ -99,6 +99,11 @@ void checkParams(const paramStruct &obj) {
         std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir, irrAniso, irrDir, but have "+obj.function+"\n";
         throw std::invalid_argument("function invalid");
     }
+    if( (obj.function == "irrAniso" || obj.function == "irrDir") && obj.rankA)
+    {
+        std::cerr << "rankA impossible when calculating irreducible function. function = "+obj.function+", rankA = " << obj.rankA << std::endl;
+        throw std::invalid_argument("function invalid");
+    }
 }
 
 ///If params.smooth is set, overwrite params.NsideOut and params.smoothRad to corresponding values. Through this, user can use either smooth or smoothRad

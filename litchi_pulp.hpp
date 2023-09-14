@@ -534,7 +534,7 @@ struct minkmapSphere :  minkmapFamily{
     }
     
     ///Marching square for case of 3 pixels meeting in one corner
-    minkTensorStack threeCornerCases(const std::array<int,4>& neighborship, std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
+    minkTensorStack threeCornerCases(const std::array<int,4>& neighborship, const std::vector<double>& values, uint caseindex, double& area, double& length, double& curvature) const
     {
         std::vector<pointing> positions;
         positions.reserve(3);
