@@ -1,3 +1,15 @@
+#
+# This file is part of litchi, a lightweight C++ library
+# for Minkowski analysis
+#
+# Copyright (C) 2021-2023 Caroline Collischon <caroline.collischon@fau.de>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#
+
+
 cmake_minimum_required(VERSION 3.10)
 # to use g++-10, if just g++ is too old: CC=gcc-10 CXX=g++-10 before calling cmake
 # set the project name
