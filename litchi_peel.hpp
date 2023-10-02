@@ -70,6 +70,8 @@ enum functionType
 
 std::unordered_map<std::string,functionType> const strToFun = { {"tr",functionType::TRACE}, {"evq",functionType::ANISOTROPY_CART}, {"evd",functionType::DIRECTION_CART}, 
                                                                 {"irrAniso",functionType::ANISOTROPY_IRR}, {"irrDir",functionType::DIRECTION_IRR}   };
+                                                                
+
 
 
 /** Apply mask to input image using threshold. All masked pixels are set to NAN
@@ -260,8 +262,10 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
                 map[pixel] = direction_irr(tensorHere);
                 break;
             default:
-                std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir, irrAniso, irrDir, but have "+std::to_string(fun)+"\n This should not happen as it is already checked in checkParams\n";
-                throw std::invalid_argument("Invalid function type");
+                std::cerr << "Invalid tensor-to-scalar function given, only permits ";
+                std::for_each( strToFun.begin(),strToFun.end(), [](const auto& pair){std::cerr << pair.first+", ";} ); //Print all keys to cerr separated by commas
+                std::cerr << "but have "+std::to_string(fun)+"\n This should not happen as it is already checked in checkParams\n";
+                throw std::invalid_argument("Invalid function type in normalHealpixInterface<maptype>::toHealpix");
         }
     }
     return map;

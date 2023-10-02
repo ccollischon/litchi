@@ -108,7 +108,9 @@ void checkParams(const paramStruct &obj) {
     }
     if(strToFun.find(obj.function) == strToFun.end())
     {
-        std::cerr << "Invalid tensor-to-scalar function given, only permits trace, EVQuo, EVDir, irrAniso, irrDir, but have "+obj.function+"\n";
+        std::cerr << "Invalid tensor-to-scalar function given, only permits ";
+        std::for_each( strToFun.begin(),strToFun.end(), [](const auto& pair){std::cerr << pair.first+", ";} ); //Print all keys to cerr separated by commas
+        std::cerr << "but have "+obj.function+"\n";
         throw std::invalid_argument("function invalid");
     }
     if( (obj.function == "irrAniso" || obj.function == "irrDir") && obj.rankA)
