@@ -235,7 +235,7 @@ double anisotropy_irr(const minkTensorStack& input)
     if(input.isEmpty()) {return NAN;}
     
     std::complex<double> psilm = getPsilm(0, input);
-    double retval = std::abs(psilm)*std::abs(psilm);
+    double retval = std::abs(psilm)//*std::abs(psilm);
     
     return retval;
 }
