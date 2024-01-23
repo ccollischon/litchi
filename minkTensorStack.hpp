@@ -53,7 +53,7 @@ struct minkTensorStack
     {
     }
     
-    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), numElements_{0}, nweights{}
+    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), nweights{}, numElements_{0}
     {
         if(std::isnan(weight))
         {
