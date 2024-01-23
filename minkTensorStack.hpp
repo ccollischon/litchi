@@ -28,7 +28,7 @@
 #include <type_traits>
 #include <vector>
 #include <stdexcept>
-#include <list>
+#include <forward_list>
 
 ///Save linear combinations of minkTensorIntegrands in one class
 struct minkTensorStack
@@ -39,8 +39,8 @@ struct minkTensorStack
     uint numnan{0}; ///< tracking how many contributions from masked pixels this tensor contains (in addition to content in nweights)
     uint numnull{0}; ///< tracking how many contributions from empty windows this tensor contains (in addition to content in nweights)
     
-    std::list<std::pair<pointing,double>> nweights{}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
-    
+    std::forward_list<std::pair<pointing,double>> nweights{}; ///< list normal vectors from which minkTensorIntegrands should be generated, and their respective weights
+    uint numElements_{0};
     
     minkTensorStack(minkTensorStack left, minkTensorStack right) : rankA(left.rankA), rankB(left.rankB), curvIndex(left.curvIndex), r(left.r), numnan(left.numnan), numnull(left.numnull), nweights(std::move(left.nweights))
     {
@@ -53,7 +53,7 @@ struct minkTensorStack
     {
     }
     
-    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), nweights{}
+    explicit minkTensorStack(const minkTensorIntegrand& inp, double weight=1) : rankA(inp.rankA), rankB(inp.rankB), curvIndex(inp.curvIndex), r(inp.r), numElements_{0}, nweights{}
     {
         if(std::isnan(weight))
         {
@@ -65,7 +65,8 @@ struct minkTensorStack
         }
         else
         {
-            nweights.emplace_back(std::make_pair(inp.n,weight));
+            nweights.emplace_front(std::make_pair(inp.n,weight));
+            numElements_ = 1;
         }
     }
     
@@ -79,6 +80,7 @@ struct minkTensorStack
     {
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to copy assign minkTensorStacks of different rank!");
         nweights = other.nweights;
+        numElements_ = other.numElements_;
         r = other.r;
         numnan = other.numnan;
         numnull = other.numnull;
@@ -90,6 +92,7 @@ struct minkTensorStack
     {
         assert(rankA==other.rankA && rankB==other.rankB && curvIndex==other.curvIndex && "Trying to move assign minkTensorStacks of different rank!");
         nweights = std::move(other.nweights);
+        numElements_ = other.numElements_;
         r = std::move(other.r);
         numnan = other.numnan;
         numnull = other.numnull;
@@ -102,7 +105,7 @@ struct minkTensorStack
      */
     bool isMasked() const
     {
-        return 15*numnan > nweights.size()+numnull;
+        return 15*numnan > numElements_+numnull;
     }
     
     /**
@@ -110,7 +113,7 @@ struct minkTensorStack
      */
     bool isEmpty() const
     {
-        return nweights.size() == 0;
+        return numElements_ == 0;//nweights.size() == 0;
     }
     
     /**
@@ -139,7 +142,7 @@ struct minkTensorStack
      */
     double accessElement_rescaled(const std::vector<uint_fast8_t>& indices) const
     {
-        double factor = 1.*(nweights.size()+numnull+numnan)/(1.*(nweights.size()+numnull));
+        double factor = 1.*(numElements_+numnull+numnan)/(1.*(numElements_+numnull));
         
         double retval = 0.;
         for(const auto& element : nweights)
@@ -180,7 +183,8 @@ struct minkTensorStack
         {
             pointing newn = tens.n;
             if(arclength(r,tens.r)>1e-12)   newn = parallelTransport(tens.r,r,newn);
-            nweights.emplace_back(std::make_pair(newn,weight));
+            nweights.emplace_front(std::make_pair(newn,weight));
+            ++numElements_;
         }
     }
     
@@ -194,8 +198,9 @@ struct minkTensorStack
         
         if(arclength(r,other.r)>1e-12)   other.moveTo(r);
         
-        auto itEnd = nweights.end();
-        nweights.splice(itEnd,std::move(other.nweights));
+        //auto itEnd = nweights.end();
+        numElements_ += other.numElements_;
+        nweights.splice_after(nweights.cbefore_begin(),std::move(other.nweights));
         
     }
     
@@ -230,13 +235,15 @@ struct minkTensorStack
     {
         if(std::isnan(other))
         {
-            numnan += nweights.size();
+            numnan += numElements_;
             nweights.clear();
+            numElements_ = 0;
         }
         else if(std::abs(other)<1e-15)
         {
-            numnull += nweights.size();
+            numnull += numElements_;
             nweights.clear();
+            numElements_ = 0;
         }
         else
         {
