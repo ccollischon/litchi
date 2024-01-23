@@ -2,7 +2,7 @@
  * This file is part of litchi, a lightweight C++ library
  * for Minkowski analysis
  * 
- * Copyright (C) 2021-2023 Caroline Collischon <caroline.collischon@fau.de>
+ * Copyright (C) 2021-2024 Caroline Collischon <caroline.collischon@fau.de>
  * 
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -210,15 +210,15 @@ double eigenVecDir(const tens& input)
 }
 
 ///Calculates the corresponding irreducible tensor, using input.rankB as l
-std::complex<double> getPsilm(int m, const minkTensorStack& input)
+std::complex<double> getPsil(const minkTensorStack& input)
 {
-    std::complex<double> psilm = 0.;
+    std::complex<double> psil = 0.;
     for(const auto& element : input.nweights)
     {
-        irreducibleMinkTens tensorHere((int)input.rankB, m, input.r, std::get<0>(element));
-        psilm += tensorHere.accessElement()*std::get<1>(element);
+        irreducibleMinkTens tensorHere((int)input.rankB, input.r, std::get<0>(element));
+        psil += tensorHere.accessElement()*std::get<1>(element);
     }
-    return psilm;
+    return psil;
 }
 
 ///Calls eigenValueQuotient(input) to get a cartesian anisotropy measure
@@ -234,8 +234,8 @@ double anisotropy_irr(const minkTensorStack& input)
     if(input.isMasked()) {return NAN;}
     if(input.isEmpty()) {return NAN;}
     
-    std::complex<double> psilm = getPsilm(0, input);
-    double retval = std::abs(psilm);//*std::abs(psilm);
+    std::complex<double> psil = getPsil(input);
+    double retval = std::abs(psil);//*std::abs(psil);
     
     return retval;
 }
@@ -253,8 +253,8 @@ double direction_irr(const minkTensorStack& input)
     if(input.isMasked()) {return NAN;}
     if(input.isEmpty()) {return NAN;}
     
-    std::complex<double> psilm = getPsilm(0, input);
-    double retval = std::remainder( ( std::arg(psilm)/input.rankB ) , (2.*3.14159265358979/input.rankB) );
+    std::complex<double> psil = getPsil(input);
+    double retval = std::remainder( ( std::arg(psil)/input.rankB ) , (2.*3.14159265358979/input.rankB) );
     
     return retval;
 }

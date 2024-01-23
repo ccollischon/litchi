@@ -2,7 +2,7 @@
  * This file is part of litchi, a lightweight C++ library
  * for Minkowski analysis
  * 
- * Copyright (C) 2021-2023 Caroline Collischon <caroline.collischon@fau.de>
+ * Copyright (C) 2021-2024 Caroline Collischon <caroline.collischon@fau.de>
  * 
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,11 +19,11 @@
 #include <cmath>
 
 struct irreducibleMinkTens {
-    const int l_, m_;
-    pointing r_{0,0};
-    pointing n_{0,0};
+    const int l{};//, m{};
+    pointing r{0,0};
+    pointing n{1,0};
     
-    irreducibleMinkTens(int l, int m, pointing r, pointing n) : l_{l}, m_{m}, r_{std::move(r)}, n_{std::move(n)}
+    irreducibleMinkTens(int lNew, pointing rNew, pointing nNew) : l{lNew}, r{std::move(rNew)}, n{std::move(nNew)}
     {
     }
     
@@ -35,8 +35,8 @@ struct irreducibleMinkTens {
     
     std::complex<double> accessElement() const // exp(i l phi(n))
     {
-        double phi = giveAngle(n_,r_);
-        return std::exp(std::complex<double>(0.0, +1.0) * (double)l_ * phi);
+        double phi = giveAngle(n,r);
+        return std::exp(std::complex<double>(0.0, +1.0) * (double)l * phi);
     }
     
     
