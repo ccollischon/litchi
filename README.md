@@ -1,6 +1,6 @@
 
 # Litchi
-This repository provides tools for creating Minkowski maps of data in the HEALPix-format. For more info on what that means and how it can be used, please read the following paper: TBA soon
+This repository provides tools for creating Minkowski maps of data in the HEALPix-format. For more info on what that means and how it can be used, please read the following paper: https://arxiv.org/abs/2402.06286
 
 If you are using results from litchi in a publication or presentation, please also cite the aforementioned paper.
 
