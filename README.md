@@ -7,6 +7,10 @@ If you are using results from litchi in a publication or presentation, please al
 
 For details on how to use litchi, see doc/manual.pdf
 
+litchi is archived at Zenodo:    [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11940174.svg)](https://doi.org/10.5281/zenodo.11940174)
+
+
+
 # Clone and build
 This project depends on HEALPix (https://healpix.sourceforge.io/), which needs to be installed by the user.
 Apart from that, it uses pybind11 (https://github.com/pybind/pybind11.git) and eigen (https://gitlab.com/libeigen/eigen.git) as submodules and handles them automatically. Clone both litchi and the submodules with the following commands:
