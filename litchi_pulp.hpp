@@ -21,6 +21,7 @@
 #include "healpix_cxx/healpix_map.h"
 
 #include <vector>
+#include <array>
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>

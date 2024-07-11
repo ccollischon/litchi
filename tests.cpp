@@ -58,7 +58,7 @@ int main ()
     pointing n(0.5, pi);
     
     minkTensorIntegrand asdf(0,2,0,A,B);
-    Healpix_Map<double> map = read_Healpix_map_from_fits<double>("../litchi/COM_CMB_IQU-smica_2048_R3.00_hm1.fits", 1, 2);
+    Healpix_Map<double> map = read_Healpix_map_from_fits<double>("./COM_CMB_IQU-smica_2048_R3.00_hm1.fits", 1, 2);
     //Test ispolar
     minkmapSphere testmink(map,0,0,1,0.);
     normalHealpixInterface interface(testmink);
