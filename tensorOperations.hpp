@@ -254,6 +254,7 @@ double direction_irr(const minkTensorStack& input)
     if(input.isEmpty()) {return NAN;}
     
     std::complex<double> psil = getPsil(input);
+    //  for agreement with morphometer remove division by rankB ?
     double retval = std::remainder( ( std::arg(psil)/input.rankB ) , (2.*3.14159265358979/input.rankB) );
     
     return retval;
