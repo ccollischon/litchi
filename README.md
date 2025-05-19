@@ -16,7 +16,7 @@ This project depends on HEALPix (https://healpix.sourceforge.io/), which needs t
 Apart from that, it uses pybind11 (https://github.com/pybind/pybind11.git) and eigen (https://gitlab.com/libeigen/eigen.git) as submodules and handles them automatically. Clone both litchi and the submodules with the following commands:
 
 ```
-git clone http://www.sternwarte.uni-erlangen.de/gitlab/collischon/litchi.git
+git clone https://github.com/ccollischon/litchi.git
 cd litchi; git submodule update --init --recursive
 cd ..
 ```
