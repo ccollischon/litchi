@@ -208,8 +208,6 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
 {
     Healpix_Map<double> map(outputNside, baseminkmap.originalMap.Scheme(), SET_NSIDE);
 
-    double smoothFactor = (baseminkmap.originalMap.Nside()/outputNside)*(baseminkmap.originalMap.Nside()/outputNside); //Amount of input pixels covered by one output pixel
-
     auto npix = map.Npix();
     int step = (outputNside <= 16) ? npix/16 : npix/64;
     
@@ -218,7 +216,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
     for(int pixel=0; pixel<npix; ++pixel)
     {
 		#ifdef THISISPYTHON
-		if(!(pixel%37))
+		if(!(pixel%13))
 		{
 			pybind11::gil_scoped_acquire acquire;
 	        if (PyErr_CheckSignals() != 0)
@@ -242,8 +240,6 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
             {
                 tensorHere += std::move(at(pixelToAdd)); //parallel transport, not just add, DONE in minkTensorStack +=
             }
-            double norm = smoothFactor/(pixelsNearby.size());//normalize such that sum over all pixels remains same
-            //if(fun == TRACE) tensorHere *= norm; //TODO check if this makes sense //don't think it does
         }
         else
         {
