@@ -65,3 +65,10 @@ target_compile_options(litchieat PUBLIC "-O3")
 target_compile_definitions(litchieat PUBLIC NDEBUG)
 target_compile_definitions(litchieat PUBLIC THISISPYTHON)
 target_link_libraries(litchieat PUBLIC -lhealpix_cxx)
+
+
+pybind11_add_module(litchieat_debug EXCLUDE_FROM_ALL NO_EXTRAS pybindings_debug.cpp)
+target_compile_definitions(litchieat_debug PUBLIC THISISPYTHON)
+target_link_libraries(litchieat_debug PUBLIC -lhealpix_cxx)
+target_compile_options(litchieat_debug PUBLIC "-pg")
+target_compile_options(litchieat_debug PUBLIC "-g")

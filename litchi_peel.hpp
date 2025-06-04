@@ -165,11 +165,6 @@ struct normalHealpixInterface
 template <minkmapFamilyType maptype>
 minkTensorStack normalHealpixInterface<maptype>::at(int pixnum) const
 {
-    #ifdef THISISPYTHON
-        if (PyErr_CheckSignals() != 0)
-            throw pybind11::error_already_set();
-    #endif
-
     fix_arr<int, 8> neighbors; //neighbors of this pixel
     baseminkmap.originalMap.neighbors(pixnum,neighbors);
     std::array<int,4> westernNeighborship{pixnum, neighbors[0],neighbors[1],neighbors[2]}; // non-polar: {E, SW, W, NW} corners, N-polar: {E, S, notacorner, W} corners, S-polar: {E, W, notacorner, N} in minkmap, replace notacorner
@@ -217,11 +212,21 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
 
     auto npix = map.Npix();
     int step = (outputNside <= 16) ? npix/16 : npix/64;
-
+    
+	
     #pragma omp parallel for
     for(int pixel=0; pixel<npix; ++pixel)
     {
-
+		#ifdef THISISPYTHON
+		if(!(pixel%37))
+		{
+			pybind11::gil_scoped_acquire acquire;
+	        if (PyErr_CheckSignals() != 0)
+	            throw pybind11::error_already_set();
+			pybind11::gil_scoped_release release;
+		}
+		#endif
+		
         if(!(pixel%step))
         {
             std::cout << "Converting pixel " << pixel << "/" << npix << "...\n";
@@ -238,7 +243,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
                 tensorHere += std::move(at(pixelToAdd)); //parallel transport, not just add, DONE in minkTensorStack +=
             }
             double norm = smoothFactor/(pixelsNearby.size());//normalize such that sum over all pixels remains same
-            if(fun == TRACE) tensorHere *= norm; //TODO check if this makes sense
+            //if(fun == TRACE) tensorHere *= norm; //TODO check if this makes sense //don't think it does
         }
         else
         {
@@ -267,7 +272,7 @@ Healpix_Map<double> normalHealpixInterface<maptype>::toHealpix(functionType fun,
                 std::cerr << "but have "+std::to_string(fun)+"\n This should not happen as it is already checked in checkParams\n";
                 throw std::invalid_argument("Invalid function type in normalHealpixInterface<maptype>::toHealpix");
         }
-    }
+    }//for
     return map;
 }
 

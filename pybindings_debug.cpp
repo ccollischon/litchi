@@ -17,7 +17,7 @@ namespace py = pybind11;
 
 
 //Nside, rankA, rankB, curvIndex, mint, maxt, numt, smooth, smoothRad, NsideOut, linThresh, function, forceOutname, sequence, maskname, maskThresh
-PYBIND11_MODULE(litchieat, m) {
+PYBIND11_MODULE(litchieat_debug, m) {
     py::class_<paramStruct>(m, "paramStruct")
         .def(py::init<>())
         .def_readwrite("Nside", &paramStruct::Nside)
